@@ -184,6 +184,10 @@ def validate_registration(form):
 
     if role not in ROLES:
         errors["role"] = "Choose how you will use Nephron."
+    # The person must tick the box agreeing to the Terms & Conditions. A browser checkbox only sends a value
+    # when it is ticked, so a missing/empty value means it was not agreed to - never trust the page to enforce it.
+    if (form.get("agree_terms") or "").strip().lower() not in ("on", "yes", "true", "1", "agree"):
+        errors["agree_terms"] = "Please agree to the Terms & Conditions to create an account."
     for field, message in (("email", check_email(email)), ("full_name", check_full_name(full_name)),
                            ("password", check_password(password, email, full_name)),
                            ("confirm_password", check_confirm_password(password, confirm_password)),
