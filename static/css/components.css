@@ -447,6 +447,12 @@
 .chip-lavender, .chip-required { color: var(--indigo); background: var(--lavender); border-color: transparent; }
 .chip-optional { color: var(--body); background: var(--surface-soft); }
 .chip-green { color: var(--green-text); background: var(--green-soft); border-color: transparent; }
+
+/* Agree-to-terms checkbox (registration) */
+.agree-group { margin: var(--space-3) 0; }
+.agree-check { display: flex; gap: var(--space-2); align-items: flex-start; cursor: pointer; }
+.agree-check input[type="checkbox"] { flex: none; width: 1.15rem; height: 1.15rem; margin-top: 0.1rem; accent-color: var(--indigo); }
+.agree-check span { line-height: 1.5; }
 .sample-tag { display: inline-flex; align-items: center; gap: var(--space-1); padding: 0.125rem 0.75rem; font-size: var(--text-tiny); font-weight: 600; line-height: 1.6; color: var(--amber-text); background: var(--amber-soft); border: 1px dashed var(--amber); border-radius: var(--radius-pill); }
 .sample-tag .icon { width: 0.9rem; height: 0.9rem; }
 
