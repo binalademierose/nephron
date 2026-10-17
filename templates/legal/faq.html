@@ -1,0 +1,105 @@
+{# Frequently asked questions. Plain answers for a CKD risk-screening capstone. Content mirrors what the app
+   actually does (screening not diagnosis, roles, privacy, account control). Uses native <details> so no JS
+   is needed and it stays accessible. #}
+{% extends "base.html" %}
+{% from "partials/_macros.html" import icon %}
+{% block content %}
+<div class="container legal-page">
+  <header class="legal-header">
+    <span class="badge badge-neutral">Help</span>
+    <h1 class="display-title">Frequently asked questions</h1>
+    <p class="text-lead">Short answers to the questions people ask most about {{ APP_NAME }}.</p>
+  </header>
+
+  <div class="notice legal-disclaimer">
+    {{ icon('alert-triangle') }}
+    <div>
+      <h2>{{ APP_NAME }} is screening information, not a diagnosis</h2>
+      <p>{{ MEDICAL_DISCLAIMER }} Never use {{ APP_NAME }} for an emergency — contact your local emergency service or
+        go to the nearest hospital.</p>
+    </div>
+  </div>
+
+  <section class="faq-list">
+    <details class="faq-item" open>
+      <summary>What is {{ APP_NAME }}?</summary>
+      <p>{{ APP_NAME }} is a chronic kidney disease (CKD) <em>risk-screening</em> tool built as an academic capstone
+        project. From the information you provide, a trained machine-learning model estimates a risk level and shows
+        which of your answers most affected that estimate.</p>
+    </details>
+
+    <details class="faq-item">
+      <summary>Is a result a diagnosis?</summary>
+      <p>No. A result — low or high — is a screening estimate, not a diagnosis. It does not confirm or rule out kidney
+        disease, prescribe treatment, or replace a doctor. Always confirm anything that matters with a qualified
+        healthcare professional and proper laboratory testing.</p>
+    </details>
+
+    <details class="faq-item">
+      <summary>What is the difference between Preliminary and Enhanced Screening?</summary>
+      <p><strong>Preliminary Screening</strong> uses questionnaire and health-history answers only — no lab tests
+        needed. <strong>Enhanced Screening</strong> adds laboratory values (for example creatinine and eGFR), so it is
+        more precise but needs a recent lab report. You can start with the preliminary screening and do the enhanced
+        one later.</p>
+    </details>
+
+    <details class="faq-item">
+      <summary>Who can use {{ APP_NAME }}, and what are the account types?</summary>
+      <p>You must be at least 18 to create an account. There are two sign-up roles: a <strong>General User</strong>,
+        who screens themselves and keeps a private history, and a <strong>Healthcare Professional</strong>, who can
+        review assessments that people choose to share with them.</p>
+    </details>
+
+    <details class="faq-item">
+      <summary>Who can see my screening results?</summary>
+      <p>Your screenings are private to your account. A healthcare professional can see them only if and when you
+        choose to share them, and you can end that access at any time. Administrators manage accounts and the service
+        but do not see a named person's results — only totals and de-identified data.</p>
+    </details>
+
+    <details class="faq-item">
+      <summary>How is my information kept safe?</summary>
+      <p>Passwords are stored only as a salted, slow hash — never in plain text — and the site is served over HTTPS.
+        Your answers may be used to improve the model only with your name, contact details, gender and exact location
+        removed. No online system can be guaranteed perfectly secure.</p>
+    </details>
+
+    <details class="faq-item">
+      <summary>What does the "verified" badge on a professional mean?</summary>
+      <p>It means an administrator recorded a self-reported professional licence number. It is informational only and
+        is not a guarantee of anyone's credentials or clinical competence.</p>
+    </details>
+
+    <details class="faq-item">
+      <summary>Can I deactivate my account?</summary>
+      <p>Yes. On <strong>Your account</strong>, use <em>Deactivate account</em>. Your data is kept, but you cannot sign
+        in until an administrator switches the account back on. You will be asked for your password to confirm.</p>
+    </details>
+
+    <details class="faq-item">
+      <summary>Can I permanently delete my account?</summary>
+      <p>Yes. On <strong>Your account</strong>, use <em>Delete account</em>. This permanently removes your account and
+        your own data — screenings, uploads, history and sharing — and cannot be undone. You will be asked for your
+        password and to confirm before anything is deleted.</p>
+    </details>
+
+    <details class="faq-item">
+      <summary>How accurate is the screening?</summary>
+      <p>The models produce estimates, not certainties, and can be wrong in either direction. Measured performance for
+        each model is published on the administrator's Model page. Unusual answers, or values outside the range the
+        model was trained on, make an estimate less reliable.</p>
+    </details>
+
+    <details class="faq-item">
+      <summary>I forgot my password — what do I do?</summary>
+      <p>Contact the administrator for this deployment. They can issue a temporary password, which you will be asked to
+        change the next time you sign in.</p>
+    </details>
+  </section>
+
+  <div class="legal-actions">
+    <a class="button button-secondary" href="{{ url_for('main.home') }}">{{ icon('home') }}Back to home</a>
+    <a class="button button-secondary" href="{{ url_for('main.terms') }}">{{ icon('file-text') }}Terms &amp; Conditions</a>
+  </div>
+</div>
+{% endblock %}
