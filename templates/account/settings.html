@@ -7,6 +7,8 @@
 {% block header_subtitle %}Your details and how you sign in.{% endblock %}
 
 {% block content %}
+{% set danger_error = danger_error|default(None) %}
+{% set danger_message = danger_message|default(None) %}
 <div class="account-grid">
   <section class="card reveal" style="--i: 0;" aria-labelledby="details-heading">
     <div class="card-header"><h2 class="card-title" id="details-heading">{{ icon_chip('user', 'lavender') }}Your details</h2></div>
@@ -64,4 +66,51 @@
     <button class="button button-secondary" type="submit">{{ icon('log-out') }}Sign out</button>
   </form>
 </section>
+
+{% if current_user.role in ['general', 'professional'] %}
+<section class="card danger-card reveal" style="--i: 3;" aria-labelledby="danger-heading">
+  <div class="card-header"><h2 class="card-title" id="danger-heading">{{ icon_chip('alert-triangle', 'lavender') }}Manage your account</h2></div>
+  <div class="danger-actions">
+
+    <div class="danger-action">
+      <h3>Deactivate account</h3>
+      <p>Temporarily switch your account off. Your data is kept, but you cannot sign in until an administrator switches it back on.</p>
+      <form method="post" action="{{ url_for('account.deactivate_account') }}" novalidate data-confirm="default" data-confirm-title="Deactivate your account?" data-confirm-message="You will be signed out and will not be able to sign in again until an administrator reactivates your account." data-confirm-accept="Deactivate" data-confirm-dismiss="Cancel">
+        {{ csrf_field() }}
+        <div class="form-group">
+          <label class="form-label" for="deactivate_password">Confirm your password</label>
+          <div class="input-wrap has-icon">
+            {{ icon('lock', 'input-icon') }}
+            <input class="form-control{{ ' is-invalid' if danger_error == 'deactivate' }}" id="deactivate_password" name="password" type="password" autocomplete="current-password" required{{ ' aria-invalid="true" autofocus'|safe if danger_error == 'deactivate' }}>
+          </div>
+          {% if danger_error == 'deactivate' %}<p class="form-error" role="alert">{{ icon('alert-circle') }}<span>{{ danger_message }}</span></p>{% endif %}
+        </div>
+        <button class="button button-secondary" type="submit">{{ icon('log-out') }}Deactivate account</button>
+      </form>
+    </div>
+
+    <div class="danger-action">
+      <h3>Delete account</h3>
+      <p>Permanently delete your account and your own data &mdash; screenings, uploads, history and sharing. This cannot be undone.</p>
+      <form method="post" action="{{ url_for('account.delete_account') }}" novalidate data-confirm="default" data-confirm-title="Permanently delete your account?" data-confirm-message="This removes your account and all of your data. It cannot be undone." data-confirm-accept="Delete forever" data-confirm-dismiss="Cancel">
+        {{ csrf_field() }}
+        <div class="form-group">
+          <label class="form-label" for="delete_password">Confirm your password</label>
+          <div class="input-wrap has-icon">
+            {{ icon('lock', 'input-icon') }}
+            <input class="form-control{{ ' is-invalid' if danger_error == 'delete' }}" id="delete_password" name="password" type="password" autocomplete="current-password" required{{ ' aria-invalid="true" autofocus'|safe if danger_error == 'delete' }}>
+          </div>
+        </div>
+        <label class="agree-check" for="confirm_delete">
+          <input type="checkbox" id="confirm_delete" name="confirm_delete" value="delete" required>
+          <span>I understand this permanently deletes my account and all of my data.</span>
+        </label>
+        {% if danger_error == 'delete' %}<p class="form-error" role="alert">{{ icon('alert-circle') }}<span>{{ danger_message }}</span></p>{% endif %}
+        <button class="button button-danger" type="submit" style="margin-top: var(--space-3);">{{ icon('alert-triangle') }}Delete my account</button>
+      </form>
+    </div>
+
+  </div>
+</section>
+{% endif %}
 {% endblock %}
