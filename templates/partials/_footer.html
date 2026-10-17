@@ -8,6 +8,7 @@
         <p class="footer-disclaimer text-small text-muted">{{ MEDICAL_DISCLAIMER }}</p>
         <p class="text-small text-muted">&copy; {{ current_year }} {{ APP_NAME }}. Capstone project.
           <a href="{{ url_for('main.terms') }}">Terms &amp; Conditions</a>
+          &middot; <a href="{{ url_for('main.faq') }}">FAQ</a>
           {% if config.DEBUG %}&middot; <a href="{{ url_for('design.index') }}">Design previews</a>{% endif %}
         </p>
       </div>
