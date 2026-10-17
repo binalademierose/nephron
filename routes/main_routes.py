@@ -26,6 +26,12 @@ def terms():
     return render_template("legal/terms.html", page_title="Terms & Conditions", effective_date=effective)
 
 
+@main_bp.route("/faq")
+def faq():
+    """Frequently asked questions. Public, no sign-in needed."""
+    return render_template("legal/faq.html", page_title="Frequently asked questions")
+
+
 @main_bp.route("/health")
 def health():
     """
