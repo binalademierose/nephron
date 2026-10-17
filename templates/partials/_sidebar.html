@@ -1,0 +1,98 @@
+{# The signed-in navigation: a curved white rail with icons. Its two curved ends are drawn as SVG (traced from the approved design).
+   Set active_nav in the page to highlight the current item. Items whose pages do not exist yet are marked
+   data-preview-link so they explain themselves instead of pretending to work.
+   On small screens this becomes a drawer, and every icon shows its name. #}
+{% from "partials/_macros.html" import icon %}
+{# Each item: key, name, icon, where it goes (None = not built yet). #}
+{% set preview = request.blueprint == 'design' %}
+{% if preview %}
+  {% set rail_items = [
+    ('overview', 'Overview', 'home', url_for('design.dashboard')),
+    ('assessment', 'New assessment', 'activity', url_for('design.assessment')),
+    ('laboratory', 'Laboratory results', 'flask', url_for('lab.start')),
+    ('history', 'Assessment history', 'clipboard-list', None),
+    ('follow-up', 'Follow-up', 'clock', None),
+    ('shared', 'Shared assessments', 'share', None),
+    ('review', 'Professional review', 'message', None),
+    ('reports', 'Reports', 'file-chart', None),
+    ('divider', None, None, None),
+    ('resources', 'PhilHealth Centers', 'map-pin', url_for('resources.philhealth_directory')),
+    ('profile', 'Profile', 'user-round', None),
+  ] %}
+{% elif current_user and current_user.role == 'admin' %}
+  {% set rail_items = [
+    ('admin-overview', 'Overview', 'home', url_for('admin.dashboard')),
+    ('admin-users', 'Accounts', 'users', url_for('admin.users')),
+    ('admin-professionals', 'Professional verification', 'shield-check', url_for('admin.professionals')),
+    ('admin-reassessment', 'Re-assessment rule', 'refresh', url_for('admin.reassessment_page')),
+    ('admin-model', 'Model performance', 'gauge', url_for('admin.model')),
+    ('admin-model-design', 'How the models work', 'layers', url_for('admin.model_design_page')),
+    ('admin-map', 'Pangasinan map', 'map-pin', url_for('admin.location_map')),
+    ('admin-research', 'Research data', 'download', url_for('admin.research_data')),
+    ('admin-activity', 'Activity log', 'history', url_for('admin.activity_log')),
+    ('divider', None, None, None),
+    ('profile', 'Your account', 'user-round', url_for('account.settings')),
+  ] %}
+{% elif current_user and current_user.role == 'professional' %}
+  {% set rail_items = [
+    ('overview', 'Overview', 'home', url_for('account.professional_home')),
+    ('search', 'Search', 'search', url_for('account.professional_search')),
+    ('patients', 'Patients', 'users', url_for('patient_records.index')),
+    ('assessments', 'Assessments', 'clipboard-list', url_for('patient_records.assessment_list')),
+    ('shared', 'Shared assessments', 'share', url_for('authorization.patients')),
+    ('review', 'Professional review', 'message', url_for('authorization.review_queue')),
+    ('follow-up', 'Follow-up', 'clock', url_for('authorization.follow_up_cases')),
+    ('reports', 'Reports', 'file-chart', url_for('patient_records.reports')),
+    ('divider', None, None, None),
+    ('resources', 'PhilHealth Centers', 'map-pin', url_for('resources.philhealth_directory')),
+    ('profile', 'Your account', 'user-round', url_for('account.settings')),
+  ] %}
+{% else %}
+  {% set rail_items = [
+    ('overview', 'Overview', 'home', url_for('account.dashboard')),
+    ('assessment', 'New assessment', 'activity', url_for('screening.screening') if screening_available else None),
+    ('laboratory', 'Laboratory results', 'flask', url_for('lab.start')),
+    ('history', 'Assessment history', 'clipboard-list', url_for('history.index')),
+    ('follow-up', 'Follow-up', 'clock', url_for('followup.index')),
+    ('shared', 'Shared assessments', 'share', url_for('authorization.share')),
+    ('review', 'Professional review', 'message', url_for('history.reviews')),
+    ('reports', 'Reports', 'file-chart', url_for('reports.patient_reports')),
+    ('divider', None, None, None),
+    ('resources', 'PhilHealth Centers', 'map-pin', url_for('resources.philhealth_directory')),
+    ('profile', 'Your account', 'user-round', url_for('account.settings')),
+  ] %}
+{% endif %}
+<aside class="rail" id="app-sidebar" aria-label="Sidebar">
+  <button type="button" class="icon-button drawer-close" data-drawer-close aria-label="Close navigation">{{ icon('x') }}</button>
+  <svg class="rail-cap rail-cap-top" viewBox="0 0 72 96" preserveAspectRatio="none" aria-hidden="true" focusable="false">
+    <path class="rail-fill" d="M0 0 C0.4 1.4 1.4 5.7 2.3 8.5 C3.2 11.3 4.1 14.2 5.2 17.0 C6.3 19.8 7.5 22.2 8.9 25.0 C10.3 27.8 11.6 31.2 13.6 34.0 C15.6 36.8 18.1 39.2 21.1 42.0 C24.2 44.8 27.9 48.2 31.9 51.0 C35.9 53.8 41.2 56.2 45.0 59.0 C48.8 61.8 51.8 64.8 54.8 67.5 C57.8 70.2 60.6 72.4 63.0 75.0 C65.4 77.6 67.6 80.5 69.0 83.0 C70.4 85.5 71.1 87.8 71.6 90.0 C72.1 92.2 71.9 95.0 72.0 96.0 L0 96 Z"/>
+    <path class="rail-glow rail-glow-strong" d="M0 0 C0.4 1.4 1.4 5.7 2.3 8.5 C3.2 11.3 4.1 14.2 5.2 17.0 C6.3 19.8 7.5 22.2 8.9 25.0 C10.3 27.8 11.6 31.2 13.6 34.0 C15.6 36.8 18.1 39.2 21.1 42.0 C24.2 44.8 27.9 48.2 31.9 51.0 C35.9 53.8 41.2 56.2 45.0 59.0 C48.8 61.8 51.8 64.8 54.8 67.5 C57.8 70.2 60.6 72.4 63.0 75.0 C65.4 77.6 67.6 80.5 69.0 83.0 C70.4 85.5 71.1 87.8 71.6 90.0 C72.1 92.2 71.9 95.0 72.0 96.0"/>
+  </svg>
+  <div class="rail-body" aria-hidden="true"></div>
+  <svg class="rail-cap rail-cap-bottom" viewBox="0 0 72 118" preserveAspectRatio="none" aria-hidden="true" focusable="false">
+    <path class="rail-fill" d="M72 0 C71.9 2.0 72.1 8.4 71.2 12.0 C70.3 15.6 68.4 18.5 66.6 21.8 C64.8 25.1 63.3 28.4 60.5 31.7 C57.7 35.0 53.6 38.2 49.7 41.5 C45.8 44.8 41.1 48.1 37.0 51.4 C32.9 54.7 28.2 57.9 24.8 61.2 C21.4 64.5 18.7 67.8 16.4 71.1 C14.1 74.4 12.3 77.6 10.8 80.9 C9.3 84.2 8.5 87.5 7.5 90.8 C6.5 94.1 5.3 97.3 4.7 100.6 C4.1 103.9 4.6 107.6 3.8 110.5 C3.0 113.4 0.6 116.8 0.0 118.0 L0 0 Z"/>
+    <path class="rail-glow rail-glow-strong" d="M72 0 C71.9 2.0 72.1 8.4 71.2 12.0 C70.3 15.6 68.4 18.5 66.6 21.8 C64.8 25.1 63.3 28.4 60.5 31.7 C57.7 35.0 53.6 38.2 49.7 41.5 C45.8 44.8 41.1 48.1 37.0 51.4 C32.9 54.7 28.2 57.9 24.8 61.2 C21.4 64.5 18.7 67.8 16.4 71.1 C14.1 74.4 12.3 77.6 10.8 80.9 C9.3 84.2 8.5 87.5 7.5 90.8 C6.5 94.1 5.3 97.3 4.7 100.6 C4.1 103.9 4.6 107.6 3.8 110.5 C3.0 113.4 0.6 116.8 0.0 118.0"/>
+  </svg>
+  <nav class="rail-nav" aria-label="Main">
+    <ul class="rail-list">
+      {% for key, label, icon_name, target in rail_items %}
+      {% if key == 'divider' %}
+      <li class="rail-divider" role="separator"></li>
+      {% else %}
+      <li>
+        {% if target or preview %}
+        <a class="rail-link" href="{{ target or '#' }}" {% if not target %}data-preview-link{% endif %} {% if active_nav == key %}aria-current="page"{% endif %}>
+          {{ icon(icon_name) }}<span class="rail-label">{{ label }}</span>
+        </a>
+        {% else %}
+        {# Not built yet: shown so the navigation matches the design, but honestly unavailable. #}
+        <a class="rail-link is-disabled" role="link" aria-disabled="true">
+          {{ icon(icon_name) }}<span class="rail-label">{{ label }}<small>Coming soon</small></span>
+        </a>
+        {% endif %}
+      </li>
+      {% endif %}
+      {% endfor %}
+    </ul>
+  </nav>
+</aside>

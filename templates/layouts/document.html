@@ -1,0 +1,38 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+  <title>{% if page_title %}{{ page_title }} | {% endif %}{{ APP_NAME }}</title>
+  <meta name="description" content="Nephron is a risk-screening and decision-support tool for early chronic kidney disease risk stratification. It does not provide a medical diagnosis.">
+  <meta name="theme-color" content="#F6F7FC">
+  <script src="{{ url_for('static', filename='js/js-flag.js') }}"></script>
+  <link rel="icon" type="image/png" href="{{ url_for('static', filename='images/brand/favicon-64.png') }}">
+  <link rel="apple-touch-icon" href="{{ url_for('static', filename='images/brand/apple-touch-icon.png') }}">
+  <link rel="stylesheet" href="{{ url_for('static', filename='css/tokens.css') }}">
+  <link rel="stylesheet" href="{{ url_for('static', filename='css/base.css') }}">
+  <link rel="stylesheet" href="{{ url_for('static', filename='css/layout.css') }}">
+  <link rel="stylesheet" href="{{ url_for('static', filename='css/components.css') }}">
+  <link rel="stylesheet" href="{{ url_for('static', filename='css/domain.css') }}">
+  <link rel="stylesheet" href="{{ url_for('static', filename='css/pages.css') }}">
+  <link rel="stylesheet" href="{{ url_for('static', filename='css/motion.css') }}">
+  <link rel="stylesheet" href="{{ url_for('static', filename='css/home.css') }}">
+  {% block head_extra %}{% endblock %}
+</head>
+<body class="{% block body_class %}{% endblock %}">
+  {% include "partials/_icon_sprite.html" %}
+  <a class="skip-link" href="#main-content">Skip to main content</a>
+
+  {% block shell %}{% endblock %}
+
+  <div class="toast-region" id="toast-region" aria-live="polite"></div>
+  {% include "partials/_confirm_dialog.html" %}
+  {% include "partials/_busy_overlay.html" %}
+  {% block preview_bar %}{% endblock %}
+
+  {% if has_sweetalert %}<script src="{{ url_for('static', filename='vendor/sweetalert2/sweetalert2.all.min.js') }}" defer></script>{% endif %}
+  <script src="{{ url_for('static', filename='js/main.js') }}" defer></script>
+  <script src="{{ url_for('static', filename='js/motion.js') }}" defer></script>
+  {% block scripts %}{% endblock %}
+</body>
+</html>

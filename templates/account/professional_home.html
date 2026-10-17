@@ -1,0 +1,239 @@
+{# The Professional Dashboard - built on the exact same visual language as the General User dashboard
+   (templates/dashboard/_overview.html): a hero card with the same kidney artwork, the same .stat-card /
+   .dash-row / .dash-aside structure, and the same profile/quick-actions/recent-activity panel on the right.
+   Every number is worked out fresh by services/professional_overview.py - never invented. #}
+{% extends "layouts/app_base.html" %}
+{% from "partials/_macros.html" import icon, csrf_field, risk_badge, avatar_face %}
+{% from "partials/_visuals.html" import icon_chip, donut, fact_ring_card, fact_mini_rings, fact_sex_differences, community_risk_card, gender_count_plot, community_cards %}
+{% set active_nav = 'overview' %}
+{% block header_title %}Home{% endblock %}
+{% block header_subtitle %}Welcome back, {{ current_user.first_name }}.{% endblock %}
+
+{% block content %}
+<div class="dash">
+  <div class="dash-main">
+
+    {# ---- Hero: the same frame and artwork as the patient dashboard, professional-facing copy ---- #}
+    <div class="hero-frame reveal" style="--i: 0;">
+      <section class="hero-card" aria-labelledby="hero-heading">
+        <div class="hero-copy">
+          <p class="eyebrow">Clinical overview</p>
+          <h2 class="hero-title" id="hero-heading">Guide your patients toward <span class="accent-text">better kidney health</span></h2>
+          <p class="hero-text">Review results, manage follow-ups, and keep every patient's care on track.</p>
+          <a class="button button-primary button-lg" href="{{ url_for('patient_records.new_assessment') }}">{{ icon('arrow-right') }}New Assessment</a>
+        </div>
+        <img class="hero-art" src="{{ url_for('static', filename='images/art/kidney-hero.png') }}" alt="" width="752" height="596" aria-hidden="true">
+        <aside class="path-card" aria-label="This week at a glance">
+          <h3 class="path-title">This week<br>at a glance</h3>
+          <ul class="glance-list">
+            <li><span class="glance-icon">{{ icon('users') }}</span><span><strong>{{ overview.total_patients }}</strong> patient{{ 's' if overview.total_patients != 1 }}</span></li>
+            <li><span class="glance-icon glance-icon-warn">{{ icon('message') }}</span><span><strong>{{ overview.pending_review_count }}</strong> pending review{{ 's' if overview.pending_review_count != 1 }}</span></li>
+            <li><span class="glance-icon">{{ icon('calendar') }}</span><span><strong>{{ overview.follow_up_count }}</strong> follow-up{{ 's' if overview.follow_up_count != 1 }} due</span></li>
+          </ul>
+        </aside>
+      </section>
+    </div>
+
+    {% if not overview.has_any_patients %}
+    <section class="card reveal" style="--i: 1;" aria-labelledby="empty-heading">
+      <div class="empty-state">
+        <span class="empty-visual" aria-hidden="true">{{ icon('users') }}</span>
+        <h3 id="empty-heading">No patients yet</h3>
+        <p>Add a patient you are managing directly, or wait for a General User to share their history with you.</p>
+        <a class="button button-primary" href="{{ url_for('patient_records.new_patient') }}">{{ icon('plus') }}New patient</a>
+      </div>
+    </section>
+    {% else %}
+
+    {# ---- Six stats, two rows of three - same .stat-card as the patient dashboard's three ---- #}
+    <div class="stat-row">
+      <article class="card stat-card reveal" style="--i: 1;">
+        {{ icon_chip('users', 'lavender', 'icon-chip-lg') }}
+        <div class="stat-body">
+          <p class="stat-label">Total Patient Records</p>
+          <p class="stat-value">{{ overview.total_patients }}</p>
+          <p class="stat-foot"><a href="{{ url_for('patient_records.index') }}">View patients</a></p>
+        </div>
+      </article>
+      <article class="card stat-card reveal" style="--i: 2;">
+        {{ icon_chip('clipboard-list', 'lavender', 'icon-chip-lg') }}
+        <div class="stat-body">
+          <p class="stat-label">Recent Assessments</p>
+          <p class="stat-value">{{ overview.recent_assessment_count }}</p>
+          <p class="stat-foot">Across every patient</p>
+        </div>
+      </article>
+      <article class="card stat-card reveal" style="--i: 3;">
+        {{ icon_chip('shield-check', 'green', 'icon-chip-lg') }}
+        <div class="stat-body">
+          <p class="stat-label">Low-Risk Patients</p>
+          <p class="stat-value stat-value-level stat-value-low">{{ overview.low_risk_count }}</p>
+          <p class="stat-foot">By their latest result</p>
+        </div>
+      </article>
+    </div>
+    <div class="stat-row">
+      <article class="card stat-card reveal" style="--i: 1;">
+        {{ icon_chip('alert-triangle', 'red', 'icon-chip-lg') }}
+        <div class="stat-body">
+          <p class="stat-label">High-Risk Patients</p>
+          <p class="stat-value stat-value-level stat-value-high">{{ overview.high_risk_count }}</p>
+          <p class="stat-foot">By their latest result</p>
+        </div>
+      </article>
+      <article class="card stat-card reveal" style="--i: 2;">
+        {{ icon_chip('calendar', 'lavender', 'icon-chip-lg') }}
+        <div class="stat-body">
+          <p class="stat-label">Follow-Up Cases</p>
+          <p class="stat-value">{{ overview.follow_up_count }}</p>
+          <p class="stat-foot"><a href="{{ url_for('authorization.follow_up_cases') }}">View follow-ups</a></p>
+        </div>
+      </article>
+      <article class="card stat-card reveal" style="--i: 3;">
+        {{ icon_chip('message', 'lavender', 'icon-chip-lg') }}
+        <div class="stat-body">
+          <p class="stat-label">Pending Reviews</p>
+          <p class="stat-value">{{ overview.pending_review_count }}</p>
+          <p class="stat-foot">Shared assessments awaiting review</p>
+        </div>
+      </article>
+    </div>
+
+    {# ---- Risk overview + recent activity, side by side like the patient dashboard's trend + summary.
+       dash-row-natural: each card keeps its own height, so the short Risk overview is not stretched to the
+       full height of the activity table beside it. ---- #}
+    <div class="dash-row">
+      <section class="card reveal" style="--i: 4;" aria-labelledby="activity-heading">
+        <div class="card-header"><h2 class="card-title" id="activity-heading">{{ icon_chip('history', 'lavender') }}Recent activity</h2></div>
+        {% if overview.recent_assessments %}
+        <div class="table-scroll">
+          <table class="data-table">
+            <thead><tr><th scope="col">Patient</th><th scope="col">Risk</th><th scope="col">Status</th></tr></thead>
+            <tbody>
+              {% for row in overview.recent_assessments[:4] %}
+              <tr>
+                <td>{{ row.patient.display_name }}<br><span class="text-muted text-small">{{ format_date(row.date) }}</span></td>
+                <td>{{ risk_badge(row.level, assessment_type=row.assessment_type) }}</td>
+                <td>
+                  {% if row.review_status == 'self_recorded' %}<span class="badge badge-neutral">Self-recorded</span>
+                  {% elif row.review_status == 'reviewed' %}<span class="badge risk-badge-low">Reviewed</span>
+                  {% else %}<span class="badge risk-badge-high">Awaiting review</span>{% endif %}
+                </td>
+              </tr>
+              {% endfor %}
+            </tbody>
+          </table>
+        </div>
+        <a class="link-action aside-more" href="{{ url_for('patient_records.assessment_list') }}">View all assessments {{ icon('arrow-right') }}</a>
+        {% else %}
+        <p class="empty-inline">{{ icon('info') }}No assessments recorded yet.</p>
+        {% endif %}
+      </section>
+
+      <section class="card reveal" style="--i: 5;" aria-labelledby="risk-overview-heading">
+        <div class="card-header"><h2 class="card-title" id="risk-overview-heading">{{ icon_chip('bar-chart', 'lavender') }}Risk overview</h2></div>
+        {% if overview.low_risk_count or overview.high_risk_count %}
+        <div class="summary-body">
+          {{ donut(overview.low_risk_count, overview.high_risk_count) }}
+          <div class="legend-block">
+            <p class="legend-title" id="risk-legend-heading">Patient risk distribution</p>
+            <ul class="legend" aria-labelledby="risk-legend-heading">
+              <li class="legend-low"><span class="legend-dot" aria-hidden="true"></span>Low<span class="legend-count">{{ overview.low_risk_count }}</span></li>
+              <li class="legend-high"><span class="legend-dot" aria-hidden="true"></span>High<span class="legend-count">{{ overview.high_risk_count }}</span></li>
+            </ul>
+          </div>
+        </div>
+        {% set with_result = overview.low_risk_count + overview.high_risk_count %}
+        <div class="risk-overview-foot">
+          <p class="summary-note">{{ overview.high_risk_count }} of {{ with_result }} patient{{ 's' if with_result != 1 }} with a result {{ 'is' if overview.high_risk_count == 1 else 'are' }} in the higher-risk group, by their latest result.</p>
+          {% if overview.high_risk_count %}<a class="link-action" href="{{ url_for('patient_records.index', risk='high') }}">View high-risk patients {{ icon('arrow-right') }}</a>{% endif %}
+        </div>
+        {% else %}
+        <div class="empty-state empty-state-centered">
+          <span class="empty-visual" aria-hidden="true">{{ icon('bar-chart') }}</span>
+          <h3>No results to summarise yet</h3>
+          <p>How your patients' results are classified will appear here.</p>
+        </div>
+        {% endif %}
+      </section>
+    </div>
+    {% endif %}
+  </div>
+
+  {# ---- Patient insights: your own patients' risk, sex, and age - never a population statistic. Same ring
+     macros ckd_facts uses on the patient dashboard, with "source" naming your own records instead of a citation. ---- #}
+
+
+  {# One right-hand column: profile, quick actions and recent activity, then the facts beneath them -
+     so the page has two columns that end level, not three that each stop at a different height. #}
+  <div class="dash-side">
+  {# ---- The right-hand panel: same structure as the patient dashboard's profile / quick actions / activity ---- #}
+  <aside class="dash-aside reveal" style="--i: 2;" aria-label="Profile and quick actions">
+    <div class="aside-top">
+      <a class="profile-row" href="{{ url_for('account.settings') }}">
+        <span class="profile-avatar{{ ' has-image' if current_user.get('avatar') }}" aria-hidden="true">{{ avatar_face(current_user) }}</span>
+        <span class="profile-text"><span class="profile-name">{{ current_user.full_name }}</span><span class="profile-role">{{ current_user.role_label }}</span></span>
+        {{ icon('chevron-right') }}
+      </a>
+      <figure class="quote-card">{{ icon('kidneys') }}<blockquote><p>&ldquo;Early screening turns a diagnosis into a conversation.&rdquo;</p></blockquote></figure>
+    </div>
+
+    <section class="aside-section" aria-labelledby="quick-heading">
+      <h2 id="quick-heading">Quick Actions</h2>
+      <ul class="quick-list">
+        <li><a class="quick-action is-primary" href="{{ url_for('patient_records.new_assessment') }}">{{ icon_chip('clipboard-check', 'lavender', 'icon-chip-sm') }}New Assessment{{ icon('arrow-right') }}</a></li>
+        <li><a class="quick-action" href="{{ url_for('patient_records.index') }}">{{ icon_chip('users', 'lavender', 'icon-chip-sm') }}View Patients{{ icon('arrow-right') }}</a></li>
+        <li><a class="quick-action" href="{{ url_for('patient_records.reports') }}">{{ icon_chip('file-lines', 'lavender', 'icon-chip-sm') }}View Reports{{ icon('arrow-right') }}</a></li>
+        <li><a class="quick-action" href="{{ url_for('account.professional_search') }}">{{ icon_chip('search', 'lavender', 'icon-chip-sm') }}Search{{ icon('arrow-right') }}</a></li>
+      </ul>
+    </section>
+
+    <section class="aside-section" aria-labelledby="side-activity-heading">
+      <h2 id="side-activity-heading">Recent Activity</h2>
+      {% if overview.recent_assessments %}
+      <ul class="activity-list">
+        {% for row in overview.recent_assessments[:4] %}
+        {% set url = url_for('patient_records.risk_analysis', patient_code=row.patient.patient_code, assessment_id=row.assessment_id) if row.patient.source == 'record' else url_for('authorization.patient_history', patient_id=row.patient.user_id) %}
+        <li class="activity-item activity-{{ row.level }}">
+          {{ icon_chip('clipboard-check', 'green' if row.level == 'low' else 'red') }}
+          <span><a class="activity-title activity-link" href="{{ url }}">{{ row.patient.display_name }}</a><span class="activity-meta">{{ level_label(row.level, row.assessment_type) }} &middot; {{ format_date(row.date) }}</span></span>
+          <span class="activity-dot" aria-hidden="true"></span>
+        </li>
+        {% endfor %}
+      </ul>
+      <a class="link-action aside-more" href="{{ url_for('patient_records.assessment_list') }}">View All Activity {{ icon('arrow-right') }}</a>
+      {% else %}
+      <div class="empty-state">
+        <span class="empty-visual" aria-hidden="true">{{ icon('activity') }}</span>
+        <h3>No activity yet</h3>
+        <p>Completed assessments appear here.</p>
+      </div>
+      {% endif %}
+    </section>
+  </aside>
+
+  </div>
+
+  {# The facts span the full width under both columns, their cards side by side. #}
+  {% if insights %}
+  <aside class="dash-ckd reveal" style="--i: 1.5;" aria-labelledby="insights-heading">
+    <div class="card-header"><h2 class="card-title" id="insights-heading">{{ icon_chip('bar-chart', 'lavender') }}Your patients, at a glance</h2></div>
+    <p class="text-muted ckd-facts-intro">Based on your own {{ insights.total_with_result }} patient result{{ 's' if insights.total_with_result != 1 }}, not a general population statistic.</p>
+    {{ fact_ring_card(insights.risk) }}
+    {{ community_risk_card(insights.philippines, "Your patients in the Philippines", "patients living in the Philippines are at higher risk",
+                           insights.source_label, "None of your patients with a result live in the Philippines yet.") }}
+    {{ gender_count_plot(insights.gender, "Your patients, by gender", insights.source_label, "No gender recorded yet.", noun='patients') }}
+    {{ fact_mini_rings(insights.age) }}
+  </aside>
+  {% endif %}
+
+  {# Everyone on Nephron who lives in the Philippines - the same anonymous picture a General User sees. #}
+  {% if community %}
+  <aside class="dash-ckd reveal" style="--i: 1.75;" aria-labelledby="community-heading">
+    <div class="card-header"><h2 class="card-title" id="community-heading">{{ icon_chip('map-pin', 'lavender') }}Kidney risk in the Philippines, on Nephron</h2></div>
+    <p class="text-muted ckd-facts-intro">All Nephron users who live in the Philippines, not only your patients. Anonymous counts, no names.</p>
+    {{ community_cards(community) }}
+  </aside>
+  {% endif %}
+</div>
+{% endblock %}

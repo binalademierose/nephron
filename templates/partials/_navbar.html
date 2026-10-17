@@ -1,0 +1,19 @@
+{% from "partials/_macros.html" import logo_lockup, csrf_field %}
+<header class="site-header">
+  <div class="container site-header-inner">
+    <a class="brand" href="{{ url_for('main.home') }}" aria-label="{{ APP_NAME }} home">{{ logo_lockup() }}</a>
+    <nav class="main-nav" aria-label="Main">
+      <ul>
+        <li><a class="nav-link" href="{{ url_for('main.home') }}" {% if request.endpoint == 'main.home' %}aria-current="page"{% endif %}>Home</a></li>
+        <li><a class="nav-link" href="{{ url_for('main.about') }}" {% if request.endpoint == 'main.about' %}aria-current="page"{% endif %}>How it works</a></li>
+        {% if current_user %}
+        <li><a class="nav-link" href="{{ url_for('admin.dashboard') if current_user.role == 'admin' else url_for('account.professional_home' if current_user.role == 'professional' else 'account.dashboard') }}">My home</a></li>
+        <li><form method="post" action="{{ url_for('auth.logout') }}" data-confirm="default" data-confirm-title="Sign out?" data-confirm-message="You will need your email and password to sign in again." data-confirm-accept="Sign out" data-confirm-dismiss="Stay signed in">{{ csrf_field() }}<button class="nav-link nav-button" type="submit">Sign out</button></form></li>
+        {% else %}
+        <li><a class="nav-link" href="{{ url_for('auth.login') }}" {% if request.endpoint == 'auth.login' %}aria-current="page"{% endif %}>Sign in</a></li>
+        <li class="nav-cta"><a class="button button-primary button-sm" href="{{ url_for('auth.register') }}">Create account</a></li>
+        {% endif %}
+      </ul>
+    </nav>
+  </div>
+</header>

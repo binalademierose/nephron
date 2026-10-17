@@ -1,0 +1,69 @@
+{# A saved assessment, for the professional who performed it. Reuses the SAME explanation partial as the patient's
+   own result page (templates/screening/_explanation.html) - the risk ring, classification, and factor cards mean
+   exactly the same thing here as they do there. #}
+{% extends "layouts/app_base.html" %}
+{% from "partials/_macros.html" import icon %}
+{% from "partials/_visuals.html" import icon_chip, ring %}
+{% set active_nav = 'patients' %}
+{% block header_title %}Risk analysis{% endblock %}
+{% block header_subtitle %}{{ record.full_name }} ({{ record.patient_code }}) - {{ result.type }}, {{ format_date(result.date) }}{% endblock %}
+
+{% block content %}
+<div class="page-actions reveal">
+  <p></p>
+  <a class="button button-secondary button-sm" href="{{ url_for('patient_records.profile', patient_code=record.patient_code) }}">{{ icon('chevron-left') }}Back to patient</a>
+</div>
+
+<section class="card card-hero result-card reveal" style="--i: 1;" aria-labelledby="category-heading">
+  <div class="result-main">
+    {{ ring(result.probability, threshold=threshold, large=True) }}
+    <div class="result-copy">
+      <span class="result-meaning-label">Risk Classification</span>
+      <div class="result-classification">
+        {{ icon_chip('alert-triangle' if level == 'high' else 'check-circle', 'red' if level == 'high' else 'green', 'icon-chip-lg') }}
+        <h2 id="category-heading" class="level-{{ level }}">{{ level_label(level, result.assessment_type) }}</h2>
+      </div>
+      <div class="result-meaning">
+        <span class="result-meaning-label">What this means</span>
+        {% if level == 'high' %}
+          <p>Higher-risk group. This is screening information, not a diagnosis.</p>
+        {% else %}
+          <p>Lower-risk group. It does not mean this patient is free of kidney disease.</p>
+        {% endif %}
+      </div>
+      {% if threshold is not none %}<span class="chip">{{ icon('gauge') }}Validated threshold: {{ percent_text(threshold) }}%</span>{% endif %}
+    </div>
+  </div>
+</section>
+
+{% include "screening/_outside_training.html" %}
+{% include "screening/_explanation.html" %}
+
+<div class="section-tight-inline">
+  <h2 class="section-heading">Assessment information</h2>
+  <div class="card">
+    <dl class="term-list">
+      <div class="term-row"><dt>Assessment ID</dt><dd>#{{ result.assessment_id }}</dd></div>
+      <div class="term-row"><dt>Patient</dt><dd>{{ record.full_name }}</dd></div>
+      <div class="term-row"><dt>Patient ID</dt><dd><span class="chip chip-mono">{{ record.patient_code }}</span></dd></div>
+      <div class="term-row"><dt>Assessment date</dt><dd>{{ format_date(result.date) }}</dd></div>
+      <div class="term-row"><dt>Assessment mode</dt><dd>{{ result.type }}</dd></div>
+      {% if previous %}<div class="term-row"><dt>Compare with</dt><dd><a href="{{ url_for('patient_records.risk_analysis', patient_code=record.patient_code, assessment_id=previous.assessment_id) }}">{{ format_date(previous.date) }}</a></dd></div>{% endif %}
+    </dl>
+  </div>
+</div>
+
+<div class="section-tight-inline">
+  <details class="answers-toggle">
+    <summary>{{ icon('clipboard-list') }}Answers behind this result</summary>
+    <div class="card">
+      {% for title, rows in answers %}
+      <h3 class="answers-group-title">{{ title }}</h3>
+      <dl class="term-list">
+        {% for label, value in rows %}<div class="term-row"><dt>{{ label }}</dt><dd>{{ value }}</dd></div>{% endfor %}
+      </dl>
+      {% endfor %}
+    </div>
+  </details>
+</div>
+{% endblock %}

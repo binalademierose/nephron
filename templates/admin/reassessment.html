@@ -1,0 +1,96 @@
+{# The re-assessment rule (services/reassessment.py): the waiting period between a General User's screenings, and
+   people's requests to screen again early. Approving opens ONE screening; the next saved screening uses it up. #}
+{% extends "layouts/app_base.html" %}
+{% from "partials/_macros.html" import icon, csrf_field %}
+{% from "partials/_visuals.html" import icon_chip %}
+{% set active_nav = 'admin-reassessment' %}
+{% block header_title %}Re-assessment{% endblock %}
+{% block header_subtitle %}How long people wait between screenings, and who may let them screen again early.{% endblock %}
+
+{% block content %}
+<div class="dash-row reassess-row">
+  <section class="card reveal" style="--i: 0;" aria-labelledby="rule-heading">
+    <div class="card-header"><h2 class="card-title" id="rule-heading">{{ icon_chip('calendar', 'lavender') }}Waiting period</h2></div>
+    <p class="status-headline">{{ ('Every ' ~ period.label) if period else 'No waiting period' }}</p>
+    <p class="text-muted text-small">
+      {% if months is none and env_days %}Taken from the server setting REASSESSMENT_DAYS ({{ env_days }} days) because no administrator setting exists yet. Saving below replaces it.
+      {% elif months is none and period %}The default. After a screening, a General User can start the next one only once this time has passed, counted in calendar months from their latest screening.
+      {% else %}After a screening, a General User can start the next one only once this time has passed. It counts calendar months from their latest screening.{% endif %}
+    </p>
+    <form method="post" action="{{ url_for('admin.reassessment_rule') }}" class="reassess-form"
+          data-confirm="default" data-confirm-title="Change the waiting period?"
+          data-confirm-message="It applies to every General User straight away, counted from each person's latest screening."
+          data-confirm-accept="Save" data-confirm-dismiss="Go back">
+      {{ csrf_field() }}
+      <div class="form-group">
+        <label class="form-label" for="months">Wait between screenings</label>
+        <select class="form-control" id="months" name="months">
+          {% for m in choices %}<option value="{{ m }}" {{ 'selected' if months == m or (months is none and m == 3) }}>{{ m }} month{{ '' if m == 1 else 's' }}{{ ' (default)' if m == 3 }}</option>{% endfor %}
+          <option value="0" {{ 'selected' if months == 0 }}>No waiting period</option>
+        </select>
+      </div>
+      <button class="button button-primary" type="submit">{{ icon('check') }}Save</button>
+    </form>
+  </section>
+
+  <section class="card card-lavender reveal" style="--i: 1;" aria-labelledby="lift-heading">
+    <div class="card-header"><h2 class="card-title" id="lift-heading">{{ icon_chip('refresh', 'lavender') }}Screening again early</h2></div>
+    <ul class="reassess-steps">
+      <li><strong>A healthcare professional</strong> the person has shared their results with can open one early screening (Request follow-up on the patient's page).</li>
+      <li><strong>The administrator</strong> can open one when the person asks for it below.</li>
+      <li>The person's <strong>next screening uses it up</strong>. After that, the waiting period above applies again from that screening's date, until someone opens another one.</li>
+    </ul>
+  </section>
+</div>
+
+<section class="card reveal" style="--i: 2;" aria-labelledby="pending-heading">
+  <div class="card-header"><h2 class="card-title" id="pending-heading">{{ icon_chip('bell', 'lavender') }}Requests to screen again early <span class="tab-count">{{ pending|length }}</span></h2></div>
+  {% if pending %}
+  <ul class="admin-pro-list" role="list">
+    {% for r in pending %}
+    <li class="admin-pro">
+      <div class="admin-pro-info">
+        <strong>{{ r.name }}</strong>
+        <span class="text-muted text-small">{{ r.email }} &middot; asked {{ format_date(r.requested_date) }}</span>
+        <span class="text-small">Latest screening: {{ format_date(r.last_screening) if r.last_screening else 'none' }}{% if r.opens_on %} &middot; next one opens {{ format_date(r.opens_on) }}{% endif %}</span>
+        <span class="reassess-reason">{% if r.reason %}&ldquo;{{ r.reason }}&rdquo;{% else %}<span class="text-muted">No reason given</span>{% endif %}</span>
+      </div>
+      <div class="admin-pro-actions">
+        <form method="post" action="{{ url_for('admin.reassessment_decide', request_id=r.request_id, decision='approve') }}" class="inline-form"
+              data-confirm="default" data-confirm-name="{{ r.name }}" data-confirm-title="Let {name} screen again early?"
+              data-confirm-message="{name} can take one screening now. After it, the usual waiting period applies again."
+              data-confirm-accept="Approve" data-confirm-dismiss="Go back">
+          {{ csrf_field() }}<button class="button button-primary button-sm" type="submit">{{ icon('check') }}Approve</button>
+        </form>
+        <form method="post" action="{{ url_for('admin.reassessment_decide', request_id=r.request_id, decision='decline') }}" class="inline-form"
+              data-confirm="danger" data-confirm-name="{{ r.name }}" data-confirm-title="Decline {name}'s request?"
+              data-confirm-message="{name} keeps the usual waiting period and is told the request was not approved."
+              data-confirm-accept="Decline" data-confirm-dismiss="Go back">
+          {{ csrf_field() }}<button class="button button-secondary button-sm" type="submit">{{ icon('x') }}Decline</button>
+        </form>
+      </div>
+    </li>
+    {% endfor %}
+  </ul>
+  {% else %}<p class="empty-inline">{{ icon('info') }}No one is waiting for a decision.</p>{% endif %}
+  <p class="text-muted text-small">You see who asked, when, the reason they typed and the date of their latest screening - never their answers or results.</p>
+</section>
+
+{% if decided %}
+<section class="card reveal" style="--i: 3;" aria-labelledby="decided-heading">
+  <div class="card-header"><h2 class="card-title" id="decided-heading">{{ icon_chip('history', 'lavender') }}Recent decisions</h2></div>
+  <div class="table-scroll">
+    <table class="data-table">
+      <thead><tr><th scope="col">Person</th><th scope="col">Asked</th><th scope="col">Outcome</th><th scope="col">Decided</th></tr></thead>
+      <tbody>
+        {% for r in decided %}
+        <tr><th scope="row">{{ r.name }}</th><td>{{ format_date(r.requested_date) }}</td>
+          <td><span class="badge {{ 'risk-badge-low' if r.status == 'approved' else ('risk-badge-high' if r.status == 'declined' else 'badge-neutral') }}">{{ {'approved': 'Approved', 'declined': 'Declined', 'closed': 'Screened before a decision'}[r.status] }}</span></td>
+          <td>{{ format_date(r.decided_date) if r.decided_date else '-' }}</td></tr>
+        {% endfor %}
+      </tbody>
+    </table>
+  </div>
+</section>
+{% endif %}
+{% endblock %}

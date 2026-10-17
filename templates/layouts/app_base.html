@@ -1,0 +1,77 @@
+{# The signed-in layout: a header on top (logo badge, greeting, tools) and a curved rail on the left.
+   On small screens the rail becomes a drawer. Pages fill two blocks: header_title / header_subtitle (optional) and content. #}
+{% extends "layouts/document.html" %}
+{% from "partials/_macros.html" import icon, csrf_field, avatar_face %}
+{% block body_class %}app-body{% endblock %}
+{% block shell %}
+{# In the design previews the header shows a made-up person. On real pages it shows whoever is signed in. #}
+{% set preview = request.blueprint == 'design' %}
+{% set person = current_user if (current_user and not preview) else {'full_name': 'Sample User', 'first_name': 'Sample', 'initials': 'SU', 'role_label': 'General User'} %}
+<div class="app-backdrop" aria-hidden="true"></div>
+<div class="app-shell">
+  <header class="app-header">
+    <button type="button" class="menu-button" data-drawer-toggle aria-expanded="false" aria-controls="app-sidebar" aria-label="Open navigation">{{ icon('menu') }}</button>
+    <a class="app-badge" href="{{ url_for('main.home') }}" aria-label="{{ APP_NAME }} home"><img src="{{ url_for('static', filename='images/brand/nephron-badge.png') }}" alt="" width="179" height="179" aria-hidden="true"></a>
+    <div class="app-heading">
+      <h1 class="app-title" id="page-title">{% block header_title scoped %}<span data-greeting>Welcome</span>, {{ person.first_name }} <span aria-hidden="true">&#128075;</span>{% endblock %}</h1>
+      <p class="app-subtitle">{% block header_subtitle scoped %}Your kidney health matters. Let&rsquo;s keep tracking.{% endblock %}</p>
+    </div>
+    <div class="app-tools">
+      <a class="tool-pill" href="{{ url_for('admin.guide') if current_user and current_user.role == 'admin' else url_for('main.about') }}">{{ icon('help-circle') }}<span>Guide</span></a>
+      {% if preview %}
+      <a class="tool-circle" href="#" data-preview-link aria-label="Settings">{{ icon('settings') }}</a>
+      <a class="tool-circle" href="#" data-preview-link aria-label="Notifications">{{ icon('bell') }}</a>
+      {% else %}
+      <div class="notif-menu" data-notif-menu>
+        <button type="button" class="tool-circle notif-menu-button" aria-expanded="false" aria-controls="notif-panel" aria-label="Notifications{% if unread_notification_count %}, {{ unread_notification_count }} unread{% endif %}">
+          {{ icon('bell') }}
+          {% if unread_notification_count %}<span class="notif-badge">{{ unread_notification_count if unread_notification_count < 10 else '9+' }}</span>{% endif %}
+        </button>
+        <div class="notif-panel" id="notif-panel" hidden>
+          <div class="notif-panel-header"><strong>Notifications</strong><a href="{{ url_for('notifications.index') }}">View all</a></div>
+          {% if header_notifications %}
+          <ul class="notif-panel-list">
+            {% for item in header_notifications %}
+            <li class="notif-panel-item{{ '' if item.is_read else ' is-unread' }}">
+              <a href="{{ item.link or url_for('notifications.index') }}">
+                <span class="notif-panel-title">{{ item.title }}</span>
+                <span class="notif-panel-time">{{ format_datetime(item.created_at_local) }}</span>
+              </a>
+            </li>
+            {% endfor %}
+          </ul>
+          {% else %}
+          <p class="notif-panel-empty">{{ icon('inbox') }}No notifications yet.</p>
+          {% endif %}
+        </div>
+      </div>
+      <a class="tool-circle" href="{{ url_for('account.settings') }}" aria-label="Your account">{{ icon('settings') }}</a>
+      {% endif %}
+      <div class="user-menu" data-user-menu>
+        <button type="button" class="user-menu-button" aria-expanded="false" aria-controls="user-menu-list" aria-label="Account menu"><span class="avatar{{ ' has-image' if person.get('avatar') }}" aria-hidden="true">{{ avatar_face(person) }}</span>{{ icon('chevron-down') }}</button>
+        <ul class="user-menu-list" id="user-menu-list" hidden>
+          <li class="user-menu-who"><strong>{{ person.full_name }}</strong><span>{{ person.role_label }}</span></li>
+          {% if preview %}
+          <li><a href="#" data-preview-link>{{ icon('user-round') }}Profile</a></li>
+          <li><a href="#" data-preview-link>{{ icon('log-out') }}Sign out</a></li>
+          {% else %}
+          <li><a href="{{ url_for('account.settings') }}">{{ icon('user-round') }}Your account</a></li>
+          <li>
+            <form method="post" action="{{ url_for('auth.logout') }}" data-confirm="default" data-confirm-title="Sign out?" data-confirm-message="You will need your email and password to sign in again." data-confirm-accept="Sign out" data-confirm-dismiss="Stay signed in">
+              {{ csrf_field() }}
+              <button type="submit" class="user-menu-item">{{ icon('log-out') }}Sign out</button>
+            </form>
+          </li>
+          {% endif %}
+        </ul>
+      </div>
+    </div>
+  </header>
+  {% include "partials/_sidebar.html" %}
+  <div class="drawer-backdrop" data-drawer-close></div>
+  <main id="main-content" class="app-main page-fade" tabindex="-1">
+    {% with flash_wrapper='flash-region' %}{% include "partials/_flash_messages.html" %}{% endwith %}
+    {% block content %}{% endblock %}
+  </main>
+</div>
+{% endblock %}

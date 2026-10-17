@@ -1,0 +1,47 @@
+{# What happened, who did it, to whom - never anyone's health information. #}
+{% extends "layouts/app_base.html" %}
+{% from "partials/_macros.html" import icon %}
+{% set active_nav = 'admin-activity' %}
+{% block header_title %}Activity log{% endblock %}
+{% block header_subtitle %}Sign-ins, new accounts, password changes and every administrator action - the newest {{ total }}.{% endblock %}
+
+{% block content %}
+<section class="card reveal" style="--i: 1;" aria-labelledby="activity-heading">
+  <div class="card-header"><h2 class="card-title" id="activity-heading">{{ icon('history') }}Activity</h2></div>
+  <div class="tab-row" role="tablist" aria-label="Kind of activity">
+    {% for key, label in (('', 'All'), ('sign_in', 'Sign-ins'), ('accounts', 'Accounts'), ('admin', 'Administrator actions')) %}
+    <a class="tab-link{{ ' is-active' if (group or '') == key }}" role="tab" aria-selected="{{ 'true' if (group or '') == key else 'false' }}"
+       href="{{ url_for('admin.activity_log', group=key or none, q=query or none) }}">{{ label }}</a>
+    {% endfor %}
+  </div>
+  <form method="get" action="{{ url_for('admin.activity_log') }}" class="filter-form" role="search" data-live-filter="live-activity">
+    <div class="form-group filter-form-search">
+      <label class="form-label" for="q">Name, email or detail</label>
+      <input class="form-control" type="text" id="q" name="q" value="{{ query }}" autocomplete="off">
+    </div>
+    {% if group %}<input type="hidden" name="group" value="{{ group }}">{% endif %}
+    <div class="filter-form-actions">
+      <button class="button button-primary" type="submit">{{ icon('search') }}Search</button>
+      <a class="button button-secondary" href="{{ url_for('admin.activity_log') }}">{{ icon('refresh') }}Reset</a>
+    </div>
+  </form>
+  <div id="live-activity" class="live-results" aria-live="polite">
+  {% if rows %}
+  <div class="table-scroll"><table class="data-table">
+    <thead><tr><th scope="col">When</th><th scope="col">What</th><th scope="col">By</th><th scope="col">Account</th><th scope="col">Detail</th></tr></thead>
+    <tbody>
+    {% for r in rows %}
+      <tr class="activity-row activity-{{ r.action }}">
+        <td>{{ format_datetime(r.created_at) }}</td>
+        <td><span class="badge {{ 'risk-badge-high' if r.action == 'sign_in_failed' else ('badge-info' if r.action in groups.admin else 'badge-neutral') }}">{{ r.label }}</span></td>
+        <td>{{ r.actor.name if r.actor else '-' }}</td>
+        <td>{% if r.target %}{{ r.target.name }}<br><span class="text-muted text-small">{{ r.target.email }}</span>{% else %}-{% endif %}</td>
+        <td class="text-muted">{{ r.details or '' }}</td>
+      </tr>
+    {% endfor %}
+    </tbody>
+  </table></div>
+  {% else %}<p class="empty-inline">{{ icon('info') }}No activity matches.</p>{% endif %}
+  </div>
+</section>
+{% endblock %}

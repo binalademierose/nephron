@@ -1,0 +1,55 @@
+{% extends "layouts/auth_base.html" %}
+{% from "partials/_macros.html" import icon %}
+{% from "partials/_visuals.html" import icon_chip %}
+{% block body_class %}auth-body has-preview-bar{% endblock %}
+{% block preview_bar %}{% include "partials/_preview_bar.html" %}{% endblock %}
+
+{% block auth_message %}
+<h2>One account, built around the way you use Nephron.</h2>
+<p>Choose the role that fits. You can change how you share results later, and nothing is shared without your say.</p>
+<ul class="auth-points">
+  <li>{{ icon_chip('user', 'solid') }}<div><strong>General user</strong><span>Screen yourself and keep a private history.</span></div></li>
+  <li>{{ icon_chip('stethoscope', 'solid') }}<div><strong>Healthcare professional</strong><span>Review assessments that people share with you.</span></div></li>
+</ul>
+{% endblock %}
+
+{% block content %}
+<h1>Create your account</h1>
+<p class="text-muted">It takes a minute. Fields marked <span class="chip chip-required">Required</span> must be filled in.</p>
+
+<form novalidate data-preview-form>
+  <fieldset class="role-grid">
+    <legend class="visually-hidden">I am a</legend>
+    <label class="role-card">
+      <input type="radio" name="role" value="general" checked>
+      <span class="role-tile">{{ icon_chip('user', 'blue') }}<strong>General user</strong><span class="role-note">Screen yourself</span></span>
+    </label>
+    <label class="role-card">
+      <input type="radio" name="role" value="professional">
+      <span class="role-tile">{{ icon_chip('stethoscope', 'teal') }}<strong>Healthcare professional</strong><span class="role-note">Review shared results</span></span>
+    </label>
+  </fieldset>
+
+  <div class="form-group">
+    <label class="form-label" for="name">Full name <span class="chip chip-required">Required</span></label>
+    <div class="input-wrap has-icon">{{ icon('user', 'input-icon') }}<input class="form-control" id="name" type="text" autocomplete="name"></div>
+  </div>
+  <div class="form-group">
+    <label class="form-label" for="email">Email address <span class="chip chip-required">Required</span></label>
+    <div class="input-wrap has-icon">{{ icon('mail', 'input-icon') }}<input class="form-control" id="email" type="email" autocomplete="email" placeholder="name@example.com" aria-describedby="email-error"></div>
+    <p class="form-error" id="email-error" hidden>{{ icon('alert-circle') }}<span>Enter a complete email address, such as name@example.com.</span></p>
+  </div>
+  <div class="form-group">
+    <label class="form-label" for="password">Password <span class="chip chip-required">Required</span></label>
+    <div class="input-wrap has-icon has-action">
+      {{ icon('lock', 'input-icon') }}
+      <input class="form-control" id="password" type="password" autocomplete="new-password" aria-describedby="password-error">
+      <button type="button" class="input-action" data-toggle-password aria-controls="password" aria-pressed="false" aria-label="Show password">{{ icon('eye') }}</button>
+    </div>
+    <p class="form-error" id="password-error" hidden>{{ icon('alert-circle') }}<span>Enter a password.</span></p>
+  </div>
+
+  <button class="button button-primary button-block" type="submit" data-loading-text="Creating account...">Create account</button>
+</form>
+<p class="text-small auth-secondary">Already have an account? <a href="{{ url_for('design.login') }}">Sign in</a></p>
+{% endblock %}

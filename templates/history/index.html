@@ -1,0 +1,102 @@
+{# The history of the signed-in person's assessments. Every row is a permanent record; this page cannot change any of them. #}
+{% extends "layouts/app_base.html" %}
+{% from "partials/_macros.html" import icon, risk_badge %}
+{% from "partials/_visuals.html" import icon_chip, trend_chart, trend_empty %}
+{% set active_nav = 'history' %}
+{% block scripts %}<script src="{{ url_for('static', filename='js/history.js') }}" defer></script>{% endblock %}
+{% block header_title %}Assessment history{% endblock %}
+{% block header_subtitle %}Every screening you have completed. Records are permanent and are never changed.{% endblock %}
+
+{% block content %}
+<div class="history-top">
+  <section class="card reveal" style="--i: 1;" aria-labelledby="trend-heading">
+    <div class="card-header">
+      <h2 class="card-title" id="trend-heading">Risk Probability Trend</h2>
+      {% if first_id %}<a class="link-action" href="{{ url_for('history.compare', id=[first_id, latest_id]) }}">Compare first and latest {{ icon('arrow-right') }}</a>{% endif %}
+    </div>
+    {% if trend %}{{ trend_chart(trend) }}{% else %}
+    {{ trend_empty('Chart appears when sufficient data exists', 'Your predicted risk probability over time will appear here after two saved assessments.') }}
+    {% endif %}
+  </section>
+
+  <section class="card card-lavender reveal" style="--i: 2;" aria-labelledby="next-heading">
+    <div class="card-header"><h2 class="card-title" id="next-heading">{{ icon_chip('calendar', 'lavender') }}Next screening</h2></div>
+    {% if status.state == 'available' %}
+    <p class="status-headline">Available now</p>
+    <p>You can start a new screening whenever you are ready.</p>
+    <a class="button button-primary" href="{{ url_for('screening.screening') }}">{{ icon('arrow-right') }}Start assessment</a>
+    {% elif status.state == 'waiting' %}
+    <p class="status-headline">Opens on {{ format_date(status.date) }}</p>
+    <p>{{ status.days_left }} day{{ '' if status.days_left == 1 else 's' }} left. A waiting period between screenings keeps results comparable. <a href="{{ url_for('screening.screening') }}#ask-admin">Need to screen sooner?</a></p>
+    <div class="progress-bar" role="progressbar" aria-valuemin="0" aria-valuemax="100" aria-valuenow="{{ (status.elapsed_share * 100)|round|int }}" aria-label="Waiting period passed"><span class="progress-bar-fill" style="--progress: {{ (status.elapsed_share * 100)|round|int }}%"></span></div>
+    {% else %}
+    <p class="status-headline">Not available yet</p>
+    <p>Screening opens once it is set up on this server. Your saved assessments stay here.</p>
+    {% endif %}
+  </section>
+</div>
+
+<section class="card history-table-card reveal" style="--i: 3;" aria-labelledby="records-heading">
+  <div class="card-header">
+    <h2 class="card-title" id="records-heading">{{ icon_chip('clipboard-list', 'lavender') }}Your assessments</h2>
+    {% if page.total %}<span class="text-small text-muted">Showing {{ page.first_number }} to {{ page.last_number }} of {{ page.total }}</span>{% endif %}
+  </div>
+
+  {% if page.total %}
+  <form method="get" action="{{ url_for('history.compare') }}" data-compare-form>
+    <div class="table-wrap">
+      <table class="data-table table-stack history-table">
+        <caption class="visually-hidden">Your assessments, newest first. Select two to compare them.</caption>
+        <thead>
+          <tr>
+            <th scope="col"><span class="visually-hidden">Select</span></th>
+            <th scope="col">Date</th>
+            <th scope="col">Type</th>
+            <th scope="col">Predicted Risk Probability</th>
+            <th scope="col">Classification</th>
+            <th scope="col"><span class="visually-hidden">Actions</span></th>
+          </tr>
+        </thead>
+        <tbody>
+          {% for record in page["items"] %}
+          <tr>
+            <td data-label="Select"><input class="pick" type="checkbox" name="id" value="{{ record.assessment_id }}" data-pick aria-label="Select the assessment of {{ format_date(record.date) }}"></td>
+            <td data-label="Date"><a href="{{ url_for('screening.result', assessment_id=record.assessment_id) }}">{{ format_date(record.date) }}</a></td>
+            <td data-label="Type">{{ record.type }}</td>
+            <td data-label="Predicted Risk Probability">{{ percent_text(record.probability) }}%</td>
+            <td data-label="Classification">{{ risk_badge(record.level, assessment_type=record.assessment_type) }}</td>
+            <td data-label="Actions">
+              <div class="row-actions">
+                <a href="{{ url_for('screening.result', assessment_id=record.assessment_id) }}">View</a>
+                {% if previous_of.get(record.assessment_id) %}<a href="{{ url_for('history.compare', id=[record.assessment_id, previous_of[record.assessment_id]]) }}">Compare with previous</a>{% endif %}
+              </div>
+            </td>
+          </tr>
+          {% endfor %}
+        </tbody>
+      </table>
+    </div>
+    <div class="compare-bar">
+      <p class="text-small text-muted" data-pick-status aria-live="polite">Select two assessments on this page to compare them.</p>
+      <button class="button button-secondary" type="submit" data-compare-button>{{ icon('arrow-right') }}Compare selected</button>
+    </div>
+  </form>
+
+  {% if page.pages > 1 %}
+  <nav class="pager" aria-label="Pages of your history">
+    {% if page.has_previous %}<a class="button button-secondary button-sm" href="{{ url_for('history.index', page=page.page - 1) }}" rel="prev">Previous</a>{% else %}<span></span>{% endif %}
+    <span class="text-small">Page {{ page.page }} of {{ page.pages }}</span>
+    {% if page.has_next %}<a class="button button-secondary button-sm" href="{{ url_for('history.index', page=page.page + 1) }}" rel="next">Next</a>{% else %}<span></span>{% endif %}
+  </nav>
+  {% endif %}
+
+  {% else %}
+  <div class="empty-state empty-state-centered">
+    <span class="empty-visual" aria-hidden="true">{{ icon('clipboard-list') }}</span>
+    <h3>No assessments yet</h3>
+    <p>Each screening you complete is saved here as a permanent record, so you can look back and compare.</p>
+    {% if status.state == 'available' %}<a class="button button-primary" href="{{ url_for('screening.screening') }}">{{ icon('arrow-right') }}Start assessment</a>{% endif %}
+  </div>
+  {% endif %}
+</section>
+{% endblock %}

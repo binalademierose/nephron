@@ -1,0 +1,99 @@
+{# The Follow-Up section: every follow-up appointment this professional has scheduled, across every patient -
+   searchable, filterable by status and date. Editing/cancelling/completing an appointment still happens from the
+   patient's own history page (templates/authorizations/patient_history.html) - "View" below goes straight there. #}
+{% extends "layouts/app_base.html" %}
+{% from "partials/_macros.html" import icon %}
+{% from "followup/_calendar.html" import month_calendar with context %}
+{% set active_nav = 'follow-up' %}
+{% block header_title %}Follow-up{% endblock %}
+{% block header_subtitle %}Every follow-up appointment across every patient you work with.{% endblock %}
+
+{% block content %}
+<section class="card card-hero reveal" style="--i: 0;" aria-labelledby="calendar-heading">
+  {{ month_calendar(weeks, month_label, url_for('authorization.follow_up_cases', year=previous_month[0], month=previous_month[1]),
+                    url_for('authorization.follow_up_cases'), url_for('authorization.follow_up_cases', year=next_month[0], month=next_month[1]),
+                    show_patient=True) }}
+</section>
+
+<section class="card reveal" style="--i: 1;" aria-labelledby="follow-up-heading">
+  <div class="card-header"><h2 class="card-title" id="follow-up-heading">{{ icon('calendar') }}Follow-up cases</h2></div>
+
+  <div class="tab-row" role="tablist" aria-label="Status">
+    {% for key, label in (('', 'All'), ('pending', 'Pending'), ('due', 'Due'), ('completed', 'Completed'), ('cancelled', 'Cancelled')) %}
+    <a class="tab-link{{ ' is-active' if (status or '') == key }}" role="tab" aria-selected="{{ 'true' if (status or '') == key else 'false' }}"
+       href="{{ url_for('authorization.follow_up_cases', q=query or none, status=key or none, date_period=date_period if date_period != 'all' else none) }}">{{ label }}</a>
+    {% endfor %}
+  </div>
+
+  <form method="get" action="{{ url_for('authorization.follow_up_cases') }}" class="filter-form" role="search" data-live-filter="live-followup-results">
+    <div class="form-group filter-form-search">
+      <label class="form-label" for="fu-q">Patient name or patient ID</label>
+      <input class="form-control" type="text" id="fu-q" name="q" value="{{ query }}" placeholder="Search patient" autocomplete="off">
+    </div>
+    <div class="form-group">
+      <label class="form-label" for="fu-date">Follow-up date</label>
+      <select class="form-control" id="fu-date" name="date_period">
+        <option value="all" {{ 'selected' if date_period == 'all' }}>All dates</option>
+        <option value="today" {{ 'selected' if date_period == 'today' }}>Today</option>
+        <option value="this_week" {{ 'selected' if date_period == 'this_week' }}>This week</option>
+        <option value="this_month" {{ 'selected' if date_period == 'this_month' }}>This month</option>
+      </select>
+    </div>
+    {% if status %}<input type="hidden" name="status" value="{{ status }}">{% endif %}
+    <div class="filter-form-actions">
+      <button class="button button-primary" type="submit">{{ icon('search') }}Apply filters</button>
+      <a class="button button-secondary" href="{{ url_for('authorization.follow_up_cases') }}">{{ icon('refresh') }}Reset</a>
+    </div>
+  </form>
+  <div id="live-followup-results" class="live-results" aria-live="polite">
+
+  {% if records %}
+  <div class="table-scroll">
+    <table class="data-table">
+      <thead>
+        <tr>
+          <th scope="col">Patient</th>
+          <th scope="col">Patient ID</th>
+          <th scope="col">Purpose</th>
+          <th scope="col">Follow-up date</th>
+          <th scope="col">Status</th>
+          <th scope="col"></th>
+        </tr>
+      </thead>
+      <tbody>
+        {% for row in records %}
+        <tr>
+          <td>{{ row.patient.display_name }}</td>
+          <td>{% if row.patient.patient_code %}<span class="chip chip-mono">{{ row.patient.patient_code }}</span>{% else %}<span class="badge badge-neutral">Shared</span>{% endif %}</td>
+          <td>{{ row.purpose }}</td>
+          <td>{{ format_datetime(row.scheduled_local) }}</td>
+          <td>
+            {% if row.follow_up_status == 'completed' %}<span class="badge risk-badge-low">Completed</span>
+            {% elif row.follow_up_status == 'due' %}<span class="badge risk-badge-high">Due</span>
+            {% elif row.follow_up_status == 'cancelled' %}<span class="badge badge-neutral">Cancelled</span>
+            {% else %}<span class="badge badge-info">Pending</span>{% endif %}
+          </td>
+          <td class="table-actions">
+            {% if row.patient.source == 'record' %}
+            <a class="button button-secondary button-sm" href="{{ url_for('patient_records.profile', patient_code=row.patient.patient_code) }}">View</a>
+            {% else %}
+            <a class="button button-secondary button-sm" href="{{ url_for('authorization.patient_history', patient_id=row.patient.user_id) }}">View</a>
+            {% endif %}
+          </td>
+        </tr>
+        {% endfor %}
+      </tbody>
+    </table>
+  </div>
+  {% elif query or status or date_period != 'all' %}
+  <p class="empty-inline">{{ icon('info') }}No follow-up matches these filters.</p>
+  {% else %}
+  <div class="empty-state">
+    <span class="empty-visual" aria-hidden="true">{{ icon('calendar') }}</span>
+    <h3>No follow-up cases yet</h3>
+    <p>Appointments you schedule from a patient's own history page will appear here.</p>
+  </div>
+  {% endif %}
+  </div>
+</section>
+{% endblock %}

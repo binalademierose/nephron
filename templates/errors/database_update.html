@@ -1,0 +1,19 @@
+{# Shown on every page while the database is older than the code (app.py _block_until_migrated): it names the
+   exact fix instead of letting a request fail later with a bare "Error 500". #}
+{% extends "base.html" %}
+{% from "partials/_macros.html" import icon %}
+{% block content %}
+<div class="container error-page">
+  <div>
+    <span class="badge badge-neutral error-code-badge">Database update needed</span>
+    <h1 class="display-title">The database needs updating</h1>
+    <p class="text-lead">Nephron was updated, but its database has not been updated to match yet. Nothing is wrong with your data.</p>
+    <ul class="error-steps">
+      <li>{{ icon('chevron-right') }}<span>Stop the app (Ctrl + C in its terminal).</span></li>
+      <li>{{ icon('chevron-right') }}<span>Run <code>python init_db.py</code> in the project folder. It only adds what is missing and keeps every existing record.</span></li>
+      <li>{{ icon('chevron-right') }}<span>Start the app again, then reload this page.</span></li>
+    </ul>
+    <p class="text-muted">Updates waiting: {{ pending|join(', ') }}</p>
+  </div>
+</div>
+{% endblock %}

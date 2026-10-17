@@ -1,0 +1,96 @@
+{# The Assessments section: every assessment across every patient this professional works with - filterable by
+   time period, a search term (patient name/code/assessment id), and risk. #}
+{% extends "layouts/app_base.html" %}
+{% from "partials/_macros.html" import icon, risk_badge %}
+{% set active_nav = 'assessments' %}
+{% block header_title %}Assessments{% endblock %}
+{% block header_subtitle %}Every assessment across every patient you work with.{% endblock %}
+
+{% block content %}
+<section class="card reveal" style="--i: 1;" aria-labelledby="assessments-heading">
+  <div class="card-header"><h2 class="card-title" id="assessments-heading">{{ icon('clipboard-list') }}All assessments</h2></div>
+
+  <div class="tab-row" role="tablist" aria-label="Time period">
+    {% for key, label in (('all', 'All Records'), ('1_day', 'Last 1 Day'), ('7_days', 'Last 7 Days'), ('30_days', 'Last 30 Days')) %}
+    <a class="tab-link{{ ' is-active' if period == key }}" role="tab" aria-selected="{{ 'true' if period == key else 'false' }}"
+       href="{{ url_for('patient_records.assessment_list', q=query or none, risk=risk or none, period=key if key != 'all' else none) }}">{{ label }}</a>
+    {% endfor %}
+  </div>
+
+  <form method="get" action="{{ url_for('patient_records.assessment_list') }}" class="filter-form" role="search" data-live-filter="live-assessment-results">
+    <div class="form-group filter-form-search">
+      <label class="form-label" for="q">Patient name, patient ID, or assessment ID</label>
+      <input class="form-control" type="text" id="q" name="q" value="{{ query }}" placeholder="Juan Dela Cruz, NPH-0001, or an assessment number" autocomplete="off">
+    </div>
+    <div class="form-group">
+      <label class="form-label" for="risk">Risk</label>
+      <select class="form-control" id="risk" name="risk">
+        <option value="" {{ 'selected' if not risk }}>All</option>
+        <option value="low" {{ 'selected' if risk == 'low' }}>Low Risk</option>
+        <option value="high" {{ 'selected' if risk == 'high' }}>High Risk</option>
+      </select>
+    </div>
+    {% if period != 'all' %}<input type="hidden" name="period" value="{{ period }}">{% endif %}
+    <div class="filter-form-actions">
+      <button class="button button-primary" type="submit">{{ icon('search') }}Apply filters</button>
+      <a class="button button-secondary" href="{{ url_for('patient_records.assessment_list') }}">{{ icon('refresh') }}Reset</a>
+    </div>
+  </form>
+  <div id="live-assessment-results" class="live-results" aria-live="polite">
+
+  {% if records %}
+  <div class="table-scroll">
+    <table class="data-table">
+      <thead>
+        <tr>
+          <th scope="col">Assessment ID</th>
+          <th scope="col">Patient</th>
+          <th scope="col">Date</th>
+          <th scope="col">Mode</th>
+          <th scope="col">Risk probability</th>
+          <th scope="col">Risk category</th>
+          <th scope="col">Review status</th>
+          <th scope="col"></th>
+        </tr>
+      </thead>
+      <tbody>
+        {% for row in records %}
+        <tr>
+          <td>#{{ row.assessment_id }}</td>
+          <td>
+            {{ row.patient.display_name }}
+            {% if row.patient.patient_code %}<span class="chip chip-mono">{{ row.patient.patient_code }}</span>{% else %}<span class="badge badge-neutral">Shared</span>{% endif %}
+          </td>
+          <td>{{ format_date(row.date) }}</td>
+          <td>{{ row.type }}</td>
+          <td>{{ percent_text(row.probability) }}%</td>
+          <td>{{ risk_badge(row.level, assessment_type=row.assessment_type) }}</td>
+          <td>
+            {% if row.review_status == 'self_recorded' %}<span class="badge badge-neutral">Self-recorded</span>
+            {% elif row.review_status == 'reviewed' %}<span class="badge risk-badge-low">Reviewed</span>
+            {% else %}<span class="badge risk-badge-high">Awaiting review</span>{% endif %}
+          </td>
+          <td class="table-actions">
+            {% if row.patient.source == 'record' %}
+            <a class="button button-secondary button-sm" href="{{ url_for('patient_records.risk_analysis', patient_code=row.patient.patient_code, assessment_id=row.assessment_id) }}">View</a>
+            {% else %}
+            <a class="button button-secondary button-sm" href="{{ url_for('authorization.patient_history', patient_id=row.patient.user_id) }}">View</a>
+            {% endif %}
+          </td>
+        </tr>
+        {% endfor %}
+      </tbody>
+    </table>
+  </div>
+  {% elif query or risk or period != 'all' %}
+  <p class="empty-inline">{{ icon('info') }}No assessment matches these filters.</p>
+  {% else %}
+  <div class="empty-state">
+    <span class="empty-visual" aria-hidden="true">{{ icon('clipboard-list') }}</span>
+    <h3>No assessments yet</h3>
+    <p>Assessments for your patients will appear here once you or they complete one.</p>
+  </div>
+  {% endif %}
+  </div>
+</section>
+{% endblock %}

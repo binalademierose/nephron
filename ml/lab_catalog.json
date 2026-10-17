@@ -1,0 +1,263 @@
+{
+  "schema_version": 1,
+  "note": "Stage 2 (Enhanced Screening) lab values. This is an EXTENSION of a person's most recent Preliminary screening: the 27 non-laboratory answers are pulled from that assessment, not re-asked here. Only Serum_Creatinine is required (eGFR cannot be computed without it, via the CKD-EPI 2021 formula in services/egfr.py); every other field is optional, matching the model's own trained tolerance for missing labs (see model/model_card_stage2.json:missing_input_robustness - performance barely moves even with every optional field missing). A value that IS given is still range-checked; nothing typed is ever silently discarded.",
+  "groups": [
+    {
+      "key": "vitals",
+      "title": "Blood pressure"
+    },
+    {
+      "key": "kidney",
+      "title": "Kidney function"
+    },
+    {
+      "key": "metabolic",
+      "title": "Blood sugar and blood counts"
+    },
+    {
+      "key": "electrolytes",
+      "title": "Electrolytes and minerals"
+    },
+    {
+      "key": "lipids",
+      "title": "Cholesterol panel"
+    },
+    {
+      "key": "other",
+      "title": "Other markers"
+    }
+  ],
+  "fields": [
+    {
+      "name": "Systolic_BP",
+      "short": "Systolic blood pressure",
+      "group": "vitals",
+      "unit": "mmHg",
+      "min": 60,
+      "max": 260,
+      "required": false,
+      "label": "Systolic blood pressure",
+      "hint": "The higher number of a blood pressure reading.",
+      "explain": "The pressure in your blood vessels when your heart beats. High blood pressure makes the kidneys' tiny filters work harder over time and can damage them."
+    },
+    {
+      "name": "Diastolic_BP",
+      "short": "Diastolic blood pressure",
+      "group": "vitals",
+      "unit": "mmHg",
+      "min": 30,
+      "max": 160,
+      "required": false,
+      "label": "Diastolic blood pressure",
+      "hint": "The lower number of a blood pressure reading.",
+      "explain": "The pressure in your blood vessels between heartbeats, while your heart rests. Together with the systolic number, it shows how hard your heart and blood vessels are working."
+    },
+    {
+      "name": "Serum_Creatinine",
+      "short": "Serum creatinine",
+      "group": "kidney",
+      "unit": "mg/dL",
+      "min": 0.1,
+      "max": 20.0,
+      "required": true,
+      "label": "Serum creatinine",
+      "hint": "Needed to work out your eGFR. This is the one lab value Enhanced Screening cannot run without.",
+      "explain": "A waste product your muscles make all the time. Healthy kidneys filter it out of your blood - when it builds up, it usually means the kidneys are not filtering as well as they should."
+    },
+    {
+      "name": "Blood_Urea_Nitrogen",
+      "short": "BUN",
+      "group": "kidney",
+      "unit": "mg/dL",
+      "min": 0,
+      "max": 150,
+      "required": false,
+      "label": "Blood urea nitrogen (BUN)",
+      "hint": "Sometimes shown as \"Urea\" on a lab report.",
+      "explain": "Another waste product, made when your body breaks down protein. Like creatinine, it should be filtered out by the kidneys, so a high level can point to reduced kidney function."
+    },
+    {
+      "name": "Albumin",
+      "short": "Albumin",
+      "group": "kidney",
+      "unit": "g/dL",
+      "min": 0.5,
+      "max": 7.0,
+      "required": false,
+      "label": "Albumin (blood)",
+      "hint": "A blood protein test, not the urine albumin test below.",
+      "explain": "A protein made by the liver that should stay in your blood. This is the blood test - a different test below checks for the same protein leaking into your urine."
+    },
+    {
+      "name": "Urine_ACR",
+      "short": "Urine ACR",
+      "group": "kidney",
+      "unit": "mg/g",
+      "min": 0,
+      "max": 7000,
+      "required": false,
+      "label": "Urine albumin-to-creatinine ratio (ACR)",
+      "hint": "Also written as UACR. A urine test, different from blood albumin.",
+      "explain": "Checks for a protein called albumin leaking into your urine. Healthy kidneys keep albumin in the blood, so finding it in urine is often one of the earliest signs of kidney damage."
+    },
+    {
+      "name": "Urine_Protein",
+      "short": "Urine protein",
+      "group": "kidney",
+      "unit": "mg/24h",
+      "min": 0,
+      "max": 4000,
+      "required": false,
+      "label": "Urine protein",
+      "hint": "From a urinalysis or 24-hour urine collection.",
+      "explain": "Measures total protein in your urine, not just albumin. Protein in the urine is another sign that the kidneys' filters may be letting through things they normally would not."
+    },
+    {
+      "name": "HbA1c",
+      "short": "HbA1c",
+      "group": "metabolic",
+      "unit": "%",
+      "min": 2.0,
+      "max": 16.0,
+      "required": false,
+      "label": "HbA1c",
+      "hint": "Average blood sugar over about 3 months.",
+      "explain": "Shows your average blood sugar over the past two to three months. Diabetes is one of the leading causes of kidney disease, so keeping this well-controlled helps protect your kidneys."
+    },
+    {
+      "name": "Fasting_Glucose",
+      "short": "Fasting glucose",
+      "group": "metabolic",
+      "unit": "mg/dL",
+      "min": 0,
+      "max": 500,
+      "required": false,
+      "label": "Fasting blood glucose",
+      "hint": "Blood sugar measured after fasting.",
+      "explain": "Your blood sugar level after not eating for several hours. Consistently high readings suggest diabetes, which puts extra strain on the kidneys over time."
+    },
+    {
+      "name": "Hemoglobin",
+      "short": "Hemoglobin",
+      "group": "metabolic",
+      "unit": "g/dL",
+      "min": 3,
+      "max": 22,
+      "required": false,
+      "label": "Hemoglobin",
+      "hint": "From a complete blood count (CBC).",
+      "explain": "The part of your blood that carries oxygen. Kidneys help make the hormone that tells your body to produce it, so declining kidney function can sometimes show up as low hemoglobin."
+    },
+    {
+      "name": "Sodium",
+      "short": "Sodium",
+      "group": "electrolytes",
+      "unit": "mmol/L",
+      "min": 100,
+      "max": 175,
+      "required": false,
+      "label": "Sodium",
+      "explain": "A mineral that helps control your body's fluid balance and blood pressure. Kidneys keep sodium in the right range, so an abnormal level can be a sign they are struggling to do that."
+    },
+    {
+      "name": "Potassium",
+      "short": "Potassium",
+      "group": "electrolytes",
+      "unit": "mmol/L",
+      "min": 1.0,
+      "max": 8.0,
+      "required": false,
+      "label": "Potassium",
+      "explain": "A mineral your heart and muscles depend on. Healthy kidneys remove the extra potassium your body does not need - when kidney function drops, potassium can build up to unsafe levels."
+    },
+    {
+      "name": "Calcium",
+      "short": "Calcium",
+      "group": "electrolytes",
+      "unit": "mg/dL",
+      "min": 4,
+      "max": 15,
+      "required": false,
+      "label": "Calcium",
+      "explain": "A mineral used for bones, muscles and nerves. Kidneys help balance it with phosphorus and vitamin D, so kidney disease can push calcium levels too high or too low."
+    },
+    {
+      "name": "Phosphorus",
+      "short": "Phosphorus",
+      "group": "electrolytes",
+      "unit": "mg/dL",
+      "min": 0.2,
+      "max": 10,
+      "required": false,
+      "label": "Phosphorus",
+      "explain": "A mineral that works closely with calcium for bone health. Healthy kidneys remove the extra phosphorus you do not need - when they cannot, it can build up and affect bones and blood vessels."
+    },
+    {
+      "name": "Uric_Acid",
+      "short": "Uric acid",
+      "group": "electrolytes",
+      "unit": "mg/dL",
+      "min": 0,
+      "max": 20,
+      "required": false,
+      "label": "Uric acid",
+      "explain": "A waste product from breaking down substances called purines, found in many foods. High levels are linked to gout and are also associated with kidney stones and reduced kidney function."
+    },
+    {
+      "name": "Total_Cholesterol",
+      "short": "Total cholesterol",
+      "group": "lipids",
+      "unit": "mg/dL",
+      "min": 20,
+      "max": 500,
+      "required": false,
+      "label": "Total cholesterol",
+      "explain": "The total amount of cholesterol, a fatty substance, in your blood - combining the 'good' and 'bad' kinds below. High cholesterol contributes to the blood vessel damage that harms kidneys over time."
+    },
+    {
+      "name": "HDL",
+      "short": "HDL",
+      "group": "lipids",
+      "unit": "mg/dL",
+      "min": 0,
+      "max": 150,
+      "required": false,
+      "label": "HDL cholesterol",
+      "explain": "Often called 'good' cholesterol, because it helps carry excess cholesterol away from your blood vessels rather than letting it build up."
+    },
+    {
+      "name": "LDL",
+      "short": "LDL",
+      "group": "lipids",
+      "unit": "mg/dL",
+      "min": 0,
+      "max": 350,
+      "required": false,
+      "label": "LDL cholesterol",
+      "explain": "Often called 'bad' cholesterol, because too much of it builds up in blood vessel walls, including the tiny vessels inside the kidneys."
+    },
+    {
+      "name": "Triglycerides",
+      "short": "Triglycerides",
+      "group": "lipids",
+      "unit": "mg/dL",
+      "min": 0,
+      "max": 800,
+      "required": false,
+      "label": "Triglycerides",
+      "explain": "A type of fat carried in your blood. High levels, often linked to diet and weight, add to the same blood vessel damage that raises kidney risk."
+    },
+    {
+      "name": "CRP",
+      "short": "CRP",
+      "group": "other",
+      "unit": "mg/L",
+      "min": 0,
+      "max": 50,
+      "required": false,
+      "label": "C-reactive protein (CRP)",
+      "hint": "A general marker of inflammation.",
+      "explain": "A marker that rises when there is inflammation somewhere in the body. It is not specific to kidneys, but ongoing inflammation is one of the ways other conditions can gradually affect kidney function."
+    }
+  ]
+}

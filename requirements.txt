@@ -1,0 +1,34 @@
+# Nephron - the ONE requirements file a host installs (Vercel, Render, Railway, a plain venv all read this).
+#
+# IMPORTANT: the saved models only load with the EXACT library versions they were trained with (the website checks
+# this and shows screening as "unavailable" otherwise - see ml/model*/model_metadata.json and services/model_service.py).
+# scikit-learn in particular must be 1.8.0; a newer one (e.g. 1.9.x) will make BOTH models refuse to load.
+#
+# xgboost: we use the CPU-only build "xgboost-cpu". It imports as `xgboost`, is the same 3.1.x version line, and is
+# a fraction of the size of the default "xgboost" wheel (which bundles large GPU/CUDA libraries). The small build is
+# what keeps the deployment under a serverless size limit; it is also perfectly fine for a normal server. If you are
+# on a host with no size limit and prefer the full wheel, replace "xgboost-cpu==3.1.3" with "xgboost==3.1.3".
+
+# --- web application ---
+Flask>=3.0,<4.0
+mysql-connector-python>=9.0
+python-dotenv>=1.0
+tzdata>=2024.1                 # the time-zone database (Windows has none of its own)
+gunicorn>=23.0                 # the production web server (used on Railway/Render/any container host; not needed for local `python app.py`)
+
+# --- screening models (pinned to the versions the models were saved with) ---
+scikit-learn==1.8.0
+xgboost-cpu==3.1.3
+pandas==3.0.2
+numpy==2.4.4
+joblib
+
+# --- downloadable PDF reports ---
+reportlab==4.4.10
+
+# --- lab-document OCR (Enhanced Screening by photo/PDF). These Python packages are safe to install anywhere, but
+#     they also need the system programs Tesseract and Poppler, which are NOT pip packages. On a host that cannot
+#     install system programs (e.g. Vercel) OCR simply won't run and the app falls back to manual entry - see README. ---
+pytesseract>=0.3.10
+pdf2image>=1.17
+Pillow>=10.0

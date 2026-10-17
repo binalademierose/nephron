@@ -1,0 +1,39 @@
+{# Section 7: a focused page for the relationship between a professional and one shared patient - when it was
+   requested and accepted, and the control that ends it. Ending access here uses the same confirmation dialog as
+   the inline button on /patients and on the history page itself. #}
+{% extends "layouts/app_base.html" %}
+{% from "partials/_macros.html" import icon, csrf_field %}
+{% from "partials/_visuals.html" import icon_chip %}
+{% set active_nav = 'shared' %}
+{% block header_title %}Manage connection{% endblock %}
+{% block header_subtitle %}{{ patient.full_name }}{% endblock %}
+
+{% block content %}
+<div class="page-actions reveal">
+  <p></p>
+  <a class="button button-secondary button-sm" href="{{ url_for('authorization.patient_history', patient_id=patient.user_id) }}">{{ icon('chevron-left') }}Back to history</a>
+</div>
+
+<section class="card reveal" style="--i: 1;" aria-labelledby="connection-heading">
+  <div class="card-header"><h2 class="card-title" id="connection-heading">{{ icon_chip('share', 'lavender') }}Connection details</h2></div>
+  <dl class="term-list">
+    <div class="term-row"><dt>Patient</dt><dd>{{ patient.full_name }}</dd></div>
+    <div class="term-row"><dt>Status</dt><dd><span class="badge risk-badge-low">{{ icon('check-circle') }}Active - you can view their assessment history</span></dd></div>
+    <div class="term-row"><dt>Requested</dt><dd>{{ format_date(requested_date) }}</dd></div>
+    {% if accepted_date %}<div class="term-row"><dt>Accepted</dt><dd>{{ format_date(accepted_date) }}</dd></div>{% endif %}
+  </dl>
+</section>
+
+<section class="card reveal" style="--i: 2;" aria-labelledby="danger-heading">
+  <div class="card-header"><h2 class="card-title" id="danger-heading">{{ icon_chip('x-circle', 'red') }}End this connection</h2></div>
+  <p class="text-muted">Ending access removes your ability to view {{ patient.full_name }}'s assessment history right away. They would need to send a new request to share it with you again. Clinical notes you already wrote stay attached to their results either way.</p>
+  <form method="post" action="{{ url_for('authorization.revoke_patient', patient_id=patient.user_id) }}"
+        data-confirm="danger" data-confirm-name="{{ patient.full_name }}"
+        data-confirm-title="Stop viewing {name}'s history?"
+        data-confirm-message="You will lose access to {name}'s assessment history right away. They would need to send a new request to share it again."
+        data-confirm-accept="End access" data-confirm-dismiss="Keep access">
+    {{ csrf_field() }}
+    <button class="button button-secondary" type="submit">{{ icon('x') }}End access</button>
+  </form>
+</section>
+{% endblock %}

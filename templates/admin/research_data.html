@@ -1,0 +1,47 @@
+{# Research data: valid screenings, de-identified, predictors only - downloadable as CSV for improving the model with
+   real-world data later (services/research_export.py). Every download is written to the activity log. #}
+{% extends "layouts/app_base.html" %}
+{% from "partials/_macros.html" import icon %}
+{% from "partials/_visuals.html" import icon_chip %}
+{% set active_nav = 'admin-research' %}
+{% block header_title %}Research data{% endblock %}
+{% block header_subtitle %}Real screening answers, de-identified, for improving the model beyond its synthetic training data.{% endblock %}
+
+{% block content %}
+<div class="notice research-notice" role="note">{{ icon('shield-check') }}
+  <div>
+    <h3>What is in these files - and what is not</h3>
+    <ul>
+      <li><strong>Only the predictors</strong>: the model's own input columns, as each person answered them.</li>
+      <li><strong>No identity</strong>: no name, email, username, id, date or time, and no gender, address or location.</li>
+      <li><strong>No result</strong>: the model's own estimate is left out; it is not a fact to learn from.</li>
+      <li>Age {{ age_cap }} or older is written as {{ age_cap }}. Rows are shuffled, so their order says nothing.</li>
+      <li>Only valid screenings exist: every row passed the website's own checks.</li>
+    </ul>
+    <p><strong>Before retraining:</strong> each row still needs a <strong>confirmed outcome</strong> (for example a doctor's diagnosis). These files have none on purpose. Handle them as health data even though they are de-identified, and keep them out of public places.</p>
+  </div>
+</div>
+
+<div class="dash-row research-row">
+  {% for k in kinds %}
+  <section class="card" aria-labelledby="research-{{ k.key }}">
+    <div class="card-header"><h2 class="card-title" id="research-{{ k.key }}">{{ icon_chip('file-text', 'lavender') }}{{ k.title }}</h2></div>
+    <dl class="research-counts">
+      <div><dt>People</dt><dd>{{ k.people }}</dd></div>
+      <div><dt>Screenings</dt><dd>{{ k.screenings }}</dd></div>
+      <div><dt>Columns</dt><dd>{{ k.columns|length }}</dd></div>
+    </dl>
+    {% if k.people %}
+    <div class="research-actions">
+      <a class="button button-primary" href="{{ url_for('admin.research_data_csv', assessment_type=k.key) }}" download>{{ icon('download') }}Download CSV - latest per person</a>
+      <a class="button button-secondary button-sm" href="{{ url_for('admin.research_data_csv', assessment_type=k.key, all=1) }}" download>Every screening ({{ k.screenings }} rows)</a>
+    </div>
+    <p class="text-muted text-small">"Latest per person" is better for training: one person repeated many times would count too much.</p>
+    {% else %}<p class="empty-inline">{{ icon('info') }}No {{ k.title|lower }} has been completed yet.</p>{% endif %}
+    <details class="research-columns"><summary>The {{ k.columns|length }} columns</summary>
+      <p class="text-small">{{ k.columns|join(', ') }}</p>
+    </details>
+  </section>
+  {% endfor %}
+</div>
+{% endblock %}

@@ -1,0 +1,51 @@
+{# Healthcare professionals' licence checks. The administrator compares the stated licence with the PRC record
+   outside Nephron, then marks the professional verified or not verified here. #}
+{% extends "layouts/app_base.html" %}
+{% from "partials/_macros.html" import icon, csrf_field %}
+{% set active_nav = 'admin-professionals' %}
+{% block header_title %}Professional verification{% endblock %}
+{% block header_subtitle %}Check each stated licence against the PRC's own records, then record the result here.{% endblock %}
+
+{% block content %}
+<section class="card reveal" style="--i: 1;" aria-labelledby="pro-heading">
+  <div class="card-header"><h2 class="card-title" id="pro-heading">{{ icon('shield-check') }}Healthcare professionals</h2></div>
+  <div class="tab-row" role="tablist" aria-label="Verification status">
+    {% for key, label in (('pending','Awaiting'),('verified','Verified'),('rejected','Not verified'),('all','All')) %}
+    <a class="tab-link{{ ' is-active' if status == key }}" role="tab" aria-selected="{{ 'true' if status == key else 'false' }}" href="{{ url_for('admin.professionals', status=key) }}">{{ label }} <span class="tab-count">{{ counts[key] }}</span></a>
+    {% endfor %}
+  </div>
+  {% if professionals %}
+  <ul class="admin-pro-list" role="list">
+    {% for p in professionals %}
+    <li class="admin-pro">
+      <div class="admin-pro-info">
+        <strong>{{ p.full_name }}</strong>
+        <span class="text-muted">{{ p.profession_title }}{% if p.institution %} &middot; {{ p.institution }}{% endif %}</span>
+        <span>Licence number: <strong class="chip chip-mono">{{ p.license_number or 'Not given' }}</strong></span>
+        <span class="text-muted text-small">{{ p.email }} &middot; joined {{ format_date(p.created_at.date()) }}</span>
+      </div>
+      <div class="admin-pro-actions">
+        <span class="badge {{ 'risk-badge-low' if p.verification_status == 'verified' else ('risk-badge-high' if p.verification_status == 'rejected' else 'badge-neutral') }}">{{ {'verified':'Verified','rejected':'Not verified'}.get(p.verification_status, 'Awaiting') }}</span>
+        {% if p.verification_status != 'verified' %}
+        <form method="post" action="{{ url_for('admin.verify', user_id=p.user_id) }}" class="inline-form"
+              data-confirm="default" data-confirm-name="{{ p.full_name }}" data-confirm-title="Mark {name} as verified?"
+              data-confirm-message="Confirm that you checked licence {{ p.license_number or '(none given)' }} against the PRC's records and it belongs to {name}."
+              data-confirm-accept="Mark verified" data-confirm-dismiss="Go back">
+          {{ csrf_field() }}<input type="hidden" name="back" value="{{ status }}"><button class="button button-primary button-sm" type="submit">{{ icon('check') }}Verify</button>
+        </form>
+        {% endif %}
+        {% if p.verification_status != 'rejected' %}
+        <form method="post" action="{{ url_for('admin.reject', user_id=p.user_id) }}" class="inline-form"
+              data-confirm="danger" data-confirm-name="{{ p.full_name }}" data-confirm-title="Mark {name} as not verified?"
+              data-confirm-message="Use this when the licence could not be confirmed. Patients will see that {name} is not verified."
+              data-confirm-accept="Mark not verified" data-confirm-dismiss="Go back">
+          {{ csrf_field() }}<input type="hidden" name="back" value="{{ status }}"><button class="button button-secondary button-sm" type="submit">{{ icon('x') }}Not verified</button>
+        </form>
+        {% endif %}
+      </div>
+    </li>
+    {% endfor %}
+  </ul>
+  {% else %}<p class="empty-inline">{{ icon('info') }}No professionals in this list.</p>{% endif %}
+</section>
+{% endblock %}

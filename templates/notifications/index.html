@@ -1,0 +1,61 @@
+{# The full notification list - reached from the bell's "View all" link (templates/layouts/app_base.html).
+   Every notification here comes from a real event (services/notifications.py); nothing is invented for this page. #}
+{% extends "layouts/app_base.html" %}
+{% from "partials/_macros.html" import icon, csrf_field %}
+{% set active_nav = 'notifications' %}
+{% block header_title %}Notifications{% endblock %}
+{% block header_subtitle %}Everything Nephron has let you know about, in one place.{% endblock %}
+
+{% set category_icons = {'follow_up': 'clock', 'clinical_review': 'message', 'share_request': 'share', 'share_response': 'share'} %}
+
+{% block content %}
+<section class="card reveal" style="--i: 1;" aria-labelledby="notifications-heading">
+  <div class="card-header">
+    <h2 class="card-title" id="notifications-heading">{{ icon('bell') }}All notifications</h2>
+    {% if items %}
+    <form method="post" action="{{ url_for('notifications.mark_all_read') }}">
+      {{ csrf_field() }}
+      <button class="button button-secondary" type="submit">{{ icon('check') }}Mark all as read</button>
+    </form>
+    {% endif %}
+  </div>
+
+  {% if items %}
+  <ul class="notification-list" role="list">
+    {% for item in items %}
+    <li class="notification-row{{ '' if item.is_read else ' is-unread' }}">
+      <span class="icon-tile" aria-hidden="true">{{ icon(category_icons.get(item.category, 'bell')) }}</span>
+      <div class="notification-body">
+        <a class="notification-title" href="{{ item.link or url_for('notifications.index') }}">{{ item.title }}</a>
+        {% if item.body %}<p class="notification-text">{{ item.body }}</p>{% endif %}
+        <p class="notification-time">{{ format_datetime(item.created_at_local) }}</p>
+      </div>
+      <div class="notification-actions">
+        {% if item.is_read %}
+        <form method="post" action="{{ url_for('notifications.mark_unread', notification_id=item.notification_id) }}">
+          {{ csrf_field() }}
+          <button class="icon-button" type="submit" aria-label="Mark as unread" title="Mark as unread">{{ icon('mail') }}</button>
+        </form>
+        {% else %}
+        <form method="post" action="{{ url_for('notifications.mark_read', notification_id=item.notification_id) }}">
+          {{ csrf_field() }}
+          <button class="icon-button" type="submit" aria-label="Mark as read" title="Mark as read">{{ icon('check') }}</button>
+        </form>
+        {% endif %}
+        <form method="post" action="{{ url_for('notifications.delete', notification_id=item.notification_id) }}">
+          {{ csrf_field() }}
+          <button class="icon-button" type="submit" aria-label="Delete notification" title="Delete">{{ icon('x') }}</button>
+        </form>
+      </div>
+    </li>
+    {% endfor %}
+  </ul>
+  {% else %}
+  <div class="empty-state">
+    <span class="empty-visual" aria-hidden="true">{{ icon('inbox') }}</span>
+    <h3>No notifications yet</h3>
+    <p>You'll see updates here about follow-ups, notes from a professional, and sharing activity.</p>
+  </div>
+  {% endif %}
+</section>
+{% endblock %}

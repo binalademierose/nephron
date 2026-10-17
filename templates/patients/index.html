@@ -1,0 +1,100 @@
+{# A professional's own patients: both the patient records they manage directly, and the patients who have
+   shared their own history with them - one list, filterable by risk and by category. #}
+{% extends "layouts/app_base.html" %}
+{% from "partials/_macros.html" import icon, risk_badge %}
+{% set active_nav = 'patients' %}
+{% block header_title %}Patients{% endblock %}
+{% block header_subtitle %}Everyone you work with - patients you manage directly, and patients who have shared their history with you.{% endblock %}
+
+{% block content %}
+<div class="page-actions reveal">
+  <p>{{ records|length }} patient{{ 's' if records|length != 1 }}.</p>
+  <a class="button button-primary" href="{{ url_for('patient_records.new_assessment') }}">{{ icon('plus') }}New assessment</a>
+</div>
+
+<section class="card reveal" style="--i: 1;" aria-labelledby="patients-heading">
+  <div class="card-header"><h2 class="card-title" id="patients-heading">{{ icon('users') }}All patients</h2></div>
+
+  <div class="tab-row" role="tablist" aria-label="Patient category">
+    {% for key, label in (('all', 'All Patients'), ('pending', 'Pending Patients'), ('reviewed', 'Reviewed Patients'), ('follow_up', 'Follow-Up Patients')) %}
+    <a class="tab-link{{ ' is-active' if category == key }}" role="tab" aria-selected="{{ 'true' if category == key else 'false' }}"
+       href="{{ url_for('patient_records.index', q=query or none, risk=risk or none, category=key if key != 'all' else none) }}">
+      {{ label }} <span class="tab-count">{{ counts[key] }}</span>
+    </a>
+    {% endfor %}
+  </div>
+
+  <form method="get" action="{{ url_for('patient_records.index') }}" class="filter-form" role="search" data-live-filter="live-patient-results">
+    <div class="form-group filter-form-search">
+      <label class="form-label" for="q">Name or patient ID</label>
+      <input class="form-control" type="text" id="q" name="q" value="{{ query }}" placeholder="Juan Dela Cruz, or NPH-0001" autocomplete="off">
+    </div>
+    <div class="form-group">
+      <label class="form-label" for="risk">Risk category</label>
+      <select class="form-control" id="risk" name="risk">
+        <option value="" {{ 'selected' if not risk }}>All</option>
+        <option value="low" {{ 'selected' if risk == 'low' }}>Low Risk</option>
+        <option value="high" {{ 'selected' if risk == 'high' }}>High Risk</option>
+      </select>
+    </div>
+    {% if category != 'all' %}<input type="hidden" name="category" value="{{ category }}">{% endif %}
+    <div class="filter-form-actions">
+      <button class="button button-primary" type="submit">{{ icon('search') }}Apply filters</button>
+      <a class="button button-secondary" href="{{ url_for('patient_records.index') }}">{{ icon('refresh') }}Reset</a>
+    </div>
+  </form>
+  <div id="live-patient-results" class="live-results" aria-live="polite">
+
+  {% if records %}
+  <div class="table-scroll">
+    <table class="data-table patients-table">
+      <thead>
+        <tr>
+          <th scope="col">Patient</th>
+          <th scope="col">Patient ID</th>
+          <th scope="col">Last assessment</th>
+          <th scope="col">Risk</th>
+          <th scope="col">Status</th>
+          <th scope="col"></th>
+        </tr>
+      </thead>
+      <tbody>
+        {% for row in records %}
+        {% set view_url = url_for('patient_records.profile', patient_code=row.patient_code) if row.source == 'record' else url_for('authorization.patient_history', patient_id=row.user_id) %}
+        <tr>
+          <td><a class="patient-name-link" href="{{ view_url }}">{{ row.display_name }}</a></td>
+          <td>{% if row.patient_code %}<span class="chip chip-mono">{{ row.patient_code }}</span>{% else %}<span class="badge badge-neutral">Shared</span>{% endif %}</td>
+          {% if row.latest %}
+          <td>{{ format_date(row.latest.date) }}</td>
+          <td>{{ risk_badge(row.latest.level, assessment_type=row.latest.assessment_type) }}</td>
+          {% else %}
+          <td class="text-muted">No assessment yet</td>
+          <td><span class="badge badge-neutral">New</span></td>
+          {% endif %}
+          <td>
+            {% if row.is_pending %}<span class="badge risk-badge-high">Pending</span>
+            {% elif row.latest %}<span class="badge risk-badge-low">Reviewed</span>{% endif %}
+            {% if row.has_follow_up %}<span class="badge badge-info">Follow-up</span>{% endif %}
+            {% if row.has_draft %}<a class="badge badge-warning" href="{{ url_for('patient_records.screening', patient_code=row.patient_code) }}">Unfinished screening</a>{% endif %}
+          </td>
+          <td class="table-actions">
+            <a class="button button-secondary button-sm" href="{{ view_url }}">View</a>
+          </td>
+        </tr>
+        {% endfor %}
+      </tbody>
+    </table>
+  </div>
+  {% elif query or risk or category != 'all' %}
+  <p class="empty-inline">{{ icon('info') }}No patient matches these filters.</p>
+  {% else %}
+  <div class="empty-state">
+    <span class="empty-visual" aria-hidden="true">{{ icon('users') }}</span>
+    <h3>No patients yet</h3>
+    <p>Add your first patient to start a screening on their behalf.</p>
+    <a class="button button-primary" href="{{ url_for('patient_records.new_patient') }}">{{ icon('plus') }}New patient</a>
+  </div>
+  {% endif %}
+  </div>
+</section>
+{% endblock %}

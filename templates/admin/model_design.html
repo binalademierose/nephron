@@ -1,0 +1,169 @@
+{# How the models work: each installed model's pipeline step by step (read from the saved model itself), where its
+   inputs and weight come from, how its scores are spread for people with and without CKD, and what moving its
+   threshold would do. The charts come from model_report.py's measurements on labelled data - none is typed in. #}
+{% extends "layouts/app_base.html" %}
+{% from "partials/_macros.html" import icon %}
+{% from "partials/_visuals.html" import icon_chip %}
+{% set active_nav = 'admin-model-design' %}
+{% block header_title %}How the models work{% endblock %}
+{% block header_subtitle %}From a person's answers to their result - each model's design, step by step, with its own measurements.{% endblock %}
+
+{% macro pct(v) %}{{ '%.1f'|format(v * 100) }}%{% endmacro %}
+{% macro not_measured(m, what) %}
+<div class="empty-state model-empty">
+  <span class="empty-visual" aria-hidden="true">{{ icon('bar-chart') }}</span>
+  <h4>{{ what }} not measured yet</h4>
+  <p>Run this once on the computer that has the model and its held-out test set:</p>
+  <pre class="admin-code"><code>python model_report.py --stage {{ m.stage }} --csv {{ m.test_csv }} --target CKD</code></pre>
+  {% if m.metrics %}<p class="text-muted text-small">The saved measurements are from an older version of model_report.py - running it again adds this chart.</p>{% endif %}
+</div>
+{% endmacro %}
+
+{% block content %}
+<nav class="tab-row model-jump" aria-label="Models">
+  {% for m in models %}<a class="tab-link" href="#design-{{ m.key }}">{{ m.title }} <span class="tab-count">{{ 'Ready' if m.ready else 'Unavailable' }}</span></a>{% endfor %}
+</nav>
+
+{% for m in models %}
+<section class="model-section model-tone-{{ m.key }}" id="design-{{ m.key }}" aria-labelledby="dh-{{ m.key }}">
+  <div class="model-section-head">
+    <h2 id="dh-{{ m.key }}"><span class="model-key-dot" aria-hidden="true"></span>{{ m.title }} model</h2>
+    <span class="badge {{ 'risk-badge-low' if m.ready else 'risk-badge-high' }}">{{ 'Ready - in use' if m.ready else 'Unavailable' }}</span>
+  </div>
+
+  {% if m.warning %}
+  <div class="notice notice-warning model-warning" role="note">{{ icon('alert-triangle') }}
+    <div><h3>A note from the model's author</h3><p>{{ m.warning }}</p></div>
+  </div>
+  {% endif %}
+
+  {# ---------------- the pipeline ---------------- #}
+  <section class="card" aria-labelledby="flow-{{ m.key }}">
+    <div class="card-header"><h3 class="card-title" id="flow-{{ m.key }}">{{ icon_chip('layers', 'lavender') }}From answers to a result</h3></div>
+    {% if m.steps %}
+    <p class="text-muted text-small">Read from the saved model file itself, in the order every answer passes through it.</p>
+    <ol class="flow-steps">
+      {% for s in m.steps %}
+      <li class="flow-step flow-{{ s.kind }}">
+        <span class="flow-number" aria-hidden="true">{{ loop.index }}</span>
+        <div class="flow-body">
+          <h4>{{ icon(s.icon) }}{{ s.title }}</h4>
+          <p>{{ s.detail }}</p>
+          {% if s['items'] %}
+          <ul class="flow-items">
+            {% for it in s['items'] %}<li><strong>{{ it.label }}</strong>{% if it.count %} <span class="text-muted">({{ it.count }} input{{ 's' if it.count != 1 }})</span>{% endif %}: {{ it.words }}</li>{% endfor %}
+          </ul>
+          {% endif %}
+        </div>
+      </li>
+      {% endfor %}
+    </ol>
+    {% else %}
+    <p class="empty-inline">{{ icon('info') }}Shown once this model is installed and ready.{% if m.reason %} <span class="text-muted">{{ m.reason }}</span>{% endif %}</p>
+    {% endif %}
+  </section>
+
+  <div class="dash-row model-row">
+    {# ---------------- where the inputs and the weight come from ---------------- #}
+    <section class="card" aria-labelledby="groups-{{ m.key }}">
+      <div class="card-header"><h3 class="card-title" id="groups-{{ m.key }}">{{ icon_chip('clipboard-list', 'lavender') }}Where its inputs and weight come from</h3></div>
+      {% if m.groups %}
+      <p class="text-muted text-small">How many inputs each group has, and how much of the model's overall importance they carry together.</p>
+      <ol class="importance-list group-weights">
+        {% for g in m.groups %}
+        <li title="{{ g.label }}: {{ g.count }} inputs, {{ g.weight }}% of the model's importance">
+          <span class="importance-name">{{ g.label }} <span class="text-muted">&middot; {{ g.count }}</span></span>
+          <span class="importance-bar" role="img" aria-label="{{ g.weight }}% of the model's total importance"><span style="width: {{ g.share }}%"></span></span>
+          <span class="importance-value">{{ g.weight }}%</span>
+        </li>
+        {% endfor %}
+      </ol>
+      {% else %}<p class="empty-inline">{{ icon('info') }}Shown once the model is installed and ready.</p>{% endif %}
+    </section>
+
+    {# ---------------- score distribution ---------------- #}
+    <section class="card" aria-labelledby="hist-{{ m.key }}">
+      <div class="card-header"><h3 class="card-title" id="hist-{{ m.key }}">{{ icon_chip('bar-chart', 'lavender') }}How it separates people</h3></div>
+      {% set h = m.histogram %}
+      {% if h %}
+      <p class="text-muted text-small">The probability the model gave each person in the test set, for people with CKD and without. The further apart the two groups, the cleaner the separation; the dashed line is the threshold.</p>
+      <ul class="chart-legend" aria-hidden="true">
+        <li><span class="legend-swatch legend-swatch-negative"></span>Without CKD ({{ h.negatives }})</li>
+        <li><span class="legend-swatch legend-swatch-high"></span>With CKD ({{ h.positives }})</li>
+      </ul>
+      <svg class="dist-svg" viewBox="-34 -12 {{ h.width + 44 }} {{ h.height + 40 }}" role="img"
+           aria-label="Score distribution: people without CKD and with CKD, by the probability the model gave them, with the threshold at {{ pct(m.metrics.threshold) }}">
+        <line x1="0" y1="{{ h.height }}" x2="{{ h.width }}" y2="{{ h.height }}" class="chart-baseline"/>
+        <line x1="0" y1="0" x2="{{ h.width }}" y2="0" class="chart-grid"/>
+        <line x1="0" y1="{{ h.height / 2 }}" x2="{{ h.width }}" y2="{{ h.height / 2 }}" class="chart-grid"/>
+        <text x="-6" y="4" class="chart-tick" text-anchor="end">{{ h.peak_percent }}%</text>
+        <text x="-6" y="{{ h.height / 2 + 4 }}" class="chart-tick" text-anchor="end">{{ (h.peak_percent / 2)|round|int }}%</text>
+        <text x="-6" y="{{ h.height + 4 }}" class="chart-tick" text-anchor="end">0</text>
+        {% for b in h.bins %}
+        <rect class="dist-bar dist-negative" x="{{ b.neg.x }}" y="{{ b.neg.y }}" width="{{ b.neg.w }}" height="{{ b.neg.h }}" rx="1.5"><title>{{ b.range }}: {{ b.neg.count }} without CKD ({{ b.neg.share }}% of them)</title></rect>
+        <rect class="dist-bar dist-positive" x="{{ b.pos.x }}" y="{{ b.pos.y }}" width="{{ b.pos.w }}" height="{{ b.pos.h }}" rx="1.5"><title>{{ b.range }}: {{ b.pos.count }} with CKD ({{ b.pos.share }}% of them)</title></rect>
+        {% endfor %}
+        {% if h.threshold_x is not none %}
+        <line x1="{{ h.threshold_x }}" y1="-6" x2="{{ h.threshold_x }}" y2="{{ h.height }}" class="chart-threshold"/>
+        <text x="{{ h.threshold_x }}" y="-1" class="chart-threshold-label" text-anchor="{{ 'end' if h.threshold_x > h.width * 0.8 else 'start' }}" dx="{{ -4 if h.threshold_x > h.width * 0.8 else 4 }}">Threshold {{ pct(m.metrics.threshold) }}</text>
+        {% endif %}
+        {% for t in (0, 25, 50, 75, 100) %}<text x="{{ h.width * t / 100 }}" y="{{ h.height + 14 }}" class="chart-tick" text-anchor="middle">{{ t }}%</text>{% endfor %}
+        <text x="{{ h.width / 2 }}" y="{{ h.height + 27 }}" class="chart-axis" text-anchor="middle">Probability of higher risk given by the model</text>
+      </svg>
+      <details class="chart-table"><summary>Show as a table</summary>
+        <div class="table-scroll"><table class="data-table"><thead><tr><th scope="col">Probability</th><th scope="col">Without CKD</th><th scope="col">With CKD</th></tr></thead>
+        <tbody>{% for b in h.bins %}<tr><th scope="row">{{ b.range }}</th><td>{{ b.neg.count }} ({{ b.neg.share }}%)</td><td>{{ b.pos.count }} ({{ b.pos.share }}%)</td></tr>{% endfor %}</tbody></table></div>
+      </details>
+      {% else %}{{ not_measured(m, 'Score distribution') }}{% endif %}
+    </section>
+  </div>
+
+  {# ---------------- threshold trade-off ---------------- #}
+  <section class="card" aria-labelledby="trade-{{ m.key }}">
+    <div class="card-header"><h3 class="card-title" id="trade-{{ m.key }}">{{ icon_chip('trending-up', 'lavender') }}Why the threshold sits where it does</h3></div>
+    {% set t = m.tradeoff %}
+    {% if t %}
+    <div class="trade-layout">
+      <div>
+        <ul class="chart-legend" aria-hidden="true">
+          <li><span class="legend-line legend-line-sens"></span>Sensitivity: people with CKD it flags</li>
+          <li><span class="legend-line legend-line-spec"></span>Specificity: people without CKD it leaves unflagged</li>
+        </ul>
+        <svg class="trade-svg" viewBox="-34 -12 {{ t.width + 44 }} {{ t.height + 40 }}" role="img"
+             aria-label="Sensitivity and specificity at every threshold from 0 to 100 percent; at the chosen {{ pct(m.metrics.threshold) }}: sensitivity {{ pct(t.at_threshold.sensitivity) }}, specificity {{ pct(t.at_threshold.specificity) }}">
+          {% for g in (0, 0.25, 0.5, 0.75, 1) %}
+          <line x1="0" y1="{{ t.height * (1 - g) }}" x2="{{ t.width }}" y2="{{ t.height * (1 - g) }}" class="{{ 'chart-baseline' if g == 0 else 'chart-grid' }}"/>
+          <text x="-6" y="{{ t.height * (1 - g) + 4 }}" class="chart-tick" text-anchor="end">{{ (g * 100)|int }}%</text>
+          {% endfor %}
+          <polyline points="{{ t.specificity }}" class="trade-line trade-spec"/>
+          <polyline points="{{ t.sensitivity }}" class="trade-line trade-sens"/>
+          {% if t.threshold_x is not none %}
+          <line x1="{{ t.threshold_x }}" y1="-6" x2="{{ t.threshold_x }}" y2="{{ t.height }}" class="chart-threshold"/>
+          <circle cx="{{ t.threshold_x }}" cy="{{ (1 - t.at_threshold.sensitivity) * t.height }}" r="4.5" class="trade-dot trade-sens-dot"><title>At {{ pct(m.metrics.threshold) }}: sensitivity {{ pct(t.at_threshold.sensitivity) }}</title></circle>
+          <circle cx="{{ t.threshold_x }}" cy="{{ (1 - t.at_threshold.specificity) * t.height }}" r="4.5" class="trade-dot trade-spec-dot"><title>At {{ pct(m.metrics.threshold) }}: specificity {{ pct(t.at_threshold.specificity) }}</title></circle>
+          <text x="{{ t.threshold_x }}" y="-1" class="chart-threshold-label" text-anchor="{{ 'end' if t.threshold_x > t.width * 0.8 else 'start' }}" dx="{{ -4 if t.threshold_x > t.width * 0.8 else 4 }}">Chosen: {{ pct(m.metrics.threshold) }}</text>
+          {% endif %}
+          {% for x in (0, 25, 50, 75, 100) %}<text x="{{ t.width * x / 100 }}" y="{{ t.height + 14 }}" class="chart-tick" text-anchor="middle">{{ x }}%</text>{% endfor %}
+          <text x="{{ t.width / 2 }}" y="{{ t.height + 27 }}" class="chart-axis" text-anchor="middle">Threshold</text>
+        </svg>
+      </div>
+      <div class="trade-explain">
+        <p class="trade-figure"><span>At the chosen {{ pct(m.metrics.threshold) }}</span>
+          <strong>{{ pct(t.at_threshold.sensitivity) }}</strong> sensitivity &middot; <strong>{{ pct(t.at_threshold.specificity) }}</strong> specificity</p>
+        <p>Lowering the threshold flags more people: more cases are caught, but more false alarms too. Raising it does the opposite.</p>
+        {% if m.stage == '1' %}
+        <p><strong>Rule used:</strong> Youden's J - the threshold where sensitivity + specificity is highest, a balance between catching cases and avoiding false alarms. Its data is close to balanced (about half with CKD), so the threshold lands near the middle.</p>
+        {% else %}
+        <p><strong>Rule used:</strong> the highest threshold that still catches at least 98% of people with CKD (recall first). It is so high because this model's scores sit almost entirely near 0% or near 100% - its lab values (eGFR, creatinine, urine ACR) nearly define CKD in its data - so even a high threshold misses few cases.</p>
+        {% endif %}
+        <details class="chart-table"><summary>Show as a table</summary>
+          <div class="table-scroll"><table class="data-table"><thead><tr><th scope="col">Threshold</th><th scope="col">Sensitivity</th><th scope="col">Specificity</th></tr></thead>
+          <tbody>{% for r in t.rows %}<tr><th scope="row">{{ pct(r[0]) }}</th><td>{{ pct(r[1]) }}</td><td>{{ pct(r[2]) }}</td></tr>{% endfor %}</tbody></table></div>
+        </details>
+      </div>
+    </div>
+    {% else %}{{ not_measured(m, 'Threshold trade-off') }}{% endif %}
+  </section>
+</section>
+{% endfor %}
+{% endblock %}

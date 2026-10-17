@@ -1,0 +1,295 @@
+{# Visual building blocks: icon chips, the probability ring, the donut, the trend chart, the sparkline, the path.
+   Import with:  {% from "partials/_visuals.html" import icon_chip, ring, donut, trend_chart, sparkline, path_steps, risk_pill, info_tip, sample_tag %}
+   Every one of these only DRAWS values it is given. The values come from services/visuals.py,
+   which calculates them from real assessment records. Nothing here makes up a number. #}
+{% from "partials/_macros.html" import icon %}
+
+{# tone: lavender, green, red, amber, neutral, solid. (The older names blue and teal still work: blue is lavender, teal is green.)
+   extra_class can add a size: icon-chip-sm or icon-chip-lg. #}
+{% macro icon_chip(name, tone='lavender', extra_class='') -%}
+{% set tones = {'blue': 'lavender', 'teal': 'green'} %}
+<span class="icon-chip icon-chip-{{ tones.get(tone, tone) }} {{ extra_class }}" aria-hidden="true">{{ icon(name) }}</span>
+{%- endmacro %}
+
+{# Marks a visual that is filled with design-review sample data (never shown in real use). #}
+{% macro sample_tag() -%}
+<span class="sample-tag" title="This is sample data used to review the design">{{ icon('flask') }}Sample data</span>
+{%- endmacro %}
+
+{# The (i) beside a card title. The words are also the accessible name, so screen readers get them. #}
+{% macro info_tip(text) -%}
+<span class="info-tip" tabindex="0" role="img" aria-label="{{ text }}" title="{{ text }}">{{ icon('info') }}</span>
+{%- endmacro %}
+
+{# A risk status: a dot and the words. level is 'low' or 'high'. #}
+{% macro risk_pill(level, assessment_type='preliminary') -%}
+<span class="risk-pill risk-pill-{{ level }}"><span class="risk-dot" aria-hidden="true"></span>{{ level_label(level, assessment_type) }}</span>
+{%- endmacro %}
+
+{# A ring that fills clockwise from the top: the predicted risk probability.
+   With show_value=False it is only a soft outline (used when there is no result yet).
+   Pass threshold to draw the model's cut-off as a tick on the ring. #}
+{% macro ring(percent, show_value=True, threshold=None, caption='Predicted Risk Probability', large=False) -%}
+{% set g = ring_geometry(percent or 0, threshold=threshold) %}
+{% if large %}<div class="ring-wrap">{% endif %}
+<div class="ring{{ ' ring-lg' if large }}{{ '' if show_value else ' ring-empty' }}"{% if show_value %} role="img" aria-label="{{ caption }}: {{ '%g'|format(percent) }} percent{% if threshold is not none %}. The tick marks the model's validated threshold.{% endif %}"{% else %} aria-hidden="true"{% endif %}>
+  <svg viewBox="0 0 {{ g.box }} {{ g.box }}" focusable="false" aria-hidden="true">
+    <circle class="ring-track" cx="{{ g.centre }}" cy="{{ g.centre }}" r="{{ g.radius }}" stroke-width="{{ g.stroke }}" fill="none"/>
+    {% if show_value %}
+    <circle class="ring-value" cx="{{ g.centre }}" cy="{{ g.centre }}" r="{{ g.radius }}" stroke-width="{{ g.stroke }}" fill="none" stroke-dasharray="{{ g.dasharray }}" transform="rotate(-90 {{ g.centre }} {{ g.centre }})" style="--circ: {{ g.circumference }};"/>
+    {% if g.tick %}<line class="ring-tick" x1="{{ g.tick.x1 }}" y1="{{ g.tick.y1 }}" x2="{{ g.tick.x2 }}" y2="{{ g.tick.y2 }}"/>{% endif %}
+    {% endif %}
+  </svg>
+  <div class="ring-centre">
+    {% if show_value %}
+      <span class="ring-number">{{ ('%.1f'|format(percent)) if percent % 1 else (percent|int) }}<small>%</small></span>
+    {% else %}
+      {{ icon('activity') }}
+    {% endif %}
+  </div>
+</div>
+{% if large %}<span class="ring-caption">{{ caption }}</span></div>{% endif %}
+{%- endmacro %}
+
+{# Low / High counts as a ring, with a legend. Needs at least one real assessment. #}
+{% macro donut(low_count, high_count) -%}
+{% set d = donut_geometry(low_count, high_count) %}
+<div class="donut" role="img" aria-label="{{ low_count }} low-risk and {{ high_count }} high-risk results">
+  <svg viewBox="0 0 100 100" focusable="false" aria-hidden="true">
+    <g transform="rotate(-90 50 50)">
+      <circle class="donut-track" cx="50" cy="50" r="{{ d.radius }}" stroke-width="{{ d.stroke }}"/>
+      {% for s in d.segments %}
+      <circle class="donut-segment donut-{{ s.key }}" cx="50" cy="50" r="{{ d.radius }}" stroke-width="{{ d.stroke }}" stroke-dasharray="{{ s.dasharray }}" stroke-dashoffset="{{ s.dashoffset }}" style="--order: {{ loop.index0 }};"/>
+      {% endfor %}
+    </g>
+  </svg>
+</div>
+{%- endmacro %}
+
+{# Predicted risk probability over time on a 0 to 100 percent scale. trend comes from trend_geometry(); needs two or more points. #}
+{% macro trend_chart(trend) -%}
+<div class="chart">
+  <svg class="chart-svg" viewBox="0 0 {{ trend.width }} {{ trend.height }}" role="group"
+       aria-label="Line chart of predicted risk probability across {{ trend.points|length }} assessments, on a scale from 0 to 100 percent">
+    <g class="chart-grid">
+      {% for tick in trend.ticks %}<line x1="{{ trend.left }}" x2="{{ trend.right }}" y1="{{ tick.y }}" y2="{{ tick.y }}"/>{% endfor %}
+      {% for p in trend.points %}<line class="chart-vgrid" x1="{{ p.x }}" x2="{{ p.x }}" y1="{{ trend.top }}" y2="{{ trend.baseline }}"/>{% endfor %}
+      <line class="chart-vgrid" x1="{{ trend.left }}" x2="{{ trend.left }}" y1="{{ trend.top }}" y2="{{ trend.baseline }}"/>
+    </g>
+    <g class="chart-axis" aria-hidden="true">
+      {% for tick in trend.ticks %}<text x="{{ trend.left - 8 }}" y="{{ tick.y + 4 }}" text-anchor="end">{{ tick.value }}%</text>{% endfor %}
+      {% for p in trend.points %}
+        {% if p.show_label %}
+        <text x="{{ p.x }}" y="{{ trend.baseline + 20 }}" text-anchor="{{ 'start' if loop.first else ('end' if loop.last else 'middle') }}">{{ p.date_short }}</text>
+        {% endif %}
+      {% endfor %}
+    </g>
+    <path class="chart-area" d="{{ trend.area }}"/>
+    <path class="chart-line" pathLength="1" d="{{ trend.line }}"/>
+    {% for p in trend.points %}
+    <circle class="chart-point" cx="{{ p.x }}" cy="{{ p.y }}" r="5" tabindex="0" role="img"
+            aria-label="{{ p.date_full }}: predicted risk probability {{ '%g'|format(p.probability) }} percent, {{ level_label(p.level, p.assessment_type|default('preliminary')) }}"
+            data-tooltip-title="{{ p.date_full }}" data-tooltip-value="Predicted risk probability: {{ '%g'|format(p.probability) }}%"/>
+    {% endfor %}
+  </svg>
+</div>
+{%- endmacro %}
+
+{# The empty version of the chart: axes only. No line and no points, so nothing looks like data. #}
+{% macro trend_empty(title, message) -%}
+{% set f = trend_frame() %}
+<div class="chart chart-empty">
+  <svg class="chart-svg" viewBox="0 0 {{ f.width }} {{ f.height }}" aria-hidden="true" focusable="false">
+    <g class="chart-grid">
+      {% for tick in f.ticks %}<line x1="{{ f.left }}" x2="{{ f.right }}" y1="{{ tick.y }}" y2="{{ tick.y }}"/>{% endfor %}
+      {% for x in f.columns %}<line class="chart-vgrid" x1="{{ x }}" x2="{{ x }}" y1="{{ f.top }}" y2="{{ f.baseline }}"/>{% endfor %}
+    </g>
+    <g class="chart-axis">
+      {% for tick in f.ticks %}<text x="{{ f.left - 8 }}" y="{{ tick.y + 4 }}" text-anchor="end">{{ tick.value }}%</text>{% endfor %}
+    </g>
+  </svg>
+  <div class="chart-message">
+    {{ icon_chip('trending-up') }}
+    <strong>{{ title }}</strong>
+    <p>{{ message }}</p>
+  </div>
+</div>
+{%- endmacro %}
+
+{# The tiny trend line on a stat card. spark comes from sparkline_geometry(); only drawn with two real points. #}
+{% macro sparkline(spark) -%}
+<svg class="sparkline" viewBox="0 0 {{ spark.width }} {{ spark.height }}" aria-hidden="true" focusable="false">
+  <path class="sparkline-area" d="{{ spark.area }}"/>
+  <path class="sparkline-line" d="{{ spark.line }}"/>
+</svg>
+{%- endmacro %}
+
+{# A thin, compact version of the risk line, for rows in lists. #}
+{% macro mini_meter(probability, threshold, level) -%}
+<span class="mini-meter" data-level="{{ level }}" style="--value: {{ probability }}; --threshold: {{ threshold }};" role="img"
+      aria-label="Predicted risk probability {{ '%g'|format(probability) }} percent"><span class="mini-meter-fill"></span><span class="mini-meter-tick"></span></span>
+{%- endmacro %}
+
+{# "Your path to better kidney health": four steps like radio dots on a line.
+   done is 0 to 4 (see screening_path in services/visuals.py). The first step that is not done is the current one. #}
+{% macro path_steps(done, steps) -%}
+<ol class="path-steps">
+  {% for label in steps %}
+  <li class="path-step{{ ' is-done' if loop.index0 < done }}{{ ' is-current' if loop.index0 == done }}"{{ ' aria-current="step"'|safe if loop.index0 == done }}>
+    <span class="path-node">{% if loop.index0 < done %}{{ icon('check') }}{% endif %}</span>
+    <span class="path-name">{{ label }}{% if loop.index0 < done %}<span class="visually-hidden"> (done)</span>{% endif %}</span>
+  </li>
+  {% endfor %}
+</ol>
+{%- endmacro %}
+
+{# A number, what it is, and a bar. value is the words shown, percent (0 to 100) is the bar. #}
+{% macro progress_item(value, label, percent, key='') -%}
+<div class="progress-item" data-key="{{ key }}">
+  <p class="progress-value">{{ value }}</p>
+  <p class="progress-label">{{ label }}</p>
+  <div class="progress-bar" role="progressbar" aria-valuenow="{{ percent }}" aria-valuemin="0" aria-valuemax="100" aria-label="{{ label }}"><span class="progress-bar-fill" style="--progress: {{ percent }}%"></span></div>
+</div>
+{%- endmacro %}
+
+{# ================= CKD EDUCATION (Phase 9 refinement): population-level facts, always sourced ================= #}
+
+{# The one reusable "where did this number come from" control - the same click-to-toggle popover as a lab
+   field's (?) button (static/js/main.js, "Field help tooltips"), just labelled as a source rather than an
+   explanation. #}
+{% macro source_note(label) -%}
+<button type="button" class="field-help-button source-note-button" data-field-help="Source: {{ label }}" aria-label="Where this figure comes from">i</button>
+{%- endmacro %}
+
+{# A single big ring with the ratio as its own centre label ("1 in 7", "9 in 10") - one glance, one number, no
+   paragraph. fact: {eyebrow, value, ring_percent, short_caption, detail, source_label}. #}
+{% macro fact_ring_card(fact) %}
+{% set g = ring_geometry(fact.ring_percent, radius=36, stroke=6) %}
+<div class="ckd-fact-card ckd-ring-card">
+  <p class="ckd-fact-eyebrow">{{ fact.eyebrow }}</p>
+  <div class="ring ckd-ring" role="img" aria-label="{{ fact.value }}: {{ fact.detail }}">
+    <svg viewBox="0 0 {{ g.box }} {{ g.box }}" focusable="false" aria-hidden="true">
+      <circle class="ring-track" cx="{{ g.centre }}" cy="{{ g.centre }}" r="{{ g.radius }}" stroke-width="{{ g.stroke }}" fill="none"/>
+      <circle class="ring-value" cx="{{ g.centre }}" cy="{{ g.centre }}" r="{{ g.radius }}" stroke-width="{{ g.stroke }}" fill="none" stroke-dasharray="{{ g.dasharray }}" transform="rotate(-90 {{ g.centre }} {{ g.centre }})" style="--circ: {{ g.circumference }};"/>
+    </svg>
+    <div class="ring-centre"><span class="ckd-ring-value">{{ fact.value }}</span></div>
+  </div>
+  <p class="ckd-ring-caption">{{ fact.short_caption }}</p>
+  {{ source_note(fact.source_label) }}
+</div>
+{% endmacro %}
+
+{# A row of small rings, one per group, each with its own percent at its centre and a one-word label underneath -
+   the visual comparison IS the content; no bars, no sentences. fact: {eyebrow, groups: [{label, percent[, icon]}], detail, source_label}. #}
+{% macro fact_mini_rings(fact) %}
+<div class="ckd-fact-card">
+  <p class="ckd-fact-eyebrow">{{ fact.eyebrow }}</p>
+  <div class="ckd-mini-rings-row" role="img" aria-label="{{ fact.detail }}">
+    {% for grp in fact.groups %}
+    {% set g = ring_geometry(grp.percent, radius=24, stroke=6) %}
+    <div class="ckd-mini-ring-item">
+      <div class="ring ckd-ring-sm">
+        <svg viewBox="0 0 {{ g.box }} {{ g.box }}" focusable="false" aria-hidden="true">
+          <circle class="ring-track" cx="{{ g.centre }}" cy="{{ g.centre }}" r="{{ g.radius }}" stroke-width="{{ g.stroke }}" fill="none"/>
+          <circle class="ring-value" cx="{{ g.centre }}" cy="{{ g.centre }}" r="{{ g.radius }}" stroke-width="{{ g.stroke }}" fill="none" stroke-dasharray="{{ g.dasharray }}" transform="rotate(-90 {{ g.centre }} {{ g.centre }})" style="--circ: {{ g.circumference }};"/>
+        </svg>
+        <div class="ring-centre"><span class="ckd-mini-ring-value">{{ grp.percent }}%</span></div>
+      </div>
+      <p class="ckd-mini-ring-label">{{ grp.label }}</p>
+    </div>
+    {% endfor %}
+  </div>
+  {{ source_note(fact.source_label) }}
+</div>
+{% endmacro %}
+
+{# The sex-differences card: two icon-led mini-stats, side by side - the caveat lives in the source/detail
+   popover, not as a paragraph on the card. fact: {eyebrow, stats: [{short, value, icon, detail}], source_label}. #}
+{% macro fact_sex_differences(fact) %}
+<div class="ckd-fact-card">
+  <p class="ckd-fact-eyebrow">{{ fact.eyebrow }}</p>
+  <div class="ckd-sex-grid">
+    {% for s in fact.stats %}
+    <div class="ckd-sex-stat">
+      <span class="ckd-sex-icon">{{ icon(s.icon) }}</span>
+      <p class="ckd-sex-value">{{ s.value }}</p>
+      <p class="ckd-sex-short">{{ s.short }}</p>
+    </div>
+    {% endfor %}
+  </div>
+  {{ source_note(fact.source_label) }}
+</div>
+{% endmacro %}
+
+{# A single big figure with an icon - for a sourced number that is not a share of 100 ("7 million", "Every hour"),
+   which a ring would misrepresent. fact: {eyebrow, value, icon, short_caption, detail, source_label}. #}
+{% macro fact_stat_card(fact) %}
+<div class="ckd-fact-card ckd-stat-card">
+  <p class="ckd-fact-eyebrow">{{ fact.eyebrow }}</p>
+  <span class="ckd-stat-icon" aria-hidden="true">{{ icon(fact.icon) }}</span>
+  <p class="ckd-stat-value" aria-label="{{ fact.value }}: {{ fact.detail }}">{{ fact.value }}</p>
+  <p class="ckd-ring-caption">{{ fact.short_caption }}</p>
+  {{ source_note(fact.source_label) }}
+</div>
+{% endmacro %}
+
+{# Nephron's own count: X of Y people in the Philippines are at higher risk by their latest result - a ring, with
+   an honest empty state until there are enough people (services/community_stats.py). #}
+{% macro community_risk_card(summary, eyebrow, caption, source, empty_note) %}
+<div class="ckd-fact-card ckd-ring-card community-card">
+  <p class="ckd-fact-eyebrow">{{ eyebrow }}</p>
+  {% if summary.enough %}
+  {% set g = ring_geometry(summary.high_percent, radius=36, stroke=6) %}
+  <div class="ring ckd-ring ring-risk" role="img" aria-label="{{ summary.high }} of {{ summary.people }} ({{ summary.high_percent }}%) {{ caption }}">
+    <svg viewBox="0 0 {{ g.box }} {{ g.box }}" focusable="false" aria-hidden="true">
+      <circle class="ring-track" cx="{{ g.centre }}" cy="{{ g.centre }}" r="{{ g.radius }}" stroke-width="{{ g.stroke }}" fill="none"/>
+      <circle class="ring-value" cx="{{ g.centre }}" cy="{{ g.centre }}" r="{{ g.radius }}" stroke-width="{{ g.stroke }}" fill="none" stroke-dasharray="{{ g.dasharray }}" transform="rotate(-90 {{ g.centre }} {{ g.centre }})" style="--circ: {{ g.circumference }};"/>
+    </svg>
+    <div class="ring-centre"><span class="ckd-ring-value">{{ summary.high_percent }}%</span></div>
+  </div>
+  <p class="ckd-ring-caption"><strong>{{ summary.high }} of {{ summary.people }}</strong> {{ caption }}</p>
+  {% else %}
+  <span class="ckd-stat-icon" aria-hidden="true">{{ icon('map-pin') }}</span>
+  <p class="ckd-ring-caption">{{ empty_note }}</p>
+  {% endif %}
+  {{ source_note(source) }}
+</div>
+{% endmacro %}
+
+{# A count plot: one bar per gender answer, its length the number of people, the red part those at higher risk.
+   data: community_stats.by_gender(...) - {rows: [{label, people, high, high_percent, bar, high_bar}], hidden, ...}. #}
+{% macro gender_count_plot(data, eyebrow, source, empty_note, noun='people') %}
+<div class="ckd-fact-card gender-plot-card">
+  <p class="ckd-fact-eyebrow">{{ eyebrow }}</p>
+  {% if data and data.rows %}
+  <ul class="gender-legend" aria-hidden="true"><li><span class="legend-swatch legend-swatch-all"></span>{{ noun|capitalize }} screened</li><li><span class="legend-swatch legend-swatch-high"></span>At higher risk</li></ul>
+  <ol class="gender-plot" role="list">
+    {% for row in data.rows %}
+    <li class="gender-plot-row" aria-label="{{ row.label }}: {{ row.people }} {{ noun if row.people != 1 else noun[:-1] if noun.endswith('s') else noun }}, {{ row.high }} at higher risk">
+      <span class="gender-plot-label">{{ row.label }}</span>
+      <span class="gender-plot-track" aria-hidden="true">
+        <span class="gender-plot-bar" style="--bar: {{ row.bar }}%;"><span class="gender-plot-high" style="--high: {{ (row.high / row.people * 100)|round(1) if row.people else 0 }}%;"></span></span>
+      </span>
+      <span class="gender-plot-count"><strong>{{ row.people }}</strong> &middot; <span class="gender-plot-risk">{{ row.high }} ({{ row.high_percent }}%)</span></span>
+    </li>
+    {% endfor %}
+  </ol>
+  {% if data.hidden %}<p class="gender-plot-note">{{ data.hidden }} {{ 'person' if data.hidden == 1 else 'people' }} in smaller groups not shown, to protect their privacy.</p>{% endif %}
+  {% else %}
+  <span class="ckd-stat-icon" aria-hidden="true">{{ icon('users') }}</span>
+  <p class="ckd-ring-caption">{{ empty_note }}</p>
+  {% endif %}
+  {{ source_note(source) }}
+</div>
+{% endmacro %}
+
+{# Nephron's own community picture for people living in the Philippines - the same on the General User's and the
+   professional's dashboard. community: community_stats.philippines(...). Anonymous counts only. #}
+{% macro community_cards(community) %}
+{% set own = "Nephron's own anonymous count: each person's latest screening result, for everyone who answered that they live in the Philippines. Not a national statistic." %}
+<h3 class="ckd-subhead">{{ icon('map-pin') }}Nephron users in the Philippines <small>Anonymous counts from screenings on Nephron</small></h3>
+{{ community_risk_card(community.risk, "Who is at risk", "people screened who live in the Philippines are at higher risk", own,
+                       "Shown once " ~ community.risk.min_people ~ " people living in the Philippines have a screening result.") }}
+{{ gender_count_plot(community.gender, "Risk by gender", own ~ " Genders with fewer than 3 people are combined or left out, so no one can be recognised.",
+                     "Shown once " ~ community.risk.min_people ~ " people living in the Philippines have a screening result.") }}
+{% endmacro %}

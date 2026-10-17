@@ -1,0 +1,166 @@
+{# The real register page. The design preview of this page is templates/design/register.html. #}
+{% extends "layouts/auth_base.html" %}
+{% from "partials/_location_fields.html" import location_fields %}
+{% from "partials/_macros.html" import icon, csrf_field, field_error %}
+{% from "partials/_visuals.html" import icon_chip %}
+{% block scripts %}<script src="{{ url_for('static', filename='js/auth.js') }}" defer></script>{% endblock %}
+
+{% block auth_art %}<img class="auth-art auth-art-alt" src="{{ url_for('static', filename='images/art/kidney-hero.png') }}" alt="" width="752" height="596" aria-hidden="true">{% endblock %}
+
+{% block auth_message %}
+<h2>One account, built around the way you use Nephron.</h2>
+<p>Choose the role that fits. You can change how you share results later, and nothing is shared without your say.</p>
+<ul class="auth-points">
+  <li>{{ icon_chip('user', 'solid') }}<div><strong>General user</strong><span>Screen yourself and keep a private history.</span></div></li>
+  <li>{{ icon_chip('stethoscope', 'solid') }}<div><strong>Healthcare professional</strong><span>Review assessments that people share with you.</span></div></li>
+</ul>
+{% endblock %}
+
+{% block content %}
+{% set field_order = ['role', 'full_name', 'email', 'username', 'date_of_birth', 'country', 'password', 'confirm_password', 'avatar', 'profession_title', 'institution', 'license_number'] %}
+{% set failing = field_order | select('in', errors) | list %}
+{% set first_error = failing[0] if failing else '' %}
+<h1>Create your account</h1>
+<p class="text-muted">It takes a minute. Fields marked <span class="chip chip-required">Required</span> must be filled in.</p>
+
+<form method="post" action="{{ url_for('auth.register') }}" novalidate>
+  {{ csrf_field() }}
+  <fieldset class="role-grid" aria-describedby="role-error">
+    <legend class="visually-hidden">I am a</legend>
+    <label class="role-card">
+      <input type="radio" name="role" value="general" {{ 'checked' if form.get('role') != 'professional' }}>
+      <span class="role-tile">{{ icon_chip('user', 'blue') }}<strong>General user</strong><span class="role-note">Screen yourself</span></span>
+    </label>
+    <label class="role-card">
+      <input type="radio" name="role" value="professional" {{ 'checked' if form.get('role') == 'professional' }}>
+      <span class="role-tile">{{ icon_chip('stethoscope', 'teal') }}<strong>Healthcare professional</strong><span class="role-note">Review shared results</span></span>
+    </label>
+  </fieldset>
+  {{ field_error(errors, 'role') }}
+
+  <div class="form-group">
+    <label class="form-label" for="full_name">Full name <span class="chip chip-required">Required</span></label>
+    <div class="input-wrap has-icon">
+      {{ icon('user', 'input-icon') }}
+      <input class="form-control{{ ' is-invalid' if errors.get('full_name') }}" id="full_name" name="full_name" type="text" value="{{ form.get('full_name', '') }}" autocomplete="name" maxlength="120" required aria-describedby="full_name-error"{{ ' aria-invalid="true"'|safe if errors.get('full_name') }}{{ ' autofocus'|safe if first_error == 'full_name' }}>
+    </div>
+    {{ field_error(errors, 'full_name') }}
+  </div>
+
+  <div class="form-group">
+    <label class="form-label" for="email">Email address <span class="chip chip-required">Required</span></label>
+    <div class="input-wrap has-icon">
+      {{ icon('mail', 'input-icon') }}
+      <input class="form-control{{ ' is-invalid' if errors.get('email') }}" id="email" name="email" type="email" value="{{ form.get('email', '') }}" autocomplete="email" autocapitalize="none" spellcheck="false" placeholder="name@example.com" maxlength="254" required aria-describedby="email-error"{{ ' aria-invalid="true"'|safe if errors.get('email') }}{{ ' autofocus'|safe if first_error == 'email' }}>
+    </div>
+    {{ field_error(errors, 'email') }}
+  </div>
+
+  <div class="form-row">
+    <div class="form-group">
+      <label class="form-label" for="username">Username <span class="chip chip-required">Required</span></label>
+      <div class="input-wrap has-icon">
+        {{ icon('at-sign', 'input-icon') }}
+        <input class="form-control{{ ' is-invalid' if errors.get('username') }}" id="username" name="username" type="text" value="{{ form.get('username', '') }}" autocomplete="username" autocapitalize="none" spellcheck="false" maxlength="32" required aria-describedby="username-hint username-error"{{ ' aria-invalid="true"'|safe if errors.get('username') }}{{ ' autofocus'|safe if first_error == 'username' }}>
+      </div>
+      <p class="form-helper" id="username-hint">Letters, numbers and underscores. Starts with a letter.</p>
+      {{ field_error(errors, 'username') }}
+    </div>
+
+    <div class="form-group">
+      <label class="form-label" for="date_of_birth">Date of birth <span class="chip chip-required">Required</span></label>
+      <div class="input-wrap has-icon">
+        {{ icon('calendar', 'input-icon') }}
+        <input class="form-control{{ ' is-invalid' if errors.get('date_of_birth') }}" id="date_of_birth" name="date_of_birth" type="date" value="{{ form.get('date_of_birth', '') }}" autocomplete="bday" required aria-describedby="date_of_birth-error"{{ ' aria-invalid="true"'|safe if errors.get('date_of_birth') }}{{ ' autofocus'|safe if first_error == 'date_of_birth' }}>
+      </div>
+      {{ field_error(errors, 'date_of_birth') }}
+    </div>
+  </div>
+
+  <div class="form-group">
+    <label class="form-label" for="country">Country you live in <span class="chip chip-required">Required for General Users</span></label>
+    <select class="form-control{{ ' is-invalid' if errors.get('country') }}" id="country" name="country" aria-describedby="country-hint country-error"{{ ' aria-invalid="true"'|safe if errors.get('country') }}{{ ' autofocus'|safe if first_error == 'country' }}>
+      <option value="">Choose one</option>
+      {% for value, label in country_options %}<option value="{{ value }}" {{ 'selected' if form.get('country') == value }}>{{ label }}</option>{% endfor %}
+    </select>
+    <p class="form-helper" id="country-hint">Used for your screenings, so you will not be asked again each time.</p>
+    {{ field_error(errors, 'country') }}
+  </div>
+
+  {{ location_fields(form, errors, country_field='country', country=form.get('country')) }}
+
+  <div class="form-group">
+    <label class="form-label" for="address">Address <span class="chip chip-optional">Optional</span></label>
+    <div class="input-wrap has-icon">
+      {{ icon('map-pin', 'input-icon') }}
+      <input class="form-control{{ ' is-invalid' if errors.get('address') }}" id="address" name="address" type="text" value="{{ form.get('address', '') }}" autocomplete="street-address" maxlength="255" aria-describedby="address-error"{{ ' aria-invalid="true"'|safe if errors.get('address') }}>
+    </div>
+    {{ field_error(errors, 'address') }}
+  </div>
+
+  <div class="form-row">
+    <div class="form-group">
+      <label class="form-label" for="password">Password <span class="chip chip-required">Required</span></label>
+      <div class="input-wrap has-icon has-action">
+        {{ icon('lock', 'input-icon') }}
+        <input class="form-control{{ ' is-invalid' if errors.get('password') }}" id="password" name="password" type="password" autocomplete="new-password" maxlength="128" required aria-describedby="password-hint password-error"{{ ' aria-invalid="true"'|safe if errors.get('password') }}{{ ' autofocus'|safe if first_error == 'password' }}>
+        <button type="button" class="input-action" data-toggle-password aria-controls="password" aria-pressed="false" aria-label="Show password">{{ icon('eye') }}</button>
+      </div>
+      <p class="form-helper" id="password-hint">At least 10 characters. A longer phrase is stronger than a short, complicated one.</p>
+      {{ field_error(errors, 'password') }}
+    </div>
+
+    <div class="form-group">
+      <label class="form-label" for="confirm_password">Confirm password <span class="chip chip-required">Required</span></label>
+      <div class="input-wrap has-icon has-action">
+        {{ icon('lock', 'input-icon') }}
+        <input class="form-control{{ ' is-invalid' if errors.get('confirm_password') }}" id="confirm_password" name="confirm_password" type="password" autocomplete="new-password" maxlength="128" required aria-describedby="confirm_password-error"{{ ' aria-invalid="true"'|safe if errors.get('confirm_password') }}{{ ' autofocus'|safe if first_error == 'confirm_password' }}>
+        <button type="button" class="input-action" data-toggle-password aria-controls="confirm_password" aria-pressed="false" aria-label="Show password">{{ icon('eye') }}</button>
+      </div>
+      {{ field_error(errors, 'confirm_password') }}
+    </div>
+  </div>
+
+  <fieldset class="form-group avatar-fieldset" aria-describedby="avatar-error">
+    <legend class="form-label">Profile picture <span class="chip chip-required">Required</span></legend>
+    <div class="avatar-grid">
+      {% for n in range(1, 9) %}
+      {% set value = "avatar-" ~ n %}
+      <label class="avatar-choice">
+        <input type="radio" name="avatar" value="{{ value }}" {{ 'checked' if form.get('avatar') == value or (not form.get('avatar') and loop.first) }}{{ ' aria-invalid="true"'|safe if errors.get('avatar') }}>
+        <span class="avatar-tile"><img src="{{ url_for('static', filename='images/avatars/' ~ value ~ '.svg') }}" alt="" width="48" height="48"></span>
+      </label>
+      {% endfor %}
+    </div>
+    {{ field_error(errors, 'avatar') }}
+  </fieldset>
+
+  {# Only for healthcare professionals. auth.js hides this block while "General user" is selected. #}
+  <div class="professional-fields" data-professional-fields>
+    <p class="form-helper professional-note">{{ icon('info') }}<span>Professional details are typed in by you. Nephron does not verify them in this version.</span></p>
+    <div class="form-group">
+      <label class="form-label" for="profession_title">Profession <span class="chip chip-required">Required</span></label>
+      <select class="form-control{{ ' is-invalid' if errors.get('profession_title') }}" id="profession_title" name="profession_title" aria-describedby="profession_title-error"{{ ' aria-invalid="true"'|safe if errors.get('profession_title') }}{{ ' autofocus'|safe if first_error == 'profession_title' }}>
+        <option value="">Choose your profession</option>
+        {% for name in professions %}<option value="{{ name }}" {{ 'selected' if form.get('profession_title') == name }}>{{ name }}</option>{% endfor %}
+      </select>
+      {{ field_error(errors, 'profession_title') }}
+    </div>
+    <div class="form-group">
+      <label class="form-label" for="institution">Hospital or clinic <span class="chip chip-optional">Optional</span></label>
+      <input class="form-control{{ ' is-invalid' if errors.get('institution') }}" id="institution" name="institution" type="text" value="{{ form.get('institution', '') }}" maxlength="120" autocomplete="organization" aria-describedby="institution-error"{{ ' aria-invalid="true"'|safe if errors.get('institution') }}>
+      {{ field_error(errors, 'institution') }}
+    </div>
+    <div class="form-group">
+      <label class="form-label" for="license_number">License number <span class="chip chip-optional">Optional</span></label>
+      <input class="form-control{{ ' is-invalid' if errors.get('license_number') }}" id="license_number" name="license_number" type="text" value="{{ form.get('license_number', '') }}" maxlength="50" autocomplete="off" aria-describedby="license_number-error"{{ ' aria-invalid="true"'|safe if errors.get('license_number') }}>
+      {{ field_error(errors, 'license_number') }}
+    </div>
+  </div>
+
+  <p class="form-helper data-use-note">{{ icon('shield-check') }}How your screening answers are used: to give you your result, and - with your name, contact details, gender and location removed - to help improve Nephron's model. Where you live is shown to local health officials only as totals per place, never with your name.</p>
+  <button class="button button-primary button-block" type="submit" data-loading-text="Creating account...">Create account</button>
+  <p class="form-helper text-small text-muted">By creating an account, you agree to our <a href="{{ url_for('main.terms') }}">Terms &amp; Conditions</a>.</p>
+</form>
+<p class="text-small auth-secondary">Already have an account? <a href="{{ url_for('auth.login') }}">Sign in</a></p>
+{% endblock %}

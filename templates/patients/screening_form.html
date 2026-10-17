@@ -1,0 +1,84 @@
+{# A Preliminary screening the PROFESSIONAL fills in on the patient's behalf. Same catalog, same questions, same
+   server-side checks as templates/screening/form.html (its own "question" macro is reused directly, unchanged) -
+   just posted to a different route, and with the same draft autosave as a person's own screening, saved under the patient record's own account. #}
+{% extends "layouts/app_base.html" %}
+{% from "partials/_macros.html" import icon, alert_box, csrf_field, field_error %}
+{% from "partials/_visuals.html" import icon_chip %}
+{% from "screening/_question_macro.html" import question %}
+{% set active_nav = 'patients' %}
+{% block scripts %}<script src="{{ url_for('static', filename='js/screening.js') }}" defer></script>{% endblock %}
+{% block header_title %}Preliminary screening{% endblock %}
+{% block header_subtitle %}For {{ record.full_name }} ({{ record.patient_code }}) - review every answer before it is analysed.{% endblock %}
+
+{% block content %}
+<div class="assessment-layout" data-assessment data-first-error-step="{{ first_error_step }}" data-draft-save-url="{{ url_for('patient_records.save_screening_draft', patient_code=patient_code) }}">
+  <div>
+    <noscript><div class="notice">{{ icon('info') }}<div><h2>JavaScript is needed</h2><p>The guided screening moves step by step and needs JavaScript. Please turn it on and reload this page.</p></div></div></noscript>
+    <p class="stepper-summary" data-step-summary aria-live="polite"></p>
+    <ol class="stepper" aria-label="Screening progress">
+      {% for step in catalog.steps %}
+      <li class="stepper-step{{ ' is-current' if loop.first }}"{{ ' aria-current="step"'|safe if loop.first }}>
+        <span class="stepper-node"><span class="stepper-number">{{ loop.index }}</span>{{ icon('check', 'stepper-check') }}</span>
+        <span class="stepper-line"></span>
+        <span class="stepper-label">{{ step.title }}</span>
+      </li>
+      {% endfor %}
+      <li class="stepper-step">
+        <span class="stepper-node"><span class="stepper-number">{{ catalog.steps|length + 1 }}</span>{{ icon('check', 'stepper-check') }}</span>
+        <span class="stepper-line"></span>
+        <span class="stepper-label">Review</span>
+      </li>
+    </ol>
+    <div class="step-progress">
+      <div class="progress-bar" role="progressbar" aria-valuemin="0" aria-valuemax="100" aria-valuenow="0" aria-label="Screening progress" data-step-progress><span class="progress-bar-fill" style="--progress: 0%"></span></div>
+      <span class="step-progress-text" data-step-progress-text>0% complete</span>
+      <span class="draft-save-status" data-draft-status aria-live="polite"></span>
+    </div>
+
+    {% if errors %}{{ alert_box('error', 'Some answers need attention. They are marked below, and nothing has been saved.', dismissible=False, title='Please check the answers') }}{% endif %}
+
+    <form method="post" action="{{ url_for('patient_records.screening', patient_code=patient_code) }}" novalidate data-assessment-form data-confirm-after-check data-busy-text="Analysing the answers..." data-confirm="default" data-confirm-title="Analyse these answers for {name}?" data-confirm-name="{{ record.full_name }}" data-confirm-message="Please confirm the answers were checked with the patient and are accurate - the estimate can only be as accurate as the answers behind it. This is a screening estimate, not a diagnosis." data-confirm-accept="Yes, analyse" data-confirm-dismiss="Check again">
+      {{ csrf_field() }}
+      {% for step in catalog.steps %}
+      <section class="step-panel{{ ' is-active' if loop.first }}" data-step-title="{{ step.title }}" data-step-key="{{ step.key }}" aria-labelledby="step-{{ loop.index }}-title">
+        <h2 id="step-{{ loop.index }}-title" tabindex="-1">{{ step.title }}</h2>
+        <p class="text-muted">{{ step.intro }}</p>
+        <div class="card form-card">
+          <div class="card-header"><h3 class="card-title">{{ icon_chip(step.icon, 'lavender', 'icon-chip-sm') }}{{ step.title }}</h3><span class="chip chip-required">Required</span></div>
+          {% for q in catalog.questions if q.step == step.key and q.kind != 'derived' %}
+            {{ question(q, answers, errors, fixed) }}
+          {% endfor %}
+        </div>
+      </section>
+      {% endfor %}
+
+      <section class="step-panel" data-step-title="Review" aria-labelledby="step-review-title">
+        <h2 id="step-review-title" tabindex="-1">Review the answers</h2>
+        <p class="text-muted">Check every answer with the patient. Go back to change anything - the answers are saved with the result.</p>
+        <div class="card form-card">
+          <div class="card-header"><h3 class="card-title">{{ icon_chip('check-circle', 'lavender', 'icon-chip-sm') }}Answers</h3></div>
+          <dl class="summary-list" data-review-list></dl>
+        </div>
+      </section>
+
+      <div class="step-actions">
+        <button type="button" class="button button-secondary" data-step-back disabled>Back</button>
+        <button type="button" class="button button-primary" data-step-next>Continue</button>
+        <button type="submit" class="button button-primary" data-step-submit hidden data-loading-text="Analysing...">Analyse these answers</button>
+      </div>
+    </form>
+  </div>
+
+  <aside class="card card-soft" aria-label="What you will receive">
+    <div class="card-header"><h2 class="card-title">Patient</h2></div>
+    <dl class="term-list">
+      <div class="term-row"><dt>Name</dt><dd>{{ record.full_name }}</dd></div>
+      <div class="term-row"><dt>Patient ID</dt><dd><span class="chip chip-mono">{{ record.patient_code }}</span></dd></div>
+      <div class="term-row"><dt>Age</dt><dd>{{ record.age }}</dd></div>
+      {% if record.get('gender') %}<div class="term-row"><dt>Gender</dt><dd>{{ record.gender }}</dd></div>{% endif %}
+      <div class="term-row"><dt>Sex at birth</dt><dd>{{ record.sex }}</dd></div>
+    </dl>
+    <p class="text-small text-muted aside-note">Age, gender and sex come from the patient's record, so they are the same in every screening.</p>
+  </aside>
+</div>
+{% endblock %}

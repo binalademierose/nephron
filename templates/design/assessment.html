@@ -1,0 +1,164 @@
+{% extends "layouts/app_base.html" %}
+{% from "partials/_macros.html" import icon %}
+{% from "partials/_visuals.html" import icon_chip %}
+{% set active_nav = 'assessment' %}
+{% block body_class %}app-body has-preview-bar{% endblock %}
+{% block preview_bar %}{% include "partials/_preview_bar.html" %}{% endblock %}
+
+{% block header_title %}Preliminary screening{% endblock %}
+{% block header_subtitle %}Answer what you can. You will review everything before it is analyzed.{% endblock %}
+
+{% block content %}
+<div class="assessment-layout" data-assessment data-result-url="{{ url_for('design.result') }}">
+  <div>
+    <p class="stepper-summary" data-step-summary aria-live="polite"></p>
+    <ol class="stepper" aria-label="Screening progress">
+      {% for label in ['About you', 'Health information', 'Lifestyle', 'Laboratory', 'Review'] %}
+      <li class="stepper-step{{ ' is-current' if loop.first }}"{{ ' aria-current="step"'|safe if loop.first }}>
+        <span class="stepper-node"><span class="stepper-number">{{ loop.index }}</span>{{ icon('check', 'stepper-check') }}</span>
+        <span class="stepper-line"></span>
+        <span class="stepper-label">{{ label }}</span>
+      </li>
+      {% endfor %}
+    </ol>
+    <div class="step-progress">
+      <div class="progress-bar" role="progressbar" aria-valuemin="0" aria-valuemax="100" aria-valuenow="0" aria-label="Screening progress" data-step-progress><span class="progress-bar-fill" style="--progress: 0%"></span></div>
+      <span class="step-progress-text" data-step-progress-text>0% complete</span>
+    </div>
+
+    <form novalidate data-assessment-form>
+
+      <section class="step-panel is-active" data-step-title="About you" aria-labelledby="step-1-title">
+        <h2 id="step-1-title" tabindex="-1">About you</h2>
+        <p class="text-muted">Two quick questions to start.</p>
+        <div class="card form-card">
+          <div class="card-header"><h3 class="card-title">{{ icon_chip('user', 'blue', 'icon-chip-sm') }}Personal information</h3><span class="chip chip-required">Required</span></div>
+          <div class="question-group">
+            <div class="form-group">
+              <label class="form-label" for="age">Age</label>
+              <div class="input-wrap has-suffix">
+                <input class="form-control" id="age" type="number" inputmode="numeric" min="0" max="120" data-review-label="Age" data-review-suffix="years">
+                <span class="input-suffix" aria-hidden="true">years</span>
+              </div>
+              <p class="form-helper">Your age in whole years.</p>
+            </div>
+          </div>
+          <div class="question-group">
+            <fieldset class="form-fieldset">
+              <legend>Sex</legend>
+              <div class="choice-group">
+                <label class="choice"><input type="radio" name="sex" value="Female" data-review-label="Sex"><span class="choice-tile">Female</span></label>
+                <label class="choice"><input type="radio" name="sex" value="Male" data-review-label="Sex"><span class="choice-tile">Male</span></label>
+              </div>
+            </fieldset>
+          </div>
+        </div>
+      </section>
+
+      <section class="step-panel" data-step-title="Health information" aria-labelledby="step-2-title">
+        <h2 id="step-2-title" tabindex="-1">Health information</h2>
+        <p class="text-muted">Choose the answer that fits best.</p>
+        <div class="card form-card">
+          <div class="card-header"><h3 class="card-title">{{ icon_chip('heart', 'teal', 'icon-chip-sm') }}Health history</h3><span class="chip chip-required">Required</span></div>
+          <div class="question-group">
+            <fieldset class="form-fieldset">
+              <legend>Have you been told you have diabetes?</legend>
+              <div class="choice-group">
+                <label class="choice"><input type="radio" name="diabetes" value="Yes" data-review-label="Diabetes"><span class="choice-tile">Yes</span></label>
+                <label class="choice"><input type="radio" name="diabetes" value="No" data-review-label="Diabetes"><span class="choice-tile">No</span></label>
+              </div>
+            </fieldset>
+            <details class="why-we-ask"><summary>Why we ask</summary><p>The model uses this to estimate risk. Nephron never diagnoses.</p></details>
+          </div>
+          <div class="question-group">
+            <fieldset class="form-fieldset">
+              <legend>Have you been told you have high blood pressure?</legend>
+              <div class="choice-group">
+                <label class="choice"><input type="radio" name="hypertension" value="Yes" data-review-label="High blood pressure"><span class="choice-tile">Yes</span></label>
+                <label class="choice"><input type="radio" name="hypertension" value="No" data-review-label="High blood pressure"><span class="choice-tile">No</span></label>
+              </div>
+            </fieldset>
+          </div>
+        </div>
+      </section>
+
+      <section class="step-panel" data-step-title="Lifestyle" aria-labelledby="step-3-title">
+        <h2 id="step-3-title" tabindex="-1">Lifestyle</h2>
+        <p class="text-muted">There are no right or wrong answers.</p>
+        <div class="card form-card">
+          <div class="card-header"><h3 class="card-title">{{ icon_chip('activity', 'green', 'icon-chip-sm') }}Daily habits</h3><span class="chip chip-required">Required</span></div>
+          <div class="question-group">
+            <div class="form-group">
+              <label class="form-label" for="activity">Physical activity</label>
+              <select class="form-control" id="activity" data-review-label="Physical activity">
+                <option value="">Select an option</option>
+                <option>Sedentary</option><option>Light</option><option>Moderate</option>
+              </select>
+            </div>
+          </div>
+          <div class="question-group">
+            <fieldset class="form-fieldset">
+              <legend>Smoking</legend>
+              <div class="choice-group">
+                <label class="choice"><input type="radio" name="smoking" value="Never" data-review-label="Smoking"><span class="choice-tile">Never</span></label>
+                <label class="choice"><input type="radio" name="smoking" value="Former" data-review-label="Smoking"><span class="choice-tile">Former</span></label>
+                <label class="choice"><input type="radio" name="smoking" value="Current" data-review-label="Smoking"><span class="choice-tile">Current</span></label>
+              </div>
+            </fieldset>
+          </div>
+        </div>
+      </section>
+
+      <section class="step-panel" data-step-title="Laboratory" aria-labelledby="step-4-title">
+        <h2 id="step-4-title" tabindex="-1">Laboratory information</h2>
+        <p class="text-muted">Add values if you have a recent laboratory result.</p>
+        <div class="card form-card">
+          <div class="card-header"><h3 class="card-title">{{ icon_chip('flask', 'amber', 'icon-chip-sm') }}Clinical and laboratory</h3><span class="chip chip-optional">Optional</span></div>
+          <div class="question-group">
+            <div class="dropzone">
+              {{ icon('upload') }}
+              <p><strong>Upload a laboratory result</strong></p>
+              <p class="text-small text-muted">JPG, PNG or PDF. You will check every value read from it.</p>
+              <button type="button" class="button button-secondary button-sm" data-toast-type="info" data-toast-title="Preview only" data-toast-message="Uploading and reading laboratory results is built in a later phase.">Choose file</button>
+            </div>
+          </div>
+          <div class="question-group">
+            <div class="form-group">
+              <label class="form-label" for="glucose">Fasting glucose</label>
+              <div class="input-wrap has-suffix">
+                <input class="form-control" id="glucose" type="number" inputmode="decimal" data-review-label="Fasting glucose" data-review-suffix="mg/dL">
+                <span class="input-suffix" aria-hidden="true">mg/dL</span>
+              </div>
+              <p class="form-helper">Leave blank if you do not have this value.</p>
+            </div>
+          </div>
+        </div>
+      </section>
+
+      <section class="step-panel" data-step-title="Review" aria-labelledby="step-5-title">
+        <h2 id="step-5-title" tabindex="-1">Review your answers</h2>
+        <p class="text-muted">Check your answers. Go back to change anything.</p>
+        <div class="card form-card">
+          <div class="card-header"><h3 class="card-title">{{ icon_chip('check-circle', 'blue', 'icon-chip-sm') }}Your answers</h3></div>
+          <dl class="summary-list" data-review-list></dl>
+        </div>
+      </section>
+
+      <div class="step-actions">
+        <button type="button" class="button button-secondary" data-step-back disabled>Back</button>
+        <button type="button" class="button button-primary" data-step-next>Continue</button>
+      </div>
+    </form>
+  </div>
+
+  <aside class="card card-soft" aria-label="What you will receive">
+    <div class="card-header"><h2 class="card-title">What you'll receive</h2></div>
+    <ul class="outputs-list">
+      <li>{{ icon_chip('gauge', 'blue', 'icon-chip-sm') }}<span><strong>Predicted Risk Probability</strong></span></li>
+      <li>{{ icon_chip('check-circle', 'teal', 'icon-chip-sm') }}<span><strong>Risk Classification</strong></span></li>
+      <li>{{ icon_chip('bar-chart', 'green', 'icon-chip-sm') }}<span><strong>Explainable risk factors</strong></span></li>
+    </ul>
+    <p class="text-small text-muted aside-note">Example questions. Your answers stay private until you share.</p>
+  </aside>
+</div>
+{% endblock %}

@@ -1,0 +1,41 @@
+{# Where in the Philippines someone lives (services/ph_locations.py): the province for anyone in the Philippines,
+   and the municipality/city and barangay for anyone in Pangasinan - for the LGU heatmap. main.js shows each question
+   only when it applies and loads the barangays of the chosen town; the server checks everything again.
+   country_field: the id of the country <select> it follows (or None when the country is fixed, e.g. on Settings). #}
+{% from "partials/_macros.html" import field_error %}
+{% macro location_fields(values, errors, country_field='country', country=None, who='you') %}
+{% set province = values.get('province_code') or '' %}
+{% set town = values.get('municipality_code') or '' %}
+{% set barangay = values.get('barangay_code') or '' %}
+<fieldset class="location-fields" data-location{% if country_field %} data-country-field="{{ country_field }}"{% endif %} data-country="{{ country or '' }}"{{ ' hidden' if country != 'Philippines' }}
+          data-pangasinan="{{ pangasinan_code }}" data-barangays-url="{{ url_for('locations.barangays', municipality_code='CODE') }}">
+  <legend class="form-label">Where {{ 'do you' if who == 'you' else 'does the patient' }} live in the Philippines?</legend>
+  <p class="form-helper">Used, without names, to show local health officials where kidney risk is higher. Pangasinan residents are also asked their town and barangay.</p>
+  <div class="form-row location-row">
+    <div class="form-group" data-location-step="province">
+      <label class="form-label" for="province_code">Province <span class="chip chip-required">Required</span></label>
+      <select class="form-control{{ ' is-invalid' if errors.get('province_code') }}" id="province_code" name="province_code"{{ ' aria-invalid="true"'|safe if errors.get('province_code') }}>
+        <option value="">Choose one</option>
+        {% for p in location_provinces %}<option value="{{ p.code }}" {{ 'selected' if province == p.code }}>{{ p.name }}</option>{% endfor %}
+      </select>
+      {{ field_error(errors, 'province_code') }}
+    </div>
+    <div class="form-group" data-location-step="municipality"{{ ' hidden' if province != pangasinan_code }}>
+      <label class="form-label" for="municipality_code">Municipality or city <span class="chip chip-required">Required</span></label>
+      <select class="form-control{{ ' is-invalid' if errors.get('municipality_code') }}" id="municipality_code" name="municipality_code"{{ ' aria-invalid="true"'|safe if errors.get('municipality_code') }}>
+        <option value="">Choose one</option>
+        {% for m in location_municipalities %}<option value="{{ m.code }}" {{ 'selected' if town == m.code }}>{{ m.name }}</option>{% endfor %}
+      </select>
+      {{ field_error(errors, 'municipality_code') }}
+    </div>
+    <div class="form-group" data-location-step="barangay"{{ ' hidden' if province != pangasinan_code }}>
+      <label class="form-label" for="barangay_code">Barangay <span class="chip chip-required">Required</span></label>
+      <select class="form-control{{ ' is-invalid' if errors.get('barangay_code') }}" id="barangay_code" name="barangay_code"{{ ' aria-invalid="true"'|safe if errors.get('barangay_code') }}{{ ' disabled' if not town }}>
+        <option value="">{{ 'Choose one' if town else 'Choose the municipality first' }}</option>
+        {% for b in location_barangays(town) %}<option value="{{ b.code }}" {{ 'selected' if barangay == b.code }}>{{ b.name }}</option>{% endfor %}
+      </select>
+      {{ field_error(errors, 'barangay_code') }}
+    </div>
+  </div>
+</fieldset>
+{% endmacro %}

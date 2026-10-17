@@ -1,0 +1,24 @@
+{% extends "base.html" %}
+{% from "partials/_macros.html" import icon %}
+{% from "partials/_visuals.html" import icon_chip %}
+{% block body_class %}has-preview-bar{% endblock %}
+{% block preview_bar %}{% include "partials/_preview_bar.html" %}{% endblock %}
+{% block content %}
+<div class="container section-tight">
+  <div class="reading-width">
+    <h1>Design previews</h1>
+    <p class="text-lead">How the screens will look and behave. They use sample values, do not touch the database, and exist only while FLASK_DEBUG=1.</p>
+    <p class="text-small text-muted">Already built for real: <a href="{{ url_for('auth.login') }}">sign in</a> and <a href="{{ url_for('auth.register') }}">create an account</a> (the two previews below show the same design with sample behaviour).</p>
+    <ul class="design-index">
+      <li class="card card-glass card-interactive"><a href="{{ url_for('main.style_guide') }}">{{ icon_chip('layout', 'blue') }}<span><strong>Style guide</strong><span>Logo, colour, depth, type, icons and every component in every state.</span></span>{{ icon('chevron-right') }}</a></li>
+      <li class="card card-glass card-interactive"><a href="{{ url_for('design.login') }}">{{ icon_chip('lock', 'blue') }}<span><strong>Sign in</strong><span>The branded split layout, with validation and error states.</span></span>{{ icon('chevron-right') }}</a></li>
+      <li class="card card-glass card-interactive"><a href="{{ url_for('design.register') }}">{{ icon_chip('user', 'blue') }}<span><strong>Create an account</strong><span>Role selection as tiles, required and optional fields.</span></span>{{ icon('chevron-right') }}</a></li>
+      <li class="card card-glass card-interactive"><a href="{{ url_for('design.dashboard') }}">{{ icon_chip('home', 'blue') }}<span><strong>Overview: real state</strong><span>A new person with no assessments. Every chart becomes an empty state.</span></span>{{ icon('chevron-right') }}</a></li>
+      <li class="card card-glass card-interactive"><a href="{{ url_for('design.dashboard', data='sample') }}">{{ icon_chip('bar-chart', 'blue') }}<span><strong>Overview: sample data</strong><span>The same page filled with made-up records, every chart tagged as sample.</span></span>{{ icon('chevron-right') }}</a></li>
+      <li class="card card-glass card-interactive"><a href="{{ url_for('design.assessment') }}">{{ icon_chip('clipboard-plus', 'blue') }}<span><strong>Guided screening</strong><span>Sectioned cards, steps, progress, review and analysis.</span></span>{{ icon('chevron-right') }}</a></li>
+      <li class="card card-glass card-interactive"><a href="{{ url_for('design.result') }}">{{ icon_chip('gauge', 'blue') }}<span><strong>Result</strong><span>Probability ring, classification, ranked factors, next step. High and low.</span></span>{{ icon('chevron-right') }}</a></li>
+      <li class="card card-glass card-interactive"><a href="{{ url_for('design.states') }}">{{ icon_chip('inbox', 'blue') }}<span><strong>Empty, loading and error states</strong><span>Empty cards, skeletons, busy screens, toasts, a dialog, a responsive table.</span></span>{{ icon('chevron-right') }}</a></li>
+    </ul>
+  </div>
+</div>
+{% endblock %}

@@ -1,0 +1,33 @@
+{# What each part of the administrator side does, and the rules it keeps. #}
+{% extends "layouts/app_base.html" %}
+{% from "partials/_macros.html" import icon %}
+{% from "partials/_visuals.html" import icon_chip %}
+{% set active_nav = '' %}
+{% block header_title %}Administrator guide{% endblock %}
+{% block header_subtitle %}What each part of the administrator side does, and what it never shows.{% endblock %}
+
+{% block content %}
+<div class="page-stack">
+  <section class="card reveal" style="--i: 1;" aria-labelledby="g-privacy">
+    <div class="card-header"><h2 class="card-title" id="g-privacy">{{ icon_chip('shield-check', 'lavender') }}The privacy rule</h2></div>
+    <p>An administrator manages <strong>accounts</strong>, the <strong>re-assessment rule</strong> and the <strong>models</strong>. No administrator page shows a named person's screening answers, risk probabilities, or results. Health figures are totals only, each person counted once without a name, and small groups are hidden. The one row-level exception is <strong>Research data</strong>: de-identified, predictors only (no name, contact details, dates, gender, location or result), and every download is logged. Treat those files as health data.</p>
+  </section>
+  <section class="card reveal" style="--i: 2;" aria-labelledby="g-parts">
+    <div class="card-header"><h2 class="card-title" id="g-parts">{{ icon_chip('book-open', 'lavender') }}The sections</h2></div>
+    <dl class="term-list">
+      <div class="term-row"><dt>Overview</dt><dd>How many people use Nephron, how many were screened, how many are in the higher-risk group and in which age groups, professionals awaiting verification, and whether each model is ready.</dd></div>
+      <div class="term-row"><dt>Accounts</dt><dd>Search every account. <strong>Switch off</strong> stops a person signing in without deleting anything, and ends their open sessions at once. <strong>Reset password</strong> gives a temporary password, shown to you only once; the person must choose their own at their next sign-in.</dd></div>
+      <div class="term-row"><dt>Professional verification</dt><dd>Compare each stated licence number with the PRC's own records, outside Nephron, then mark it verified or not verified. Patients see the result when they search for a professional.</dd></div>
+      <div class="term-row"><dt>Re-assessment rule</dt><dd>How long a General User waits between screenings (3 months by default; 1 to 12 months, or none). A healthcare professional the person shares with can open one early screening, and so can you when the person asks: approve or decline their request here. The next screening uses it up, and the waiting period applies again from that day.</dd></div>
+      <div class="term-row"><dt>Model performance</dt><dd>Each model's measured performance (accuracy, sensitivity, specificity, precision, F1, ROC-AUC and its curve, the confusion matrix), which inputs weigh most in it, and its model card. The figures come from <code>python model_report.py</code> run on labelled test data - nothing is typed in.</dd></div>
+      <div class="term-row"><dt>Activity log</dt><dd>Sign-ins, failed sign-ins, new accounts, password changes, and every administrator action - who did it, and to whom.</dd></div>
+    </dl>
+  </section>
+  <section class="card reveal" style="--i: 3;" aria-labelledby="g-admins">
+    <div class="card-header"><h2 class="card-title" id="g-admins">{{ icon_chip('users', 'lavender') }}Adding another administrator</h2></div>
+    <p>Administrators are never created through the public sign-up page. Someone with access to the server runs:</p>
+    <pre class="admin-code"><code>python create_admin.py new.admin@example.com "Full Name"
+python create_admin.py existing@example.com --promote</code></pre>
+  </section>
+</div>
+{% endblock %}

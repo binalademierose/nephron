@@ -1,0 +1,13 @@
+{# Shown by Nephron.showBusy(...) during long tasks: analysis, OCR, reports. #}
+<div class="busy-overlay" id="busy-overlay" role="status" aria-live="polite">
+  <div class="busy-card" tabindex="-1">
+    <svg class="busy-signal" viewBox="0 0 240 70" fill="none" stroke-linecap="round" aria-hidden="true" focusable="false">
+      <path d="M12 46C48 46 60 14 102 20s58 34 96 20 30-22 30-22" stroke="#E3E2FF" stroke-width="4"/>
+      <path class="busy-line" pathLength="1" d="M12 46C48 46 60 14 102 20s58 34 96 20 30-22 30-22" stroke="url(#brand-line-gradient)" stroke-width="4"/>
+      <circle cx="12" cy="46" r="7" stroke="#302B91" stroke-width="3.5" fill="#fff"/>
+      <circle cx="228" cy="18" r="8" fill="#7D75EE"/>
+    </svg>
+    <h2 class="busy-title">Working...</h2>
+    <p class="busy-message"></p>
+  </div>
+</div>

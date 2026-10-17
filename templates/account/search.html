@@ -1,0 +1,90 @@
+{# The professional's own search: patients (by name or patient code) and assessments (by patient name/code, or a
+   numeric assessment id) - across both kinds of patient this professional works with. Every result here is
+   already scoped to them (services/professional_overview.py search()); nothing here is ever someone else's. #}
+{% extends "layouts/app_base.html" %}
+{% from "partials/_macros.html" import icon, risk_badge %}
+{% set active_nav = 'search' %}
+{% block header_title %}Search{% endblock %}
+{% block header_subtitle %}Search your patients and their assessments.{% endblock %}
+
+{% block content %}
+<section class="card reveal" style="--i: 1;" aria-labelledby="search-heading">
+  <div class="card-header"><h2 class="card-title" id="search-heading">{{ icon('search') }}Search</h2></div>
+  <form method="get" action="{{ url_for('account.professional_search') }}" class="upload-form" role="search" data-live-filter="live-search-results">
+    <div class="form-group" style="flex: 1; margin-bottom: 0;">
+      <label class="form-label" for="q">Patient name, patient ID, or assessment ID</label>
+      <input class="form-control" type="text" id="q" name="q" value="{{ query }}" placeholder="Juan Dela Cruz, NPH-0001, or an assessment number" autocomplete="off" autofocus>
+    </div>
+    <button class="button button-primary" type="submit">{{ icon('search') }}Search</button>
+  </form>
+</section>
+<div id="live-search-results" class="live-results">
+
+{% if query %}
+<section class="card reveal" style="--i: 2;" aria-labelledby="patients-results-heading">
+  <div class="card-header"><h2 class="card-title" id="patients-results-heading">{{ icon('users') }}Patients ({{ results.patients|length }})</h2></div>
+  {% if results.patients %}
+  <ul class="search-result-list" role="list">
+    {% for patient in results.patients %}
+    <li class="search-result-row">
+      <div>
+        <strong>{{ patient.display_name }}</strong>
+        {% if patient.patient_code %}<span class="chip chip-mono">{{ patient.patient_code }}</span>{% else %}<span class="badge badge-neutral">Shared</span>{% endif %}
+      </div>
+      {% if patient.source == 'record' %}
+      <a class="button button-secondary button-sm" href="{{ url_for('patient_records.profile', patient_code=patient.patient_code) }}">View profile</a>
+      {% else %}
+      <a class="button button-secondary button-sm" href="{{ url_for('authorization.patient_history', patient_id=patient.user_id) }}">View history</a>
+      {% endif %}
+    </li>
+    {% endfor %}
+  </ul>
+  {% else %}
+  <p class="empty-inline">{{ icon('info') }}No patient matches "{{ query }}".</p>
+  {% endif %}
+</section>
+
+<section class="card reveal" style="--i: 3;" aria-labelledby="assessment-results-heading">
+  <div class="card-header"><h2 class="card-title" id="assessment-results-heading">{{ icon('clipboard-list') }}Assessments ({{ results.assessments|length }})</h2></div>
+  {% if results.assessments %}
+  <div class="table-scroll">
+    <table class="data-table">
+      <thead>
+        <tr>
+          <th scope="col">Assessment ID</th>
+          <th scope="col">Patient</th>
+          <th scope="col">Patient ID</th>
+          <th scope="col">Date</th>
+          <th scope="col">Mode</th>
+          <th scope="col">Risk category</th>
+          <th scope="col"></th>
+        </tr>
+      </thead>
+      <tbody>
+        {% for row in results.assessments %}
+        <tr>
+          <td>#{{ row.assessment_id }}</td>
+          <td>{{ row.patient.display_name }}</td>
+          <td>{% if row.patient.patient_code %}<span class="chip chip-mono">{{ row.patient.patient_code }}</span>{% else %}<span class="text-muted">Shared</span>{% endif %}</td>
+          <td>{{ format_date(row.date) }}</td>
+          <td>{{ row.type }}</td>
+          <td>{{ risk_badge(row.level, assessment_type=row.assessment_type) }}</td>
+          <td class="table-actions">
+            {% if row.patient.source == 'record' %}
+            <a class="button button-secondary button-sm" href="{{ url_for('patient_records.risk_analysis', patient_code=row.patient.patient_code, assessment_id=row.assessment_id) }}">View</a>
+            {% else %}
+            <a class="button button-secondary button-sm" href="{{ url_for('authorization.patient_history', patient_id=row.patient.user_id) }}">View</a>
+            {% endif %}
+          </td>
+        </tr>
+        {% endfor %}
+      </tbody>
+    </table>
+  </div>
+  {% else %}
+  <p class="empty-inline">{{ icon('info') }}No assessment matches "{{ query }}".</p>
+  {% endif %}
+</section>
+{% endif %}
+</div>
+{% endblock %}

@@ -1,0 +1,18 @@
+{% from "partials/_macros.html" import icon, csrf_field %}
+{# A share request is only ever sent after an active yes. With JavaScript, a confirmation dialog (wording from
+   _consent_template.html) asks and fills the hidden consent field. Without it, the plain checkbox below does the
+   same job. Either way routes/authorization_routes.py refuses the request without "consent=1". #}
+{% macro request_form(professional_user_id, name, label='Request', icon_name='mail') %}
+<form method="post" action="{{ url_for('authorization.request_share') }}"
+      data-confirm="consent" data-confirm-template="share-consent-template" data-confirm-name="{{ name }}"
+      data-confirm-title="Share your health information?"
+      data-confirm-message="You are about to send {name} a request to view your assessment history."
+      data-confirm-check="I understand what I am sharing with {name}, and I agree to share it."
+      data-confirm-accept="Agree and send request">
+  {{ csrf_field() }}
+  <input type="hidden" name="professional_user_id" value="{{ professional_user_id }}">
+  <input type="hidden" name="consent" value="">
+  <noscript><label class="consent-inline"><input type="checkbox" name="consent" value="1" required> I understand what I am sharing with {{ name }} (my assessment history, for their review), and I agree to share it.</label></noscript>
+  <button class="button button-secondary" type="submit">{{ icon(icon_name) }}{{ label }}</button>
+</form>
+{% endmacro %}

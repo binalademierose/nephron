@@ -1,0 +1,28 @@
+{# The plain-language consent a patient reads before sharing. Kept in ONE place - both the server-rendered forms and
+   the live-search results point their confirmation dialog at this template. If what it PROMISES changes, change
+   services/consents.py CURRENT_VERSION too, so an earlier agreement still names the wording it was given under. #}
+{% from "partials/_macros.html" import icon %}
+<template id="share-consent-template">
+  <ul class="confirm-points">
+    <li>
+      <span class="confirm-point-icon">{{ icon('file-lines') }}</span>
+      <div><strong>What will be shared</strong>
+        <p>Your assessment history: the date, type and risk result of each screening, and the answers and lab values behind it.</p></div>
+    </li>
+    <li>
+      <span class="confirm-point-icon">{{ icon('stethoscope') }}</span>
+      <div><strong>Who receives it</strong>
+        <p><span data-slot="name"></span> only - a healthcare professional account on Nephron. Nothing is visible to them until they accept.</p></div>
+    </li>
+    <li>
+      <span class="confirm-point-icon">{{ icon('heart') }}</span>
+      <div><strong>Why</strong>
+        <p>So they can review your results, add notes you can read on your own results, ask you to screen again, and schedule follow-up visits.</p></div>
+    </li>
+    <li>
+      <span class="confirm-point-icon">{{ icon('lock') }}</span>
+      <div><strong>Your control</strong>
+        <p>You can end access at any time from this page. If you go back now, nothing is sent.</p></div>
+    </li>
+  </ul>
+</template>

@@ -1,0 +1,87 @@
+{# The real guided screening. Every question comes from ml/feature_catalog.json, so the form, the checks and the
+   summary can never disagree with each other or with the model. Progress and step buttons are in static/js/screening.js;
+   the SERVER checks every answer again, so nothing depends on the JavaScript. #}
+{% extends "layouts/app_base.html" %}
+{% from "partials/_macros.html" import icon, alert_box, csrf_field, field_error %}
+{% from "partials/_visuals.html" import icon_chip %}
+{% set active_nav = 'assessment' %}
+{% block scripts %}<script src="{{ url_for('static', filename='js/screening.js') }}" defer></script>{% endblock %}
+{% block header_title %}Preliminary screening{% endblock %}
+{% block header_subtitle %}Answer every question. You will review everything before it is analysed.{% endblock %}
+
+{# The question renderer lives in its own file, shared with the professional's own screening form - see that
+   file's comment for why it cannot simply be imported from here. #}
+{% from "screening/_question_macro.html" import question %}
+
+
+{% block content %}
+{% set steps = catalog.steps %}
+<div class="assessment-layout" data-assessment data-first-error-step="{{ first_error_step }}" data-draft-save-url="{{ url_for('screening.save_draft') }}">
+  <div>
+    <noscript><div class="notice">{{ icon('info') }}<div><h2>JavaScript is needed</h2><p>The guided screening moves step by step and needs JavaScript. Please turn it on and reload this page.</p></div></div></noscript>
+    <p class="stepper-summary" data-step-summary aria-live="polite"></p>
+    <ol class="stepper" aria-label="Screening progress">
+      {% for step in steps %}
+      <li class="stepper-step{{ ' is-current' if loop.first }}"{{ ' aria-current="step"'|safe if loop.first }}>
+        <span class="stepper-node"><span class="stepper-number">{{ loop.index }}</span>{{ icon('check', 'stepper-check') }}</span>
+        <span class="stepper-line"></span>
+        <span class="stepper-label">{{ step.title }}</span>
+      </li>
+      {% endfor %}
+      <li class="stepper-step">
+        <span class="stepper-node"><span class="stepper-number">{{ steps|length + 1 }}</span>{{ icon('check', 'stepper-check') }}</span>
+        <span class="stepper-line"></span>
+        <span class="stepper-label">Review</span>
+      </li>
+    </ol>
+    <div class="step-progress">
+      <div class="progress-bar" role="progressbar" aria-valuemin="0" aria-valuemax="100" aria-valuenow="0" aria-label="Screening progress" data-step-progress><span class="progress-bar-fill" style="--progress: 0%"></span></div>
+      <span class="step-progress-text" data-step-progress-text>0% complete</span>
+      <span class="draft-save-status" data-draft-status aria-live="polite"></span>
+    </div>
+
+    {% if errors %}{{ alert_box('error', 'Some answers need attention. They are marked below, and nothing has been saved.', dismissible=False, title='Please check your answers') }}{% endif %}
+
+    <form method="post" action="{{ url_for('screening.screening') }}" novalidate data-assessment-form data-confirm-after-check data-busy-text="Analysing the answers..." data-confirm="default" data-confirm-title="Ready to analyse your answers?" data-confirm-message="Please check that every answer is true to the best of your knowledge - the estimate can only be as accurate as the answers behind it. Results can vary as your health and habits change, and this is a screening estimate, not a diagnosis." data-confirm-accept="Yes, analyse" data-confirm-dismiss="Let me check again">
+      {{ csrf_field() }}
+      {% for step in steps %}
+      <section class="step-panel{{ ' is-active' if loop.first }}" data-step-title="{{ step.title }}" data-step-key="{{ step.key }}" aria-labelledby="step-{{ loop.index }}-title">
+        <h2 id="step-{{ loop.index }}-title" tabindex="-1">{{ step.title }}</h2>
+        <p class="text-muted">{{ step.intro }}</p>
+        <div class="card form-card">
+          <div class="card-header"><h3 class="card-title">{{ icon_chip(step.icon, 'lavender', 'icon-chip-sm') }}{{ step.title }}</h3><span class="chip chip-required">Required</span></div>
+          {% for q in catalog.questions if q.step == step.key and q.kind != 'derived' %}
+            {{ question(q, answers, errors, fixed) }}
+          {% endfor %}
+        </div>
+      </section>
+      {% endfor %}
+
+      <section class="step-panel" data-step-title="Review" aria-labelledby="step-review-title">
+        <h2 id="step-review-title" tabindex="-1">Review your answers</h2>
+        <p class="text-muted">Check your answers. Go back to change anything. Your answers are saved with your result so you can always see what it was based on.</p>
+        <div class="card form-card">
+          <div class="card-header"><h3 class="card-title">{{ icon_chip('check-circle', 'lavender', 'icon-chip-sm') }}Your answers</h3></div>
+          <dl class="summary-list" data-review-list></dl>
+        </div>
+      </section>
+
+      <div class="step-actions">
+        <button type="button" class="button button-secondary" data-step-back disabled>Back</button>
+        <button type="button" class="button button-primary" data-step-next>Continue</button>
+        <button type="submit" class="button button-primary" data-step-submit hidden data-loading-text="Analysing...">Analyse my answers</button>
+      </div>
+    </form>
+  </div>
+
+  <aside class="card card-soft" aria-label="What you will receive">
+    <div class="card-header"><h2 class="card-title">What you'll receive</h2></div>
+    <ul class="outputs-list">
+      <li>{{ icon_chip('gauge', 'lavender', 'icon-chip-sm') }}<span><strong>Predicted Risk Probability</strong></span></li>
+      <li>{{ icon_chip('check-circle', 'green', 'icon-chip-sm') }}<span><strong>Risk Classification</strong></span></li>
+      <li>{{ icon_chip('bar-chart', 'lavender', 'icon-chip-sm') }}<span><strong>What raised and lowered your estimate</strong></span></li>
+    </ul>
+    <p class="text-small text-muted aside-note">This is screening, not a diagnosis. Your answers are private to you.</p>
+  </aside>
+</div>
+{% endblock %}

@@ -1,0 +1,89 @@
+{# Two of the person's assessments side by side. The wording stays neutral: "higher" and "lower" are not "better" and "worse". #}
+{% extends "layouts/app_base.html" %}
+{% from "partials/_macros.html" import icon, alert_box, risk_badge %}
+{% from "partials/_visuals.html" import icon_chip, ring %}
+{% set active_nav = 'history' %}
+{% set c = comparison %}
+{% block header_title %}Compare assessments{% endblock %}
+{% block header_subtitle %}{{ format_date(c.earlier.date) }} and {{ format_date(c.later.date) }}{% endblock %}
+
+{% block content %}
+<div class="page-actions reveal">
+  <p>A neutral comparison. Higher or lower does not mean better or worse.</p>
+  <a class="button button-secondary button-sm" href="{{ url_for('history.index') }}">{{ icon('clipboard-list') }}Back to history</a>
+</div>
+
+{% if c.model == 'different' %}
+{{ alert_box('warning', 'These two results were made by different versions of the model, so the probabilities are not directly comparable.', dismissible=False, title='Different model versions') }}
+{% elif c.model == 'unknown' %}
+{{ alert_box('info', 'The version of the model was not recorded for one of these results, so the probabilities may not be directly comparable.', dismissible=False, title='Model version not recorded') }}
+{% endif %}
+
+<div class="compare-cards">
+  {% for side, label in ((c.earlier, 'Earlier'), (c.later, 'Later')) %}
+  <section class="card compare-card reveal" style="--i: {{ loop.index }};" aria-labelledby="side-{{ loop.index }}-heading">
+    <div class="card-header"><h2 class="card-title" id="side-{{ loop.index }}-heading">{{ label }}: {{ format_date(side.date) }}</h2></div>
+    <div class="compare-card-body">
+      {{ ring(side.probability, threshold=side.threshold) }}
+      <div class="compare-card-facts">
+        {{ risk_badge(side.level, assessment_type=side.assessment_type) }}
+        <dl class="summary-list">
+          <div class="summary-row"><dt>Type</dt><dd>{{ side.type }}</dd></div>
+          <div class="summary-row"><dt>Threshold</dt><dd>{{ (percent_text(side.threshold) ~ '%') if side.threshold is not none else 'Not recorded' }}</dd></div>
+          <div class="summary-row"><dt>Model version</dt><dd class="model-version">{{ side.model_version or 'Not recorded' }}</dd></div>
+        </dl>
+        <a class="link-action" href="{{ url_for('screening.result', assessment_id=side.assessment_id) }}">View full result {{ icon('arrow-right') }}</a>
+      </div>
+    </div>
+  </section>
+  {% endfor %}
+</div>
+
+<section class="card reveal" style="--i: 3;" aria-labelledby="change-heading">
+  <div class="card-header"><h2 class="card-title" id="change-heading">{{ icon_chip('trending-up', 'lavender') }}What changed</h2></div>
+  <ul class="change-list">
+    <li>
+      {% if c.direction == 'same' %}The Predicted Risk Probability stayed the same at {{ percent_text(c.later.probability) }}%.
+      {% else %}The Predicted Risk Probability went from {{ percent_text(c.earlier.probability) }}% to {{ percent_text(c.later.probability) }}%: {{ percent_text(c.points) }} {{ 'point' if c.points == 1 else 'points' }} {{ c.direction }}.{% endif %}
+    </li>
+    <li>
+      {% if c.level_changed %}The classification changed from {{ level_label(c.earlier.level, c.earlier.assessment_type|default('preliminary')) }} to {{ level_label(c.later.level, c.later.assessment_type|default('preliminary')) }}.
+      {% else %}The classification stayed {{ level_label(c.later.level, c.later.assessment_type|default('preliminary')) }}.{% endif %}
+    </li>
+  </ul>
+
+  <h3 class="subsection-heading">Answers</h3>
+  {% if not c.answers_available %}
+  <p class="text-muted">The answers were not saved for one or both of these assessments, so they cannot be compared answer by answer.</p>
+  {% elif c.changes %}
+  <div class="table-wrap">
+    <table class="data-table table-stack">
+      <caption class="visually-hidden">The answers that changed between the two assessments</caption>
+      <thead><tr><th scope="col">Question</th><th scope="col">{{ format_date(c.earlier.date) }}</th><th scope="col">{{ format_date(c.later.date) }}</th></tr></thead>
+      <tbody>
+        {% for change in c.changes %}
+        <tr>
+          <td data-label="Question">{{ change.label }}</td>
+          <td data-label="{{ format_date(c.earlier.date) }}">{{ change.earlier }}</td>
+          <td data-label="{{ format_date(c.later.date) }}">{{ change.later }}</td>
+        </tr>
+        {% endfor %}
+      </tbody>
+    </table>
+  </div>
+  <p class="text-small text-muted change-unchanged">{{ c.unchanged }} other answer{{ '' if c.unchanged == 1 else 's' }} did not change.</p>
+  {% else %}
+  <p class="text-muted">None of the answers changed. All {{ c.unchanged }} stayed the same.</p>
+  {% endif %}
+</section>
+
+<div class="section-tight-inline">
+  <div class="notice">
+    {{ icon('info') }}
+    <div>
+      <h2>About this comparison</h2>
+      <p>A different result can come from different answers, from a different version of the model, or from both. This is screening information, not a diagnosis.</p>
+    </div>
+  </div>
+</div>
+{% endblock %}

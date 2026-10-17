@@ -1,0 +1,17 @@
+.env
+venv/
+.venv/
+__pycache__/
+*.pyc
+logs/*
+!logs/.gitkeep
+uploads/*
+!uploads/.gitkeep
+
+# Machine learning
+ml/validation_holdout.csv
+ml/stage2_sealed_test.csv
+.ipynb_checkpoints/
+
+# Data files: the dataset is large and is not part of the project
+*.csv

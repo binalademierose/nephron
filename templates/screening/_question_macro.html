@@ -1,0 +1,162 @@
+{# The single "one question" renderer, shared by every screening form: templates/screening/form.html (a person
+   screening themselves) and templates/patients/screening_form.html (a professional screening a patient on their
+   behalf). Kept in its own file, with no {% extends %}, on purpose - importing a macro from a template that
+   itself extends a layout can trigger evaluation of THAT template's own block content as a side effect, which
+   breaks a totally unrelated render (Jinja resolves it against ITS OWN context, not the importer's). A plain,
+   extends-free partial like this one has no such side effect. #}
+{% from "partials/_macros.html" import icon, field_error %}
+{% from "partials/_visuals.html" import icon_chip %}
+
+{# Sex is asked THROUGH Gender (ml/feature_catalog.json, "asked_through"): the person's own gender answer is saved
+   and shown, and the model gets the sex it implies (Gay man -> Male). Only when the gender answer does not tell
+   (Non-binary, Prefer not to say...) is "Sex assigned at birth" asked as well - screening.js shows or hides it;
+   the server works the sex out again either way (services/screening_contract.py). #}
+{% macro gender_question(q, answers, errors, fixed={}) %}
+{% set spec = q.asked_through %}
+{% set field = spec.field %}
+{% set gender = answers.get(field, '') %}
+{% set gender_option = spec.options|selectattr('value', 'equalto', gender)|first %}
+{% set sex_fixed = fixed.get(q.name) %}
+{% if field in fixed %}
+{% set item = fixed[field] %}
+<div class="question-group question-fixed" data-question data-kind="fixed" data-name="{{ field }}">
+  <span class="form-label" id="{{ field }}-fixed-label">{{ spec.label }}</span>
+  <div class="fixed-answer" aria-labelledby="{{ field }}-fixed-label">
+    {{ icon('lock') }}<input class="fixed-answer-value" type="text" value="{{ spec.options|selectattr('value', 'equalto', item.value|string)|map(attribute='label')|first or item.value }}" readonly tabindex="-1" aria-readonly="true" data-review-label="{{ spec.short }}">
+  </div>
+  <input type="hidden" name="{{ field }}" value="{{ item.value }}">
+  <p class="form-helper">{{ item.reason }}</p>
+</div>
+{% else %}
+<div class="question-group" data-question data-kind="choice" data-name="{{ field }}" data-gender-question>
+  <fieldset class="form-fieldset" aria-describedby="{{ field }}-hint {{ field }}-error">
+    <legend>{{ spec.label }}</legend>
+    <div class="choice-group choice-group-gender">
+      {% for o in spec.options if not sex_fixed or not o.get('sex') or o.sex == sex_fixed.value|string %}
+      <label class="choice"><input type="radio" name="{{ field }}" value="{{ o.value }}" data-sex="{{ o.get('sex', '') }}" data-review-label="{{ spec.short }}" data-review-text="{{ o.label }}" {{ 'checked' if gender == o.value }}{{ ' aria-invalid="true"'|safe if errors.get(field) }}><span class="choice-tile">{{ o.label }}</span></label>
+      {% endfor %}
+    </div>
+    <p class="form-helper" id="{{ field }}-hint">{{ spec.hint }}{% if sex_fixed %} Answers that do not match the sex kept from the first screening are not shown.{% endif %}</p>
+    {{ field_error(errors, field) }}
+  </fieldset>
+  {% if spec.get('why') %}<details class="why-we-ask"><summary>Why we ask</summary><p>{{ spec.why }}</p></details>{% endif %}
+</div>
+{% endif %}
+{% if sex_fixed %}
+<div class="question-group question-fixed" data-question data-kind="fixed" data-name="{{ q.name }}">
+  <span class="form-label" id="{{ q.name }}-fixed-label">{{ q.label }}</span>
+  <div class="fixed-answer" aria-labelledby="{{ q.name }}-fixed-label">
+    {{ icon('lock') }}<input class="fixed-answer-value" type="text" value="{{ q.options|selectattr('value', 'equalto', sex_fixed.value|string)|map(attribute='label')|first or sex_fixed.value }}" readonly tabindex="-1" aria-readonly="true" data-review-label="{{ q.short }}">
+  </div>
+  <input type="hidden" name="{{ q.name }}" value="{{ sex_fixed.value }}">
+  <p class="form-helper">{{ sex_fixed.reason }}</p>
+</div>
+{% else %}
+{% set sex = answers.get(q.name, '') %}
+<div class="question-group question-follow-up" data-question data-kind="choice" data-name="{{ q.name }}" data-sex-follow-up{{ ' hidden' if not gender_option or gender_option.get('sex') }}>
+  <fieldset class="form-fieldset" aria-describedby="{{ q.name }}-hint {{ q.name }}-error">
+    <legend>{{ q.label }}</legend>
+    <div class="choice-group">
+      {% for o in q.options %}
+      <label class="choice"><input type="radio" name="{{ q.name }}" value="{{ o.value }}" data-review-label="{{ q.short }}" data-review-text="{{ o.label }}" {{ 'checked' if sex == o.value }}{{ ' aria-invalid="true"'|safe if errors.get(q.name) }}><span class="choice-tile">{{ o.label }}</span></label>
+      {% endfor %}
+    </div>
+    <p class="form-helper" id="{{ q.name }}-hint">{{ q.hint }}</p>
+    {{ field_error(errors, q.name) }}
+  </fieldset>
+  {% if q.get('why') %}<details class="why-we-ask"><summary>Why we ask</summary><p>{{ q.why }}</p></details>{% endif %}
+</div>
+{% endif %}
+{% endmacro %}
+
+{# A choice worked out from a number (activity level from weekly exercise hours): shown locked, filled in as the
+   hours are typed (screening.js), and worked out again by the server - so the person is never asked twice. #}
+{% macro derived_choice(q, answers) %}
+{% set spec = q.derived_from %}
+{% set current = answers.get(q.name, '') %}
+<div class="question-group question-fixed question-derived" data-question data-kind="derived-choice" data-name="{{ q.name }}"
+     data-derived-from="{{ spec.field }}" data-bands='{{ spec.bands|tojson }}'>
+  <span class="form-label" id="{{ q.name }}-derived-label">{{ q.label }}</span>
+  <div class="fixed-answer" aria-labelledby="{{ q.name }}-derived-label">
+    {{ icon('lock') }}<input class="fixed-answer-value" type="text" value="{{ (q.options|selectattr('value', 'equalto', current)|map(attribute='label')|first) or '' }}" placeholder="Enter your exercise hours above" readonly tabindex="-1" aria-readonly="true" aria-live="polite" data-review-label="{{ q.short }}" data-derived-readout>
+  </div>
+  <input type="hidden" name="{{ q.name }}" value="{{ current }}" data-derived-value>
+  <p class="form-helper">{{ spec.note }} <span class="derived-bands">{% for o in q.options %}{{ o.label }}: {{ o.hint|lower }}{{ ' · ' if not loop.last }}{% endfor %}</span></p>
+</div>
+{% endmacro %}
+
+{% macro question(q, answers, errors, fixed={}) %}
+{% if q.get('derived_from') %}{{ derived_choice(q, answers) }}{% elif q.get('asked_through') %}{{ gender_question(q, answers, errors, fixed) }}{% else %}
+{% set name = q.name %}
+{% set value = answers.get(name, '') %}
+{% if name in fixed %}
+{% set item = fixed[name] %}
+{% set shown = (q.options|selectattr('value', 'equalto', item.value|string)|map(attribute='label')|first) if q.kind == 'choice' else (item.value|string ~ (' ' ~ q.unit if q.unit else '')) %}
+<div class="question-group question-fixed" data-question data-kind="fixed" data-name="{{ name }}">
+  <span class="form-label" id="{{ name }}-fixed-label">{{ q.label }}</span>
+  <div class="fixed-answer" aria-labelledby="{{ name }}-fixed-label">
+    {{ icon('lock') }}<input class="fixed-answer-value" type="text" value="{{ shown or item.value }}" readonly tabindex="-1" aria-readonly="true" data-review-label="{{ q.short }}">
+  </div>
+  <input type="hidden" name="{{ name }}" value="{{ item.value }}">
+  <p class="form-helper">{{ item.reason }}</p>
+</div>
+{% else %}
+<div class="question-group" data-question data-kind="{{ q.kind }}" data-name="{{ name }}"
+     {% if q.kind == 'number' %}data-min="{{ q.valid_min if q.valid_min is defined else q.min }}" data-max="{{ q.valid_max if q.valid_max is defined else q.max }}" data-integer="{{ 'true' if q.integer else 'false' }}"{% endif %}>
+  {% if q.kind in ('choice', 'yesno') and q.get('display') != 'select' %}
+  <fieldset class="form-fieldset" aria-describedby="{{ name }}-hint {{ name }}-error">
+    <legend>{{ q.label }}</legend>
+    <div class="choice-group">
+      {% for o in q.options %}
+      <label class="choice"><input type="radio" name="{{ name }}" value="{{ o.value }}" data-review-label="{{ q.short }}" data-review-text="{{ o.label }}" {{ 'checked' if value == o.value }}{{ ' aria-invalid="true"'|safe if errors.get(name) }}><span class="choice-tile">{{ o.label }}{% if o.get('hint') %}<small class="choice-hint">{{ o.hint }}</small>{% endif %}</span></label>
+      {% endfor %}
+    </div>
+    {% if q.get('hint') %}<p class="form-helper" id="{{ name }}-hint">{{ q.hint }}</p>{% endif %}
+    {{ field_error(errors, name) }}
+  </fieldset>
+  {% elif q.kind == 'choice' %}
+  <div class="form-group">
+    <label class="form-label" for="f-{{ name }}">{{ q.label }}</label>
+    <select class="form-control{{ ' is-invalid' if errors.get(name) }}" id="f-{{ name }}" name="{{ name }}" data-review-label="{{ q.short }}" aria-describedby="{{ name }}-hint {{ name }}-error"{{ ' aria-invalid="true"'|safe if errors.get(name) }}>
+      <option value="">Choose one</option>
+      {% for o in q.options %}<option value="{{ o.value }}" {{ 'selected' if value == o.value }}>{{ o.label }}</option>{% endfor %}
+    </select>
+    {% if q.get('hint') %}<p class="form-helper" id="{{ name }}-hint">{{ q.hint }}</p>{% endif %}
+    {{ field_error(errors, name) }}
+  </div>
+  {% elif q.kind == 'number' %}
+  <div class="form-group">
+    <label class="form-label" for="f-{{ name }}">{{ q.label }}</label>
+    <div class="input-wrap has-suffix">
+      <input class="form-control{{ ' is-invalid' if errors.get(name) }}" id="f-{{ name }}" name="{{ name }}" type="text" inputmode="{{ 'numeric' if q.integer else 'decimal' }}" autocomplete="off" value="{{ value }}" data-review-label="{{ q.short }}" data-review-suffix="{{ q.unit }}" aria-describedby="{{ name }}-hint {{ name }}-error"{{ ' aria-invalid="true"'|safe if errors.get(name) }}>
+      <span class="input-suffix" aria-hidden="true">{{ q.unit }}</span>
+    </div>
+    <p class="form-helper" id="{{ name }}-hint">{{ q.get('hint', '') }}{{ ' ' if q.get('hint') }}{{ q.get('range_note', '') }}</p>
+    {{ field_error(errors, name) }}
+  </div>
+  {% elif q.kind == 'bmi' %}
+  <div class="form-group" data-bmi data-bmi-min="{{ q.valid_min if q.valid_min is defined else q.min }}" data-bmi-max="{{ q.valid_max if q.valid_max is defined else q.max }}" data-bmi-note="{{ q.range_note }}">
+    <span class="form-label" id="{{ name }}-label">{{ q.label }}</span>
+    <div class="bmi-fields" role="group" aria-labelledby="{{ name }}-label">
+      {% for part in (q.height, q.weight) %}
+      <div>
+        <label class="form-label form-label-light" for="f-{{ part.field }}">{{ part.label }}</label>
+        <div class="input-wrap has-suffix">
+          <input class="form-control{{ ' is-invalid' if errors.get(part.field) }}" id="f-{{ part.field }}" name="{{ part.field }}" type="text" inputmode="decimal" autocomplete="off" value="{{ answers.get(part.field, '') }}" data-bmi-input="{{ part.field }}" data-min="{{ part.valid_min if part.valid_min is defined else part.min }}" data-max="{{ part.valid_max if part.valid_max is defined else part.max }}" data-unit="{{ part.unit }}" aria-describedby="{{ part.field }}-error"{{ ' aria-invalid="true"'|safe if errors.get(part.field) }}>
+          <span class="input-suffix" aria-hidden="true">{{ part.unit }}</span>
+        </div>
+        {{ field_error(errors, part.field) }}
+      </div>
+      {% endfor %}
+    </div>
+    <p class="bmi-readout" data-bmi-readout aria-live="polite"></p>
+    {{ field_error(errors, name) }}
+  </div>
+  {% endif %}
+  {% if q.get('why') and q.kind != 'derived' %}
+  <details class="why-we-ask"><summary>Why we ask</summary><p>{{ q.why }}</p></details>
+  {% endif %}
+</div>
+{% endif %}
+{% endif %}
+{% endmacro %}

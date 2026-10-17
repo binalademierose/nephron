@@ -1,0 +1,17 @@
+{# Bottom strip shown on design previews only. #}
+<div class="preview-bar" role="note">
+  <strong>Design preview</strong>
+  <span>Sample values only. Not functional. Visible only while FLASK_DEBUG=1.</span>
+  {% set show_toggle = data_toggle is defined and data_toggle %}
+  {% set sample_on = is_sample is defined and is_sample %}
+  {% set locked_on = is_locked is defined and is_locked %}
+  {% if show_toggle %}
+  <span>Data:
+    <a href="{{ request.path }}" {% if not sample_on %}aria-current="true"{% endif %}>Real state (empty)</a>
+    <a href="{{ request.path }}?data=sample" {% if sample_on and not locked_on %}aria-current="true"{% endif %}>Sample data</a>
+    <a href="{{ request.path }}?data=sample&locked=1" {% if locked_on %}aria-current="true"{% endif %}>Sample, waiting period</a>
+  </span>
+  {% endif %}
+  <a href="{{ url_for('design.index') }}">All previews</a>
+</div>
+<script src="{{ url_for('static', filename='js/preview.js') }}" defer></script>

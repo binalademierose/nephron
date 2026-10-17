@@ -1,0 +1,44 @@
+/* motion.css - Nephron's animation system.
+
+   Rules of the system, so every page moves the same way:
+   1. Content is ALWAYS readable without motion. Every "before" state below is gated behind BOTH
+      html.js (set by a tiny inline script in <head>, so it exists before the first paint) AND
+      prefers-reduced-motion: no-preference. No JavaScript, or a request for less motion, simply shows the
+      finished page - never a blank one.
+   2. Only opacity and transform are animated (cheap for the browser, no layout shifting).
+   3. No number on a public page is ever animated into place unless it is real: a count-up that "arrives at" an
+      invented figure would be an invented figure. (The public pictures are numberless illustrations on purpose.)
+   4. One easing (--ease) and a few durations. Stagger with --d (an index) instead of hand-picked delays.
+
+   How to use (static/js/motion.js does the rest):
+     data-animate="fade-up|fade-in|scale-in|slide-left|slide-right|pop"   reveal once when scrolled into view
+     data-stagger                                                          on a parent: its children get --d = 0,1,2...
+     data-draw                                                             an SVG path with pathLength="1" that draws itself
+     .anim-ring                                                            a ring (.ring-value) that fills when seen
+*/
+:root { --motion-step: 80ms; --motion-slow: 700ms; }
+
+@media (prefers-reduced-motion: no-preference) {
+  /* ---- scroll reveals ---- */
+  .js [data-animate] {
+    transition: opacity var(--motion-slow) var(--ease), transform var(--motion-slow) var(--ease);
+    transition-delay: calc(var(--d, 0) * var(--motion-step));
+  }
+  .js [data-animate]:not(.is-in) { opacity: 0; transform: translateY(1.5rem); }
+  .js [data-animate="fade-in"]:not(.is-in) { transform: none; }
+  .js [data-animate="scale-in"]:not(.is-in) { transform: scale(0.94); }
+  .js [data-animate="slide-left"]:not(.is-in) { transform: translateX(-2rem); }
+  .js [data-animate="slide-right"]:not(.is-in) { transform: translateX(2rem); }
+  .js [data-animate="pop"]:not(.is-in) { transform: scale(0.6); }
+  .js [data-animate="journey"], .js [data-animate="journey"]:not(.is-in) { opacity: 1; transform: none; }   /* its own children move */
+
+  /* ---- things that fill or draw once they are seen ---- */
+  .js [data-animate]:not(.is-in) .ring-value, .js .anim-ring:not(.is-in) .ring-value { animation: none; stroke-dasharray: 0 var(--circ); }
+  .js [data-animate]:not(.is-in) .factor-fill, .js .anim-fill:not(.is-in) .factor-fill { animation: none; transform: scaleX(0); }
+  .js [data-draw] { stroke-dasharray: 1; transition: stroke-dashoffset 1.4s var(--ease) calc(var(--d, 0) * var(--motion-step)); }
+  .js :not(.is-in) > [data-draw], .js [data-draw]:not(.is-in) { stroke-dashoffset: 1; }
+}
+
+@media (prefers-reduced-motion: reduce) {
+  .hw, .hero-in, .hero-art, .hero-glow, .hero-ripple, .hero-float-card, .cta-orb { animation: none !important; }
+}

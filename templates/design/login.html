@@ -1,0 +1,50 @@
+{% extends "layouts/auth_base.html" %}
+{% from "partials/_macros.html" import icon, alert_box %}
+{% from "partials/_visuals.html" import icon_chip %}
+{% block body_class %}auth-body has-preview-bar{% endblock %}
+{% block preview_bar %}{% include "partials/_preview_bar.html" %}{% endblock %}
+
+{% block auth_message %}
+<h2>Risk screening that supports the conversation with your care team.</h2>
+<p>Estimate your risk of chronic kidney disease, see which of your answers affected your result most, and share results with a healthcare professional.</p>
+<ul class="auth-points">
+  <li>{{ icon_chip('shield-check', 'solid') }}<div><strong>Screening, not diagnosis</strong><span>Results guide a conversation with a clinician.</span></div></li>
+  <li>{{ icon_chip('lock', 'solid') }}<div><strong>You control sharing</strong><span>A professional sees an assessment only when you share it.</span></div></li>
+  <li>{{ icon_chip('activity', 'solid') }}<div><strong>Clear explanations</strong><span>See which answers affected your result most, in plain language.</span></div></li>
+</ul>
+{% endblock %}
+
+{% block content %}
+<h1>Welcome back</h1>
+<p class="text-muted">Sign in to see your assessments and shared results.</p>
+
+{% if state == 'error' %}
+  {{ alert_box('error', 'Check your email address and password, then try again.', dismissible=False, title="We couldn't sign you in") }}
+{% endif %}
+
+<form novalidate data-preview-form>
+  <div class="form-group">
+    <label class="form-label" for="email">Email address</label>
+    <div class="input-wrap has-icon">
+      {{ icon('mail', 'input-icon') }}
+      <input class="form-control{{ ' is-invalid' if state == 'error' }}" id="email" name="email" type="email" autocomplete="email" placeholder="name@example.com" aria-describedby="email-error"{{ ' aria-invalid="true"'|safe if state == 'error' }}>
+    </div>
+    <p class="form-error" id="email-error" hidden>{{ icon('alert-circle') }}<span>Enter a complete email address, such as name@example.com.</span></p>
+  </div>
+
+  <div class="form-group">
+    <label class="form-label" for="password">Password</label>
+    <div class="input-wrap has-icon has-action">
+      {{ icon('lock', 'input-icon') }}
+      <input class="form-control{{ ' is-invalid' if state == 'error' }}" id="password" name="password" type="password" autocomplete="current-password" aria-describedby="password-error"{{ ' aria-invalid="true"'|safe if state == 'error' }}>
+      <button type="button" class="input-action" data-toggle-password aria-controls="password" aria-pressed="false" aria-label="Show password">{{ icon('eye') }}</button>
+    </div>
+    <p class="form-error" id="password-error" hidden>{{ icon('alert-circle') }}<span>Enter your password.</span></p>
+  </div>
+
+  <button class="button button-primary button-block" type="submit" data-loading-text="Signing in...">Sign in</button>
+</form>
+
+<p class="text-small auth-secondary">New to Nephron? <a href="{{ url_for('design.register') }}">Create an account</a></p>
+<p class="text-small text-muted">See the error state: <a href="{{ url_for('design.login', state='error') }}">sign-in with an error</a></p>
+{% endblock %}

@@ -1,0 +1,56 @@
+{# Professional review (General User): the clinical notes healthcare professionals have written on this person's
+   own results. A note is a professional's own words about a screening result - not a change to the result. #}
+{% extends "layouts/app_base.html" %}
+{% from "partials/_macros.html" import icon, risk_badge %}
+{% from "partials/_visuals.html" import icon_chip %}
+{% set active_nav = 'review' %}
+{% block header_title %}Professional review{% endblock %}
+{% block header_subtitle %}Notes healthcare professionals have written about your results.{% endblock %}
+
+{% block content %}
+<div class="page-stack">
+  {% if reviewed %}
+  <p class="text-muted">{{ note_count }} note{{ 's' if note_count != 1 }} on {{ reviewed|length }} result{{ 's' if reviewed|length != 1 }}.</p>
+  {% for item in reviewed %}
+  <section class="card reveal" style="--i: {{ loop.index }};" aria-labelledby="rv-{{ item.record.assessment_id }}">
+    <div class="card-header">
+      <h2 class="card-title" id="rv-{{ item.record.assessment_id }}">{{ icon_chip('clipboard-check', 'lavender') }}{{ format_date(item.record.date) }} &middot; {{ item.record.type }}</h2>
+      <span class="card-tags">{{ risk_badge(item.record.level, assessment_type=item.record.assessment_type) }}</span>
+    </div>
+    <ul class="review-note-list">
+      {% for note in item.notes %}
+      <li class="review-note">
+        <div class="review-note-head">
+          <strong>{{ note.professional_name }}</strong>{% if note.profession_title %}<span class="text-muted"> &middot; {{ note.profession_title }}</span>{% endif %}
+          <span class="review-note-date">{{ format_date(note.created_at.date()) }}</span>
+        </div>
+        <p>{{ note.note }}</p>
+      </li>
+      {% endfor %}
+    </ul>
+    <a class="link-action" href="{{ url_for('screening.result', assessment_id=item.record.assessment_id) }}">View this result {{ icon('arrow-right') }}</a>
+  </section>
+  {% endfor %}
+  {% else %}
+  <section class="card reveal" style="--i: 1;">
+    <div class="empty-state">
+      <span class="empty-visual" aria-hidden="true">{{ icon('message') }}</span>
+      <h3>No professional notes yet</h3>
+      <p>When a healthcare professional you share your history with reviews a result, their note appears here.</p>
+      <a class="button button-primary" href="{{ url_for('authorization.share') }}">{{ icon('share') }}Share your assessments</a>
+    </div>
+  </section>
+  {% endif %}
+
+  {% if waiting %}
+  <section class="card reveal" aria-labelledby="waiting-heading">
+    <div class="card-header"><h2 class="card-title" id="waiting-heading">{{ icon_chip('clock', 'lavender') }}Results without a note yet</h2></div>
+    <ul class="review-waiting-list">
+      {% for r in waiting %}
+      <li><span>{{ format_date(r.date) }} &middot; {{ r.type }}</span>{{ risk_badge(r.level, assessment_type=r.assessment_type) }}</li>
+      {% endfor %}
+    </ul>
+  </section>
+  {% endif %}
+</div>
+{% endblock %}

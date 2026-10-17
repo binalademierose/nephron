@@ -1,0 +1,135 @@
+/*
+  tokens.css - the Nephron design tokens.
+  Every colour, size, space and timing used by the site is defined here ONCE.
+  Change a value here and the whole product follows.
+
+  THE PALETTE (from the project blueprint and the approved dashboard design):
+    Lavender  #E3E2FF   the primary identity colour: soft fills, highlights, the active state
+    Indigo    #302B91   deep indigo: the logo mark, strong accents
+    Navy      #0C0D35   headings and the dark button
+    Off-white #F6F7FC   the page;  White #FFFFFF  the cards
+  STATUS COLOURS (always shown with an icon and words, never colour alone):
+    teal/green = Low Preliminary Risk      red = High Preliminary Risk or an error
+    amber = pending or attention           gray = secondary, unavailable or inactive
+*/
+:root {
+  /* ---------- Brand ---------- */
+  --lavender: #E3E2FF;
+  --lavender-strong: #D2D0FB;        /* lavender when hovered or pressed */
+  --lavender-wash: #F1F0FF;          /* the faintest lavender: soft panels */
+  --indigo: #302B91;
+  --violet: #7D75EE;                 /* graphics: chart line, ring, dots */
+  --violet-strong: #6C63E6;          /* large violet text (3.7:1 on the hero) */
+  --violet-text: #4F46C8;            /* small violet text (4.8:1 on the hero) */
+  --navy: #0C0D35;                   /* headings and main text */
+  --navy-button: #17193F;            /* the dark pill button */
+  --body: #464F82;                   /* paragraphs */
+  --muted: #56608A;                  /* secondary text (6.1:1 on white, 4.8:1 on lavender) */
+
+  /* ---------- Surfaces ---------- */
+  --page: #F6F7FC;
+  --surface: #FFFFFF;
+  --surface-soft: #F6F7FC;           /* an inner panel inside a card */
+  --border: #E7E9F7;                 /* restrained card borders */
+  --border-strong: #D5D8EE;
+  --control-border: #8A90B2;         /* form field edge: 3.2:1 on white */
+  --hero-from: #ECEEFE;              /* the hero card gradient, sampled from the design */
+  --hero-to: #D4D7FD;
+
+  /* ---------- Status ---------- */
+  --green: #0FA287;                  /* graphics (3.2:1 on white) */
+  --green-text: #06775F;             /* text (5.5:1 on white) */
+  --green-soft: #E1F5EE;
+  --green-line: #BDE6D8;
+  --red: #D64560;
+  --red-text: #B3203F;
+  --red-soft: #FDECEF;
+  --red-line: #F5C2CB;
+  --amber: #C97C00;
+  --amber-text: #8A5300;
+  --amber-soft: #FFF3D6;
+  --amber-line: #F2D9A0;
+  --gray: #8A90B2;
+
+  /* Risk: colour is only ever an extra. The words and the icon always come with it. */
+  --risk-low: var(--green);           --risk-low-text: var(--green-text);   --risk-low-soft: var(--green-soft);   --risk-low-line: var(--green-line);
+  --risk-high: var(--red);            --risk-high-text: var(--red-text);    --risk-high-soft: var(--red-soft);    --risk-high-line: var(--red-line);
+
+  /* ---------- Typography (system fonts: nothing to download, works offline) ---------- */
+  --font-body: "Segoe UI Variable Text", "Segoe UI", system-ui, -apple-system, "Helvetica Neue", Arial, sans-serif;
+  --font-heading: "Segoe UI Variable Display", "Segoe UI", system-ui, -apple-system, "Helvetica Neue", Arial, sans-serif;
+  --weight-heading: 600;             /* semibold, as the blueprint asks */
+
+  --text-display: clamp(2.25rem, 1.5rem + 2.6vw, 3.5rem);
+  --text-hero: clamp(1.75rem, 1.3rem + 1.5vw, 2.75rem);
+  --text-page-title: clamp(1.375rem, 1.2rem + 0.7vw, 1.75rem);
+  --text-section-heading: 1.25rem;
+  --text-subsection-heading: 1.0625rem;
+  --text-lead: 1.125rem;
+  --text-body: 1rem;
+  --text-small: 0.875rem;
+  --text-tiny: 0.8125rem;
+  --text-result: clamp(2.5rem, 2rem + 2vw, 3.5rem);
+  --text-number: clamp(1.75rem, 1.5rem + 0.9vw, 2.25rem);
+
+  /* ---------- Spacing (8px scale) ---------- */
+  --space-1: 0.25rem;
+  --space-2: 0.5rem;
+  --space-3: 0.75rem;
+  --space-4: 1rem;
+  --space-5: 1.5rem;
+  --space-6: 2rem;
+  --space-7: 3rem;
+  --space-8: 4.5rem;
+  --gap: 1.25rem;                    /* the space between cards, everywhere */
+
+  /* ---------- Shape ---------- */
+  --radius-sm: 12px;                 /* inputs, small tiles */
+  --radius-md: 20px;                 /* inner panels */
+  --radius-lg: 28px;                 /* cards */
+  --radius-xl: 34px;                 /* the hero and the side panel */
+  --radius-pill: 999px;
+
+  /* ---------- Depth: soft, lavender-tinted shadows ---------- */
+  --shadow-xs: 0 1px 2px rgba(48, 43, 145, 0.06);
+  --shadow-card: 0 1px 2px rgba(48, 43, 145, 0.04), 0 8px 24px rgba(48, 43, 145, 0.05);
+  --shadow-lift: 0 2px 4px rgba(48, 43, 145, 0.06), 0 16px 36px rgba(48, 43, 145, 0.11);
+  --shadow-overlay: 0 20px 50px rgba(12, 13, 53, 0.28);
+  --glow: 0 0 0 4px rgba(125, 117, 238, 0.25);
+
+  --surface-glass: rgba(255, 255, 255, 0.72);
+  --surface-glass-strong: rgba(255, 255, 255, 0.92);
+  --blur-glass: 14px;
+
+  /* ---------- Layout ---------- */
+  --content-width: 72rem;
+  --reading-width: 44rem;
+  --rail-width: 4.5rem;              /* the curved navigation rail */
+  --aside-width: 21rem;              /* the right-hand panel */
+  --ckd-width: 19rem;                 /* the "Kidney health, by the numbers" column, between the main content and the aside */
+
+  /* ---------- Motion ---------- */
+  --duration-fast: 120ms;
+  --duration-base: 180ms;
+  --duration-slow: 260ms;
+  --ease: cubic-bezier(0.2, 0.7, 0.2, 1);
+
+  /* ---------- Older names, kept so every part of the stylesheet keeps working ---------- */
+  --primary-color: var(--indigo);
+  --primary-strong: var(--navy);
+  --primary-soft: var(--lavender-wash);
+  --primary-line: var(--border-strong);
+  --link-color: var(--indigo);
+  --secondary-color: var(--indigo);            /* focus outline */
+  --background-color: var(--page);
+  --surface-color: var(--surface);
+  --text-color: var(--navy);
+  --muted-color: var(--muted);
+  --border-color: var(--border);
+  --success-color: var(--green-text);   --success-soft: var(--green-soft);   --success-line: var(--green-line);
+  --warning-color: var(--amber);        --warning-text: var(--amber-text);   --warning-soft: var(--amber-soft);   --warning-line: var(--amber-line);
+  --danger-color: var(--red);           --danger-text: var(--red-text);      --danger-soft: var(--red-soft);      --danger-line: var(--red-line);
+  --info-soft: var(--lavender-wash);
+  --accent: var(--lavender);
+  --ink: var(--navy);
+}

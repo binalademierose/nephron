@@ -1,0 +1,115 @@
+{# The Reports section: every assessment across every patient a professional works with, as a downloadable
+   report - stats, search, and filters reuse the same aggregation as the Assessments section
+   (services/professional_overview.py assessment_list()), with a Download action instead of View. #}
+{% extends "layouts/app_base.html" %}
+{% from "partials/_macros.html" import icon, csrf_field, risk_badge %}
+{% from "partials/_visuals.html" import icon_chip %}
+{% set active_nav = 'reports' %}
+{% block header_title %}Reports{% endblock %}
+{% block header_subtitle %}Download a report for any assessment across every patient you work with.{% endblock %}
+
+{% block content %}
+<div class="stat-row">
+  <article class="card stat-card reveal" style="--i: 1;">
+    {{ icon_chip('file-chart', 'lavender', 'icon-chip-lg') }}
+    <div class="stat-body"><p class="stat-label">Total Reports</p><p class="stat-value">{{ stats.total }}</p></div>
+  </article>
+  <article class="card stat-card reveal" style="--i: 2;">
+    {{ icon_chip('alert-triangle', 'red', 'icon-chip-lg') }}
+    <div class="stat-body"><p class="stat-label">High-Risk Reports</p><p class="stat-value stat-value-level stat-value-high">{{ stats.high_risk }}</p></div>
+  </article>
+  <article class="card stat-card reveal" style="--i: 3;">
+    {{ icon_chip('message', 'lavender', 'icon-chip-lg') }}
+    <div class="stat-body"><p class="stat-label">Pending Reports</p><p class="stat-value">{{ stats.pending }}</p></div>
+  </article>
+  <article class="card stat-card reveal" style="--i: 4;">
+    {{ icon_chip('shield-check', 'green', 'icon-chip-lg') }}
+    <div class="stat-body"><p class="stat-label">Reviewed Reports</p><p class="stat-value stat-value-level stat-value-low">{{ stats.reviewed }}</p></div>
+  </article>
+</div>
+
+<section class="card reveal" style="--i: 5;" aria-labelledby="reports-heading">
+  <div class="card-header"><h2 class="card-title" id="reports-heading">{{ icon_chip('file-chart', 'lavender') }}All reports</h2></div>
+
+  <form method="get" action="{{ url_for('patient_records.reports') }}" class="filter-form" role="search" data-live-filter="live-report-results">
+    <div class="form-group filter-form-search">
+      <label class="form-label" for="rp-q">Patient or report ID</label>
+      <input class="form-control" type="text" id="rp-q" name="q" value="{{ query }}" placeholder="Patient name, patient ID, or report ID" autocomplete="off">
+    </div>
+    <div class="form-group">
+      <label class="form-label" for="rp-risk">Risk</label>
+      <select class="form-control" id="rp-risk" name="risk">
+        <option value="" {{ 'selected' if not risk }}>All</option>
+        <option value="low" {{ 'selected' if risk == 'low' }}>Low Risk</option>
+        <option value="high" {{ 'selected' if risk == 'high' }}>High Risk</option>
+      </select>
+    </div>
+    <div class="form-group">
+      <label class="form-label" for="rp-status">Status</label>
+      <select class="form-control" id="rp-status" name="review_status">
+        <option value="" {{ 'selected' if not review_status }}>All</option>
+        <option value="awaiting_review" {{ 'selected' if review_status == 'awaiting_review' }}>Awaiting Review</option>
+        <option value="reviewed" {{ 'selected' if review_status == 'reviewed' }}>Reviewed</option>
+      </select>
+    </div>
+    <div class="filter-form-actions">
+      <button class="button button-primary" type="submit">{{ icon('search') }}Apply filters</button>
+      <a class="button button-secondary" href="{{ url_for('patient_records.reports') }}">{{ icon('refresh') }}Reset</a>
+    </div>
+  </form>
+  <div id="live-report-results" class="live-results" aria-live="polite">
+
+  {% if records %}
+  <div class="table-scroll">
+    <table class="data-table">
+      <thead>
+        <tr>
+          <th scope="col">Report ID</th>
+          <th scope="col">Patient</th>
+          <th scope="col">Date</th>
+          <th scope="col">Risk category</th>
+          <th scope="col">Status</th>
+          <th scope="col"></th>
+        </tr>
+      </thead>
+      <tbody>
+        {% for row in records %}
+        {% set download_url = url_for('reports.download_patient_record_report', patient_code=row.patient.patient_code) if row.patient.source == 'record' else url_for('reports.download_patient_report_for_professional', patient_id=row.patient.user_id) %}
+        <tr>
+          <td>#{{ row.assessment_id }}</td>
+          <td>
+            {{ row.patient.display_name }}
+            {% if row.patient.patient_code %}<span class="chip chip-mono">{{ row.patient.patient_code }}</span>{% else %}<span class="badge badge-neutral">Shared</span>{% endif %}
+          </td>
+          <td>{{ format_date(row.date) }}</td>
+          <td>{{ risk_badge(row.level, assessment_type=row.assessment_type) }}</td>
+          <td>
+            {% if row.review_status == 'self_recorded' %}<span class="badge badge-neutral">Self-recorded</span>
+            {% elif row.review_status == 'reviewed' %}<span class="badge risk-badge-low">Reviewed</span>
+            {% else %}<span class="badge risk-badge-high">Awaiting review</span>{% endif %}
+          </td>
+          <td class="table-actions">
+            <form method="post" action="{{ download_url }}" class="inline-form">
+              {{ csrf_field() }}
+              <input type="hidden" name="report_type" value="single">
+              <input type="hidden" name="assessment_id" value="{{ row.assessment_id }}">
+              <button class="button button-secondary button-sm" type="submit">{{ icon('download') }}Download</button>
+            </form>
+          </td>
+        </tr>
+        {% endfor %}
+      </tbody>
+    </table>
+  </div>
+  {% elif query or risk or review_status %}
+  <p class="empty-inline">{{ icon('info') }}No report matches these filters.</p>
+  {% else %}
+  <div class="empty-state">
+    <span class="empty-visual" aria-hidden="true">{{ icon('file-chart') }}</span>
+    <h3>No reports yet</h3>
+    <p>Reports become available once you or your patients complete an assessment.</p>
+  </div>
+  {% endif %}
+  </div>
+</section>
+{% endblock %}

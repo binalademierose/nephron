@@ -1,0 +1,71 @@
+{# Search for a professional by name or email, send (or resend) a request, and see the status of every professional
+   this patient has ever asked. Works with no JavaScript (a plain GET with ?q=), then static/js/practitioner_search.js
+   upgrades the same box into a live, debounced search against /share/search. #}
+{% extends "layouts/app_base.html" %}
+{% from "partials/_macros.html" import icon, csrf_field %}
+{% from "authorizations/_macros.html" import request_form %}
+{% set active_nav = 'shared' %}
+{% block header_title %}Share with a professional{% endblock %}
+{% block header_subtitle %}Search for a professional by name or email. They will see your full assessment history only after you send a request and they accept it.{% endblock %}
+
+{% block content %}
+<section class="card card-hero reveal" style="--i: 1;" aria-labelledby="search-heading">
+  <div class="card-header"><h2 class="card-title" id="search-heading">{{ icon('search') }}Find a professional</h2></div>
+  <form method="get" action="{{ url_for('authorization.share') }}" class="upload-form" role="search" data-practitioner-search data-request-url="{{ url_for('authorization.request_share') }}">
+    {{ csrf_field() }}
+    <div class="form-group" style="flex: 1; margin-bottom: 0;">
+      <label class="form-label" for="q">Name or email</label>
+      <input class="form-control" type="text" id="q" name="q" value="{{ query }}" placeholder="Dr. Cruz, or their email address" autocomplete="off" data-practitioner-search-input>
+    </div>
+    <noscript><button class="button button-primary" type="submit">{{ icon('search') }}Search</button></noscript>
+  </form>
+
+  <div data-practitioner-results>
+    {% include "authorizations/_search_results.html" %}
+  </div>
+</section>
+
+<div class="section-tight-inline">
+  <section class="card reveal" style="--i: 2;" aria-labelledby="requests-heading">
+    <div class="card-header"><h2 class="card-title" id="requests-heading">Your requests</h2></div>
+    {% if not authorizations %}
+    <p class="empty-inline">{{ icon('info') }}You have not requested anyone yet.</p>
+    {% else %}
+    <ul class="authorization-list" role="list">
+      {% for row in authorizations %}
+      <li class="authorization-row">
+        <div>
+          <strong>{{ row.professional_name }}</strong>
+          <p class="text-muted">{{ row.profession_title }}{% if row.institution %} &middot; {{ row.institution }}{% endif %}</p>
+        </div>
+        <span class="badge {{ 'risk-badge-low' if row.status == 'accepted' else 'badge-info' if row.status == 'pending' else 'badge-neutral' }}">
+          {{ icon('check-circle' if row.status == 'accepted' else 'clock' if row.status == 'pending' else 'x') }}{{ row.status|capitalize }}
+        </span>
+        {% if row.status == 'accepted' %}
+        <form method="post" action="{{ url_for('authorization.revoke_share', professional_id=row.professional_user_id) }}"
+              data-confirm="danger" data-confirm-name="{{ row.professional_name }}"
+              data-confirm-title="Remove {name}'s access?"
+              data-confirm-message="{name} will lose access to your assessment history right away. Notes they already wrote stay with your results, and you can send a new request later."
+              data-confirm-accept="Remove access" data-confirm-dismiss="Keep sharing">
+          {{ csrf_field() }}
+          <button class="button button-secondary" type="submit">{{ icon('x') }}Remove access</button>
+        </form>
+        {% elif row.status in ('declined', 'revoked') %}
+        {{ request_form(row.professional_user_id, row.professional_name, 'Request again') }}
+        {% endif %}
+        {% if consent_dates.get(row.professional_user_id) %}
+        <p class="consent-note">{{ icon('shield-check') }}You agreed to share on {{ format_date(consent_dates[row.professional_user_id]) }}</p>
+        {% endif %}
+      </li>
+      {% endfor %}
+    </ul>
+    {% endif %}
+  </section>
+</div>
+{% endblock %}
+
+{% include "authorizations/_consent_template.html" %}
+
+{% block scripts %}
+<script src="{{ url_for('static', filename='js/practitioner_search.js') }}" defer></script>
+{% endblock %}

@@ -1,0 +1,23 @@
+{% from "partials/_macros.html" import icon %}
+{% if results %}
+<ul class="facility-list" role="list">
+  {% for center in results %}
+  <li class="facility-item">
+    <div class="facility-item-header">
+      <h3 class="facility-name">{{ center.name|title }}</h3>
+      <span class="badge {{ 'badge-info' if center.sector == 'Private' else 'risk-badge-low' }}">{{ center.sector }}</span>
+    </div>
+    <p class="facility-address">{{ icon('map-pin') }}{{ center.street|title }}{% if center.street %}, {% endif %}{{ center.municipality|title }}, {{ center.province_or_city|title }}</p>
+    <p class="facility-region text-muted">{{ center.region|title }}</p>
+    <div class="facility-contact">
+      {% if center.tel %}<span class="facility-tel">{{ icon('phone') }}{{ center.tel }}</span>{% endif %}
+      {% if center.email %}<a href="mailto:{{ center.email }}">{{ icon('mail') }}{{ center.email }}</a>{% endif %}
+    </div>
+  </li>
+  {% endfor %}
+</ul>
+{% elif total == 0 and (term or region or sector) %}
+<p class="empty-inline">{{ icon('info') }}No accredited centers match your search.</p>
+{% elif not results %}
+<p class="empty-inline">{{ icon('info') }}No accredited centers to show.</p>
+{% endif %}

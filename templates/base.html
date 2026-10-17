@@ -1,0 +1,10 @@
+{# The public layout: header, page, footer. Used by the home page, About, and error pages. #}
+{% extends "layouts/document.html" %}
+{% block shell %}
+  {% include "partials/_navbar.html" %}
+  <main id="main-content" class="site-main page-fade" tabindex="-1">
+    {% include "partials/_flash_messages.html" %}
+    {% block content %}{% endblock %}
+  </main>
+  {% include "partials/_footer.html" %}
+{% endblock %}

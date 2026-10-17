@@ -1,0 +1,19 @@
+{# Good news slides in as a toast and leaves by itself. Anything the person still has to READ AND ACT ON (an error, a
+   warning, a notice) stays a banner in the page until they dismiss it - it must never vanish before it is read. #}
+{% from "partials/_macros.html" import alert_box, toast_item %}
+{% with messages = get_flashed_messages(with_categories=true) %}
+  {% if messages %}
+  {% set banners = [] %}
+  {% for category, message in messages %}{% if category not in ('success', 'done') %}{% set _ = banners.append((category, message)) %}{% endif %}{% endfor %}
+  {% if banners %}
+  <div class="flash-region {{ flash_wrapper|default('container') }}">
+    {% for category, message in banners %}
+      {{ alert_box(category if category in ('info', 'warning', 'error') else 'info', message) }}
+    {% endfor %}
+  </div>
+  {% endif %}
+  <div class="toast-region flash-toasts">
+    {% for category, message in messages %}{% if category in ('success', 'done') %}{{ toast_item('success', message, modal=(category == 'done')) }}{% endif %}{% endfor %}
+  </div>
+  {% endif %}
+{% endwith %}

@@ -1,0 +1,115 @@
+{# The animated pictures on Home and How it works. Every one is an ILLUSTRATION (each says so, on the picture itself):
+   none of these numbers or names is a real result. All motion comes from static/css/home.css and is triggered by
+   the classes static/js/motion.js adds - the markup itself is finished and readable with no script at all. #}
+{% from "partials/_macros.html" import icon, risk_badge %}
+
+{# A ring that fills to an ARC - a picture of the idea, never a value: a public page shows no invented numbers, so the
+   centre is an icon, not a percentage. threshold (optional) adds the validated-cut-off tick. #}
+{% macro mini_ring(fill, threshold=None, extra_class='') -%}
+{% set g = ring_geometry(fill, radius=38, stroke=9, threshold=threshold) %}
+<div class="ring mini-ring {{ extra_class }}" role="img" aria-label="Illustration of a risk ring, not a real result">
+  <svg viewBox="0 0 {{ g.box }} {{ g.box }}" focusable="false" aria-hidden="true">
+    <circle class="ring-track" cx="{{ g.centre }}" cy="{{ g.centre }}" r="{{ g.radius }}" stroke-width="{{ g.stroke }}" fill="none"/>
+    <circle class="ring-value" cx="{{ g.centre }}" cy="{{ g.centre }}" r="{{ g.radius }}" stroke-width="{{ g.stroke }}" fill="none" stroke-dasharray="{{ g.dasharray }}" transform="rotate(-90 {{ g.centre }} {{ g.centre }})" style="--circ: {{ g.circumference }};"/>
+    {% if g.tick %}<line class="ring-tick" x1="{{ g.tick.x1 }}" y1="{{ g.tick.y1 }}" x2="{{ g.tick.x2 }}" y2="{{ g.tick.y2 }}"/>{% endif %}
+  </svg>
+  <div class="ring-centre">{{ icon('activity') }}</div>
+</div>
+{%- endmacro %}
+
+{# The small picture above each step of "How screening works" on the home page. #}
+{% macro journey_visual(n) -%}
+{% if n == 1 %}
+<div class="mv mv-form" aria-hidden="true">
+  {% for w in (70, 54, 82) %}<div class="mv-row" style="--r: {{ loop.index0 }}"><span class="mv-dot">{{ icon('check') }}</span><span class="mv-bar" style="--w: {{ w }}%"></span></div>{% endfor %}
+</div>
+{% elif n == 2 %}
+<div class="mv mv-ring">{{ mini_ring(34) }}</div>
+{% elif n == 3 %}
+<div class="mv mv-bars" aria-hidden="true">
+  {% for w, kind in ((88, 'up'), (62, 'down'), (40, 'up')) %}<span class="mv-b mv-b-{{ kind }}" style="--w: {{ w }}%; --r: {{ loop.index0 }}"></span>{% endfor %}
+</div>
+{% elif n == 4 %}
+<div class="mv mv-share" aria-hidden="true"><span class="mv-shield">{{ icon('shield-check') }}</span><span class="mv-switch"></span></div>
+{% else %}
+<div class="mv mv-trend" aria-hidden="true">
+  <svg viewBox="0 0 120 56" focusable="false"><path class="mv-line" pathLength="1" d="M8 44 L42 34 L74 38 L112 12"/>
+    {% for x, y in ((8, 44), (42, 34), (74, 38), (112, 12)) %}<circle class="mv-point" style="--r: {{ loop.index0 }}" cx="{{ x }}" cy="{{ y }}" r="4.5"/>{% endfor %}</svg>
+</div>
+{% endif %}
+{%- endmacro %}
+
+{# The five scenes of the How it works walkthrough. One per step, always the same markup whether it appears in the sticky
+   stage (wide screens) or above its step (phones and no-script). #}
+{% macro scene(n) -%}
+{% if n == 1 %}
+<div class="scene sc-answers">
+  <span class="sc-tag">Illustration</span>
+  <div class="sc-card">
+    <p class="sc-title">{{ icon('clipboard-plus') }}Your answers</p>
+    <ul class="sc-rows">
+      {% for label, w in (('Age and sex', 40), ('Health history', 64), ('Medications', 52), ('Lifestyle', 72)) %}
+      <li class="sc-row" style="--r: {{ loop.index0 }}"><span class="sc-tick">{{ icon('check') }}</span><span class="sc-label">{{ label }}</span><span class="sc-skel" style="--w: {{ w }}%"></span></li>
+      {% endfor %}
+    </ul>
+  </div>
+  <div class="sc-card sc-lab">
+    <span class="sc-lab-icon">{{ icon('file-up') }}</span>
+    <div><strong>A lab report, if you have one</strong><p>Values are read for you to check and correct.</p></div>
+  </div>
+</div>
+{% elif n == 2 %}
+<div class="scene sc-estimate">
+  <span class="sc-tag">Illustration</span>
+  {{ mini_ring(34, threshold=61, extra_class='sc-ring') }}
+  <div class="sc-result">{{ risk_badge('low', large=True) }}</div>
+  <p class="sc-note">A threshold chosen during validation turns the probability into Low or High.</p>
+</div>
+{% elif n == 3 %}
+<div class="scene sc-factors">
+  <span class="sc-tag">Illustration</span>
+  <p class="sc-title">{{ icon('bar-chart') }}What moved this estimate</p>
+  <ul class="sc-frows">
+    {% for name, w, kind in (('Age', 88, 'up'), ('Blood pressure history', 66, 'up'), ('Physical activity', 54, 'down'), ('Water intake', 34, 'down')) %}
+    <li class="sc-frow sc-{{ kind }}" style="--r: {{ loop.index0 }}">
+      <span class="sc-fname">{{ name }}</span>
+      <span class="sc-fbar"><i style="--w: {{ w }}%"></i></span>
+      <span class="sc-fdir">{{ icon('arrow-up-small') }}{{ 'Raised' if kind == 'up' else 'Lowered' }}</span>
+    </li>
+    {% endfor %}
+  </ul>
+</div>
+{% elif n == 4 %}
+<div class="scene sc-share">
+  <span class="sc-tag">Illustration</span>
+  <div class="sc-consent"><span class="sc-tick">{{ icon('check') }}</span>I understand and agree to share</div>
+  <div class="sc-people">
+    <div class="sc-person"><span class="sc-avatar">{{ icon('user-round') }}</span><strong>You</strong></div>
+    <div class="sc-wire"><span class="sc-packet"></span></div>
+    <div class="sc-person sc-pro"><span class="sc-avatar">{{ icon('stethoscope') }}</span><strong>Your professional</strong></div>
+  </div>
+  <p class="sc-pill sc-pill-a">{{ icon('lock') }}Nothing is visible until they accept</p>
+  <p class="sc-pill sc-pill-b">{{ icon('x') }}You can end access at any time</p>
+</div>
+{% else %}
+<div class="scene sc-follow">
+  <span class="sc-tag">Illustration</span>
+  <div class="sc-duo">
+    <div class="sc-card sc-cal">
+      <p class="sc-title">{{ icon('calendar') }}Follow-up</p>
+      <div class="sc-grid">{% for i in range(21) %}<span{% if i == 10 %} class="is-appt"{% endif %}></span>{% endfor %}</div>
+    </div>
+    <div class="sc-card sc-trend">
+      <p class="sc-title">{{ icon('trending-up') }}Over time</p>
+      <svg viewBox="0 0 120 56" focusable="false"><path class="sc-tline" pathLength="1" d="M8 44 L42 34 L74 38 L112 12"/>
+        {% for x, y in ((8, 44), (42, 34), (74, 38), (112, 12)) %}<circle class="sc-tpoint" style="--r: {{ loop.index0 }}" cx="{{ x }}" cy="{{ y }}" r="4.5"/>{% endfor %}</svg>
+    </div>
+  </div>
+  <div class="sc-card sc-checklist">
+    {% for label in ('Keep your check-up', 'Walk most days of the week', 'Ask before changing any medicine') %}
+    <p class="sc-check" style="--r: {{ loop.index0 }}"><span class="sc-tick">{{ icon('check') }}</span>{{ label }}</p>
+    {% endfor %}
+  </div>
+</div>
+{% endif %}
+{%- endmacro %}

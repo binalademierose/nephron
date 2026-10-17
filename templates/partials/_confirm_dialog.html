@@ -1,0 +1,27 @@
+{# One dialog for every "are you sure" - consent to share health information, ending access, discarding a draft.
+   It is filled in by static/js/main.js from data-confirm-* attributes on the FORM that asked for it (see
+   templates/authorizations/_macros.html for the consent form). Without JavaScript the forms simply submit; the
+   one that needs a real yes (sharing) carries a plain checkbox instead, and the server refuses it without one. #}
+{% from "partials/_macros.html" import icon %}
+<dialog class="dialog confirm-dialog" id="nephron-confirm" aria-labelledby="nephron-confirm-title" aria-describedby="nephron-confirm-lead">
+  <div class="confirm-hero">
+    <span class="confirm-badge" aria-hidden="true">
+      <span data-confirm-icon="consent" hidden>{{ icon('shield-check') }}</span>
+      <span data-confirm-icon="danger" hidden>{{ icon('alert-triangle') }}</span>
+      <span data-confirm-icon="default" hidden>{{ icon('info') }}</span>
+    </span>
+  </div>
+  <div class="confirm-header">
+    <h2 id="nephron-confirm-title" data-confirm-title></h2>
+    <p id="nephron-confirm-lead" data-confirm-lead></p>
+  </div>
+  <div class="confirm-details" data-confirm-details></div>
+  <label class="confirm-check" for="nephron-confirm-checkbox" data-confirm-check hidden>
+    <input type="checkbox" id="nephron-confirm-checkbox" data-confirm-checkbox>
+    <span data-confirm-check-text></span>
+  </label>
+  <div class="confirm-footer">
+    <button type="button" class="button button-secondary" data-dialog-close data-confirm-cancel>Go back</button>
+    <button type="button" class="button button-primary" data-confirm-accept>Confirm</button>
+  </div>
+</dialog>

@@ -1,0 +1,35 @@
+{# Choosing how to screen this patient. Enhanced/Laboratory Assessment builds on the patient's latest Preliminary
+   Screening, so until one exists it says so instead of offering a form that would be refused. #}
+{% extends "layouts/app_base.html" %}
+{% from "partials/_macros.html" import icon %}
+{% set active_nav = 'patients' %}
+{% block header_title %}New assessment{% endblock %}
+{% block header_subtitle %}For {{ record.full_name }} ({{ record.patient_code }}){% endblock %}
+
+{% block content %}
+<div class="page-actions reveal">
+  <p></p>
+  <a class="button button-secondary button-sm" href="{{ url_for('patient_records.profile', patient_code=record.patient_code) }}">{{ icon('chevron-left') }}Back to patient</a>
+</div>
+
+<section class="card reveal" style="--i: 1;" aria-labelledby="choose-heading">
+  <div class="card-header"><h2 class="card-title" id="choose-heading">{{ icon('gauge') }}Choose an assessment type</h2></div>
+  <div class="outputs">
+    <a class="card output-card card-interactive card-lavender assessment-choice" href="{{ url_for('patient_records.screening', patient_code=record.patient_code) }}">
+      <div class="output-visual">{{ icon('clipboard-plus') }}</div>
+      <div><h3>Preliminary Screening</h3><p>Lifestyle and history answers only. Available now.</p></div>
+    </a>
+    {% if has_preliminary %}
+    <a class="card output-card card-interactive card-lavender assessment-choice" href="{{ url_for('patient_records.enhanced', patient_code=record.patient_code) }}">
+      <div class="output-visual">{{ icon('flask') }}</div>
+      <div><h3>Enhanced / Laboratory Assessment</h3><p>Adds lab values to this patient's latest Preliminary Screening.</p></div>
+    </a>
+    {% else %}
+    <div class="card output-card assessment-choice is-disabled" aria-disabled="true">
+      <div class="output-visual">{{ icon('flask') }}</div>
+      <div><h3>Enhanced / Laboratory Assessment</h3><p>Available once this patient has a Preliminary Screening - it builds on those answers.</p></div>
+    </div>
+    {% endif %}
+  </div>
+</section>
+{% endblock %}

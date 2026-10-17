@@ -1,0 +1,22 @@
+{# The account details, shown on the home page and on the account page. Needs current_user. #}
+{% from "partials/_macros.html" import icon, avatar_face %}
+<div class="account-person">
+  <span class="profile-avatar{{ ' has-image' if current_user.get('avatar') }}" aria-hidden="true">{{ avatar_face(current_user) }}</span>
+  <div>
+    <strong>{{ current_user.full_name }}</strong>
+    <span class="chip chip-lavender">{{ current_user.role_label }}</span>
+  </div>
+</div>
+<dl class="summary-list">
+  <div class="summary-row"><dt>Email</dt><dd>{{ current_user.email }}</dd></div>
+  <div class="summary-row"><dt>Member since</dt><dd>{{ format_date(local_date(current_user.created_at)) }}</dd></div>
+  <div class="summary-row"><dt>Last sign-in</dt><dd>{{ format_date(local_date(current_user.last_login_at)) if current_user.last_login_at else 'This is your first sign-in' }}</dd></div>
+  {% if current_user.role == 'professional' %}
+  <div class="summary-row"><dt>Profession</dt><dd>{{ current_user.profession_title }}</dd></div>
+  {% if current_user.institution %}<div class="summary-row"><dt>Hospital or clinic</dt><dd>{{ current_user.institution }}</dd></div>{% endif %}
+  {% if current_user.license_number %}<div class="summary-row"><dt>License number</dt><dd>{{ current_user.license_number }}</dd></div>{% endif %}
+  {% endif %}
+</dl>
+{% if current_user.role == 'professional' %}
+<p class="self-declared">{{ icon('info') }} Professional details were typed in by you and are not verified.</p>
+{% endif %}

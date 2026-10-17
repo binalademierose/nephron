@@ -1,0 +1,50 @@
+{# What affected THIS person's result: one card for the answers that RAISED the estimate, one for those that LOWERED it.
+   Both cards use the same scale, so bars can be compared. Used by the real result page and by the design preview (is_sample = True).
+   explanation is None when there is nothing honest to show.
+   Note: use explanation["raises"], because explanation.items would be the dictionary's own method. #}
+{% from "partials/_macros.html" import icon %}
+{% from "partials/_visuals.html" import icon_chip, sample_tag %}
+<div class="explain-grid">
+  {% if explanation %}
+  {% for kind, title, chip in (('raises', 'What raised your estimate', 'red'), ('lowers', 'What lowered your estimate', 'green')) %}
+  {% set items = explanation[kind] %}
+  <section class="card explain-card explain-{{ kind }} reveal" style="--i: {{ loop.index + 1 }};" aria-labelledby="explain-{{ kind }}-heading">
+    <div class="card-header">
+      <h2 class="card-title" id="explain-{{ kind }}-heading"><span class="explain-arrow explain-arrow-{{ kind }}" aria-hidden="true">{{ icon('arrow-up-small') }}</span>{{ title }}</h2>
+      {% if is_sample %}<span class="card-tags">{{ sample_tag() }}</span>{% endif %}
+    </div>
+    {% if items %}
+    <ol class="factor-list">
+      {% for item in items %}
+      <li class="factor factor-explained {{ 'factor-up' if kind == 'raises' else 'factor-down' }}">
+        <span class="factor-rank" aria-hidden="true">{{ loop.index }}</span>
+        <span class="factor-name">{{ item.label }}<small class="factor-answer">Your answer: {{ item.answer }}</small></span>
+        <span class="factor-bar" role="img" aria-label="Rank {{ loop.index }}. {{ 'Raised' if kind == 'raises' else 'Lowered' }} the estimate. Effect size {{ item.share }} percent of the biggest effect."><span class="factor-fill" style="--share: {{ item.share }}; --order: {{ loop.index0 }};"></span></span>
+      </li>
+      {% endfor %}
+    </ol>
+    <div class="explanation">
+      {% for sentence in explanation.summary[kind] %}<p>{{ sentence }}</p>{% endfor %}
+    </div>
+    {% else %}
+    <div class="empty-state empty-state-compact">
+      <p>{{ explanation.empty[kind] }}</p>
+    </div>
+    {% endif %}
+  </section>
+  {% endfor %}
+  <p class="explain-caveat text-small text-muted">{{ explanation.caveat }}</p>
+  {% else %}
+  <section class="card explain-unavailable reveal" style="--i: 2;" aria-labelledby="explain-heading">
+    <div class="card-header">
+      <h2 class="card-title" id="explain-heading">What affected your result</h2>
+      {% if is_sample %}<span class="card-tags">{{ sample_tag() }}</span>{% endif %}
+    </div>
+    <div class="empty-state">
+      <span class="empty-visual" aria-hidden="true">{{ icon('bar-chart') }}</span>
+      <h3>No explanation for this result</h3>
+      <p>{{ explanation_unavailable }}</p>
+    </div>
+  </section>
+  {% endif %}
+</div>

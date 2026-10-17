@@ -1,0 +1,339 @@
+{# The signed-in overview: hero with the kidney artwork and the path, three stat cards, trend + latest result,
+   classification summary, history, resources, and the right-hand panel. Used by the design preview AND by the real
+   dashboard, so there is one markup and one look.
+
+   It needs (all worked out by services/visuals.py from real assessment records):
+     summary, trend, message, activity, path_labels, path_done, is_sample, profile, links, result_urls
+   (result_urls: {assessment id: address of its result page}; empty in the design preview)
+   links.<name> says where each action goes:
+     a real address  - a working link
+     'preview'       - only in the design preview: a link that explains it is a preview
+     None            - the feature is not built yet: shown as unavailable ("Coming soon"), never as a dead link
+   With no assessments every card shows an honest empty state. Nothing is invented. #}
+{% from "partials/_macros.html" import icon, csrf_field, avatar_face %}
+{% from "partials/_visuals.html" import icon_chip, ring, donut, trend_chart, trend_empty, sparkline, path_steps, risk_pill, info_tip, sample_tag, fact_ring_card, fact_mini_rings, fact_sex_differences, fact_stat_card, community_cards %}
+
+{% macro link_action(target, label, extra_class='') -%}
+{% if target == 'preview' %}<a class="link-action {{ extra_class }}" href="#" data-preview-link>{{ label }} {{ icon('arrow-right') }}</a>
+{% elif target %}<a class="link-action {{ extra_class }}" href="{{ target }}">{{ label }} {{ icon('arrow-right') }}</a>{% endif %}
+{%- endmacro %}
+
+{% macro quick_action(target, icon_name, label) -%}
+{% if target is none %}
+<span class="quick-action is-disabled" aria-disabled="true">{{ icon_chip(icon_name, 'lavender', 'icon-chip-sm') }}<span>{{ label }}<small>Coming soon</small></span></span>
+{% else %}
+<a class="quick-action" href="{{ '#' if target == 'preview' else target }}"{{ ' data-preview-link'|safe if target == 'preview' }}>{{ icon_chip(icon_name, 'lavender', 'icon-chip-sm') }}{{ label }}{{ icon('arrow-right') }}</a>
+{% endif %}
+{%- endmacro %}
+
+{% macro resource(target, icon_name, title, sub) -%}
+{% if target is none %}
+<span class="resource is-disabled" aria-disabled="true"><span class="icon-tile" aria-hidden="true">{{ icon(icon_name) }}</span><span><span class="resource-title">{{ title }}</span><span class="resource-sub">Coming soon</span></span></span>
+{% else %}
+<a class="resource" href="{{ '#' if target == 'preview' else target }}"{{ ' data-preview-link'|safe if target == 'preview' }}><span class="icon-tile" aria-hidden="true">{{ icon(icon_name) }}</span><span><span class="resource-title">{{ title }}</span><span class="resource-sub">{{ sub }}</span></span>{{ icon('chevron-right') }}</a>
+{% endif %}
+{%- endmacro %}
+
+{% macro profile_link(target) -%}
+<a class="profile-row" href="{{ '#' if target == 'preview' else target }}"{{ ' data-preview-link'|safe if target == 'preview' }}>{{ caller() }}</a>
+{%- endmacro %}
+
+{% set latest = summary.latest %}
+{% set next = summary.next_screening %}
+{# ready: a screening can start. waiting: the waiting period has not passed. unavailable: screening is not built yet. #}
+{% set start_state = 'unavailable' if links.start is none else ('waiting' if next.state == 'waiting' else 'ready') %}
+{% set spark = sparkline_geometry(summary.oldest_first) %}
+{% set tag = sample_tag() if is_sample else '' %}
+{% if not is_sample and profile.get('role') == 'general' and profile.get('country') == 'Philippines' and not profile.get('province_code') %}
+<div class="notice location-nudge reveal" role="note">{{ icon('map-pin') }}
+  <div><h3>Where in the Philippines do you live?</h3>
+    <p>Tell us your province (and, in Pangasinan, your town and barangay). Local health officials see only totals per place, never your name. <a href="{{ url_for('account.settings') }}#location">Add where you live</a></p></div>
+</div>
+{% endif %}
+<div class="dash">
+  <div class="dash-main">
+    {% if open_follow_up is defined and open_follow_up %}
+    <div class="notice reveal" style="--i: -1;">
+      {{ icon('bell') }}
+      <div>
+        {% if admin_opening is defined and admin_opening %}
+        <h2>The administrator approved your request to screen again early</h2>
+        <p>You can take one screening now. After it, the usual waiting period applies again.</p>
+        {% else %}
+        <h2>{{ open_follow_up.professional_name }} requested a follow-up screening</h2>
+        <p>{% if open_follow_up.message %}"{{ open_follow_up.message }}" {% endif %}You can screen again right away - the usual waiting period does not apply this time.</p>
+        {% endif %}
+      </div>
+    </div>
+    {% endif %}
+    {% if drafts is defined and drafts %}
+    {% for draft in drafts %}
+    <section class="card card-draft reveal" style="--i: -0.5;" aria-labelledby="draft-{{ draft.assessment_type }}-heading">
+      <div class="card-header">
+        <h2 class="card-title" id="draft-{{ draft.assessment_type }}-heading">{{ icon('clipboard-plus') }}Continue your screening</h2>
+        <span class="card-tags">{{ draft.type_label }} &middot; {{ draft.percent }}% complete</span>
+      </div>
+      <div class="progress-bar" role="progressbar" aria-valuemin="0" aria-valuemax="100" aria-valuenow="{{ draft.percent }}" aria-label="Draft progress"><span class="progress-bar-fill" style="--progress: {{ draft.percent }}%"></span></div>
+      <p class="text-muted draft-updated">Last updated {{ format_date(draft.updated_at) }}</p>
+      <div class="draft-actions">
+        <a class="button button-primary" href="{{ url_for('screening.screening') if draft.assessment_type == 'preliminary' else url_for('lab.start') }}">{{ icon('arrow-right') }}Continue</a>
+        <form method="post" action="{{ url_for('screening.discard_draft') }}"
+              data-confirm="danger" data-confirm-title="Discard your unfinished screening?"
+              data-confirm-message="The answers you have saved so far will be deleted. You can start a new screening at any time."
+              data-confirm-accept="Discard draft" data-confirm-dismiss="Keep it">
+          {{ csrf_field() }}
+          <input type="hidden" name="assessment_type" value="{{ draft.assessment_type }}">
+          <button class="button button-secondary" type="submit">{{ icon('x') }}Discard</button>
+        </form>
+      </div>
+    </section>
+    {% endfor %}
+    {% endif %}
+    {# ---- Hero: the welcome card, the kidney artwork and the path ---- #}
+    <div class="hero-frame reveal" style="--i: 0;">
+      <section class="hero-card" aria-labelledby="hero-heading">
+        <div class="hero-copy">
+          <p class="eyebrow">Early risk stratification</p>
+          <h2 class="hero-title" id="hero-heading">Take the next step towards <span class="accent-text">healthier kidneys</span></h2>
+          <p class="hero-text">Complete a screening and review your model-generated results.</p>
+          {% if start_state == 'ready' %}
+          <a class="button button-primary button-lg" href="{{ links.start }}">{{ icon('arrow-right') }}Start Assessment</a>
+          {% elif start_state == 'waiting' %}
+          <p class="hero-locked">{{ icon('clock') }}Your next screening opens on {{ format_date(next.date) }} &middot; {{ next.days_left }} days left</p>
+          {% else %}
+          <p class="hero-locked">{{ icon('clock') }}Screening is not available yet</p>
+          {% endif %}
+        </div>
+        <img class="hero-art" src="{{ url_for('static', filename='images/art/kidney-hero.png') }}" alt="" width="752" height="596" aria-hidden="true">
+        <aside class="path-card" aria-label="Your path to better kidney health">
+          <h3 class="path-title">Your path to<br>better kidney health</h3>
+          {{ path_steps(path_done, path_labels) }}
+        </aside>
+      </section>
+    </div>
+
+    {# ---- Three stat cards ---- #}
+    <div class="stat-row">
+      <article class="card stat-card reveal" style="--i: 1;">
+        {{ icon_chip('clipboard-list', 'lavender', 'icon-chip-lg') }}
+        <div class="stat-body">
+          <p class="stat-label">Total Assessments</p>
+          <p class="stat-value" {% if summary.total %}data-count-to="{{ summary.total }}"{% endif %}>{{ summary.total }}</p>
+          <p class="stat-foot">
+            {% if not summary.total %}No assessments yet
+            {% elif summary.month_count %}<span class="chip chip-green">{{ icon('arrow-up-small') }}{{ summary.month_count }} this month</span>
+            {% else %}None this month{% endif %}
+          </p>
+        </div>
+        {% if spark %}<div class="stat-spark">{{ sparkline(spark) }}</div>{% endif %}
+      </article>
+
+      <article class="card stat-card reveal" style="--i: 2;">
+        {{ icon_chip('alert-triangle' if latest and latest.level == 'high' else 'shield-check', 'red' if latest and latest.level == 'high' else ('green' if latest else 'neutral'), 'icon-chip-lg') }}
+        <div class="stat-body">
+          <p class="stat-label">Latest Risk</p>
+          {% if latest %}
+          <p class="stat-value stat-value-level stat-value-{{ latest.level }}">{{ level_label(latest.level, latest.assessment_type|default('preliminary')) }}</p>
+          <p class="stat-foot">Assessed on {{ format_date(latest.date) }}</p>
+          {% else %}
+          <p class="stat-value stat-value-level">No result yet</p>
+          <p class="stat-foot">Complete an assessment to see your result</p>
+          {% endif %}
+        </div>
+      </article>
+
+      <article class="card stat-card stat-card-go reveal" style="--i: 3;">
+        {{ icon_chip('calendar', 'lavender', 'icon-chip-lg') }}
+        <div class="stat-body">
+          <p class="stat-label">Next Assessment</p>
+          {% if start_state == 'ready' %}
+          <p class="stat-value stat-value-level">Available now</p>
+          <p class="stat-foot">{{ 'You can screen again today' if latest else 'Start your first assessment' }}</p>
+          {% elif start_state == 'waiting' %}
+          <p class="stat-value stat-value-level">{{ format_date(next.date) }}</p>
+          <p class="stat-foot next-days">{{ next.days_left }} day{{ '' if next.days_left == 1 else 's' }} left{% if not is_sample %}{% if admin_request is defined and admin_request and admin_request.status == 'pending' %} &middot; early request sent{% else %} &middot; <a href="{{ url_for('screening.screening') }}#ask-admin">need it sooner?</a>{% endif %}{% endif %}</p>
+          {% else %}
+          <p class="stat-value stat-value-level">Not available yet</p>
+          <p class="stat-foot">Screening opens in a later update</p>
+          {% endif %}
+        </div>
+        {% if start_state == 'ready' %}
+        <a class="circle-button stat-go" href="{{ links.start }}" aria-label="Start an assessment">{{ icon('arrow-right') }}</a>
+        {% elif start_state == 'waiting' %}
+        <span class="circle-button stat-go" aria-disabled="true" role="img" aria-label="Not available until {{ format_date(next.date) }}">{{ icon('clock') }}</span>
+        {% else %}
+        <span class="circle-button stat-go" aria-disabled="true" role="img" aria-label="Screening is not available yet">{{ icon('clock') }}</span>
+        {% endif %}
+      </article>
+    </div>
+
+    {# ---- Trend + latest result, and the classification summary ---- #}
+    <div class="dash-row">
+      <section class="card trend-card reveal" style="--i: 4;" aria-labelledby="trend-heading">
+        <div class="card-header">
+          <h2 class="card-title" id="trend-heading">Risk Probability Trend {{ info_tip('Each point is the predicted risk probability of one saved assessment, on a scale from 0 to 100 percent.') }}</h2>
+          {% if is_sample %}<span class="card-tags">{{ tag }}</span>{% endif %}
+        </div>
+        <div class="trend-layout">
+          <div>
+            {% if trend %}{{ trend_chart(trend) }}
+            {% else %}{{ trend_empty('Chart appears when sufficient data exists', 'A trend needs at least two saved assessments.' if summary.total == 1 else 'Your predicted risk probability over time will appear here.') }}
+            {% endif %}
+          </div>
+          <aside class="result-panel" aria-label="Latest result">
+            <p class="result-panel-label">Latest Result</p>
+            {% if latest %}
+            <div class="result-panel-main">{{ ring(latest.probability) }}<p>Predicted<br>Risk Probability</p></div>
+            {{ risk_pill(latest.level, latest.assessment_type|default('preliminary')) }}
+            {% if result_urls.get(latest.get('assessment_id')) %}{{ link_action(result_urls[latest.assessment_id], 'View result') }}{% endif %}
+            {% if latest.get('threshold') is not none %}
+            <p class="result-panel-threshold">Threshold: {{ percent_text(latest.threshold) }}% {{ info_tip("The model's validated cut-off between Low and High Preliminary Risk.") }}</p>
+            {% endif %}
+            {% else %}
+            <div class="result-panel-main">{{ ring(0, show_value=False) }}<p>Predicted<br>Risk Probability</p></div>
+            <p class="empty-note">No result yet. Your latest result appears here after an assessment.</p>
+            {% endif %}
+          </aside>
+        </div>
+      </section>
+
+      <section class="card reveal" style="--i: 5;" aria-labelledby="summary-heading">
+        <div class="card-header">
+          <h2 class="card-title" id="summary-heading">{{ icon_chip('bar-chart', 'lavender') }}Assessment Summary</h2>
+          {% if is_sample %}<span class="card-tags">{{ tag }}</span>{% endif %}
+        </div>
+        {% if summary.has_distribution %}
+        <div class="summary-body">
+          {{ donut(summary.low_count, summary.high_count) }}
+          <div class="legend-block">
+            <p class="legend-title" id="legend-heading">Your results</p>
+            <ul class="legend" aria-labelledby="legend-heading">
+              <li class="legend-low"><span class="legend-dot" aria-hidden="true"></span>Low<span class="legend-count">{{ summary.low_count }}</span></li>
+              <li class="legend-high"><span class="legend-dot" aria-hidden="true"></span>High<span class="legend-count">{{ summary.high_count }}</span></li>
+            </ul>
+          </div>
+        </div>
+        <p class="summary-note">{{ icon('kidneys') }}<span>{{ message }}</span></p>
+        {% else %}
+        <div class="empty-state empty-state-centered">
+          <span class="empty-visual" aria-hidden="true">{{ icon('bar-chart') }}</span>
+          <h3>No results to summarise yet</h3>
+          <p>How your assessments are classified will appear here after your first one.</p>
+        </div>
+        {% endif %}
+      </section>
+    </div>
+
+    {# ---- Helpful resources ---- #}
+    <div class="dash-row dash-row-single">
+      {% if checklist_days is defined and checklist_days %}
+      {% set y_done, y_total = checklist_days.yesterday %}{% set t_done, t_total = checklist_days.today %}
+      <section class="card reveal checklist-days" style="--i: 6;" aria-labelledby="checklist-days-heading">
+        <div class="card-header"><h2 class="card-title" id="checklist-days-heading">{{ icon_chip('heart', 'lavender') }}Daily kidney-health checklist</h2>
+          <a class="link-action" href="{{ links.tips }}">Open today's list {{ icon('arrow-right') }}</a></div>
+        <div class="checklist-days-grid">
+          <div class="checklist-day">
+            <span class="checklist-day-label">Yesterday</span>
+            <span class="checklist-day-value">{{ y_done }} / {{ y_total }}</span>
+            <span class="checklist-day-note">{{ 'You finished every task - well done.' if y_total and y_done == y_total else ('tasks finished' if y_done else 'No tasks were ticked.') }}</span>
+          </div>
+          <div class="checklist-day is-today">
+            <span class="checklist-day-label">Today</span>
+            <span class="checklist-day-value">{{ t_done }} / {{ t_total }}</span>
+            <div class="progress-bar" role="progressbar" aria-valuemin="0" aria-valuemax="{{ t_total }}" aria-valuenow="{{ t_done }}" aria-label="Today's checklist progress"><span class="progress-bar-fill" style="--progress: {{ (100 * t_done / t_total)|round|int if t_total else 0 }}%"></span></div>
+            <span class="checklist-day-note">A fresh list starts every day.</span>
+          </div>
+        </div>
+      </section>
+      {% endif %}
+
+      <section class="card reveal" style="--i: 6;" aria-labelledby="resources-heading">
+        <div class="card-header"><h2 class="card-title" id="resources-heading">{{ icon_chip('book-open', 'lavender') }}Helpful Resources</h2></div>
+        <ul class="resource-list">
+          <li>{{ resource(links.philhealth, 'map-pin', 'PhilHealth Accredited Centers', 'Find dialysis and kidney-care facilities') }}</li>
+          <li>{{ resource(links.model_info, 'bar-chart', 'Model information', 'How the prediction works') }}</li>
+          <li>{{ resource(links.tips, 'heart', 'Tips for healthy kidneys', 'Daily care and prevention') }}</li>
+        </ul>
+      </section>
+    </div>
+  </div>
+
+  {# ---- Kidney health, by the numbers: its own column, between the main content and the profile panel.
+     Population-level facts, never a personal risk claim - see services/ckd_facts.py for every source. ---- #}
+  {% if ckd_facts is defined %}
+
+  {% endif %}
+
+  {# One right-hand column: profile, quick actions and recent activity, then the facts beneath them -
+     so the page has two columns that end level, not three that each stop at a different height. #}
+  <div class="dash-side">
+  {# ---- The right-hand panel ---- #}
+  <aside class="dash-aside reveal" style="--i: 2;" aria-label="Profile and quick actions">
+    <div class="aside-top">
+      {% call profile_link(links.profile) %}
+        <span class="profile-avatar{{ ' has-image' if profile.get('avatar') }}" aria-hidden="true">{{ avatar_face(profile) }}</span>
+        <span class="profile-text"><span class="profile-name">{{ profile.full_name }}</span><span class="profile-role">{{ profile.role_label }}</span></span>
+        {{ icon('chevron-right') }}
+      {% endcall %}
+      <figure class="quote-card">{{ icon('kidneys') }}<blockquote><p>&ldquo;Healthy kidneys support a healthier you.&rdquo;</p></blockquote></figure>
+    </div>
+
+    <section class="aside-section" aria-labelledby="quick-heading">
+      <h2 id="quick-heading">Quick Actions</h2>
+      <ul class="quick-list">
+        <li>
+          {% if start_state == 'ready' %}
+          <a class="quick-action is-primary" href="{{ links.start }}">{{ icon_chip('clipboard-check', 'lavender', 'icon-chip-sm') }}Start Assessment{{ icon('arrow-right') }}</a>
+          {% elif start_state == 'waiting' %}
+          <span class="quick-action is-primary is-disabled" aria-disabled="true">{{ icon_chip('clipboard-check', 'lavender', 'icon-chip-sm') }}<span>Start Assessment<small>Opens {{ format_date(next.date) }}</small></span></span>
+          {% else %}
+          <span class="quick-action is-primary is-disabled" aria-disabled="true">{{ icon_chip('clipboard-check', 'lavender', 'icon-chip-sm') }}<span>Start Assessment<small>Coming soon</small></span></span>
+          {% endif %}
+        </li>
+        <li>{{ quick_action(links.upload, 'file-up', 'Upload Lab Results') }}</li>
+        <li>{{ quick_action(links.reports, 'file-lines', 'View Reports') }}</li>
+        <li>{{ quick_action(links.share, 'share', 'Share Assessment') }}</li>
+      </ul>
+    </section>
+
+    <section class="aside-section" aria-labelledby="activity-heading">
+      <h2 id="activity-heading">Recent Activity</h2>
+      {% if activity %}
+      <ul class="activity-list">
+        {% for item in activity %}
+        <li class="activity-item activity-{{ item.level }}">
+          {{ icon_chip('clipboard-check', 'green' if item.level == 'low' else 'red') }}
+          {% set url = result_urls.get(item.get('assessment_id')) %}
+          <span>{% if url %}<a class="activity-title activity-link" href="{{ url }}">{{ item.title }}</a>{% else %}<span class="activity-title">{{ item.title }}</span>{% endif %}<span class="activity-meta">{{ level_label(item.level, item.assessment_type|default('preliminary')) }} &middot; {{ format_date(item.date) }}</span></span>
+          <span class="activity-dot" aria-hidden="true"></span>
+        </li>
+        {% endfor %}
+      </ul>
+      {{ link_action(links.activity, 'View All Activity', 'aside-more') }}
+      {% else %}
+      <div class="empty-state">
+        <span class="empty-visual" aria-hidden="true">{{ icon('activity') }}</span>
+        <h3>No activity yet</h3>
+        <p>Completed assessments appear here.</p>
+      </div>
+      {% endif %}
+    </section>
+  </aside>
+
+  </div>
+
+  {# The facts span the full width under both columns, their cards side by side: first sourced figures about
+     kidney health in the Philippines (services/ckd_facts.py), then Nephron's own anonymous counts of people living
+     in the Philippines (services/community_stats.py) - each labelled for what it is. #}
+  <aside class="dash-ckd reveal" style="--i: 1.5;" aria-labelledby="ckd-facts-heading">
+    <div class="card-header"><h2 class="card-title" id="ckd-facts-heading">{{ icon_chip('bar-chart', 'lavender') }}Kidney health in the Philippines</h2></div>
+    <p class="text-muted ckd-facts-intro">General figures, not about you. Tap <span class="source-note-inline">i</span> for the source.</p>
+    {{ fact_stat_card(ckd_facts.prevalence) }}
+    {{ fact_ring_card(ckd_facts.awareness) }}
+    {{ fact_stat_card(ckd_facts.kidney_failure) }}
+    {{ fact_stat_card(ckd_facts.cause_of_death) }}
+    {{ fact_sex_differences(ckd_facts.sex_differences) }}
+    {{ fact_stat_card(ckd_facts.age_decline) }}
+    {% if community is defined and community %}{{ community_cards(community) }}{% endif %}
+  </aside>
+</div>

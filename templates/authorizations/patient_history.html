@@ -1,0 +1,231 @@
+{# An authorized patient's history, one card per assessment, each with its own clinical review notes (oldest
+   first, a running conversation) and a small form to add another one. Deliberately does NOT link into the
+   detailed result pages (screening.result): those are scoped to the signed-in patient themselves - see README.md. #}
+{% extends "layouts/app_base.html" %}
+{% from "partials/_macros.html" import icon, csrf_field, risk_badge %}
+{% set active_nav = 'shared' %}
+{% block header_title %}{{ patient.full_name }}'s history{% endblock %}
+{% block header_subtitle %}{{ patient.email }}{% endblock %}
+
+{% block content %}
+<div class="section-tight-inline">
+  <a class="button button-secondary" href="{{ url_for('authorization.patients') }}">{{ icon('chevron-left') }}Back to authorized patients</a>
+  <a class="button button-secondary" href="{{ url_for('authorization.manage_connection', patient_id=patient.user_id) }}">{{ icon('share') }}Manage connection</a>
+</div>
+
+<section class="card card-hero reveal" style="--i: 1;" aria-labelledby="follow-up-heading">
+  <div class="card-header"><h2 class="card-title" id="follow-up-heading">{{ icon('clock') }}Follow-up</h2></div>
+  {% if open_follow_up %}
+  <p>{{ icon('check-circle') }}A follow-up screening was requested on {{ format_date(open_follow_up.date) }}
+    {% if open_follow_up.message %}: "{{ open_follow_up.message }}"{% endif %}. {{ patient.full_name }} can screen again right away.</p>
+  {% else %}
+  <form method="post" action="{{ url_for('authorization.request_followup', patient_id=patient.user_id) }}" class="upload-form">
+    {{ csrf_field() }}
+    <div class="form-group" style="flex: 1; margin-bottom: 0;">
+      <label class="form-label" for="followup-message">Ask {{ patient.full_name }} to screen again <span class="chip chip-optional">Optional message</span></label>
+      <input class="form-control" type="text" id="followup-message" name="message" maxlength="500" placeholder="e.g. Please redo this after your medication change">
+    </div>
+    <button class="button button-primary" type="submit">{{ icon('mail') }}Request follow-up</button>
+  </form>
+  <p class="form-helper">This lets {{ patient.full_name }} take one screening right away, even during their usual waiting period. After that screening, the waiting period applies again.</p>
+  {% endif %}
+</section>
+
+<section class="card reveal" style="--i: 1.5;" aria-labelledby="appointments-heading">
+  <div class="card-header"><h2 class="card-title" id="appointments-heading">{{ icon('calendar') }}Schedule a follow-up appointment</h2></div>
+  <form method="post" action="{{ url_for('authorization.schedule_appointment', patient_id=patient.user_id) }}" class="appointment-form">
+    {{ csrf_field() }}
+    <div class="form-row">
+      <div class="form-group">
+        <label class="form-label" for="appt-date">Date <span class="chip chip-required">Required</span></label>
+        <input class="form-control" type="date" id="appt-date" name="date" required>
+      </div>
+      <div class="form-group">
+        <label class="form-label" for="appt-time">Time <span class="chip chip-required">Required</span></label>
+        <input class="form-control" type="time" id="appt-time" name="time" required>
+      </div>
+    </div>
+    <div class="form-group">
+      <label class="form-label" for="appt-purpose">Purpose <span class="chip chip-required">Required</span></label>
+      <input class="form-control" type="text" id="appt-purpose" name="purpose" maxlength="200" placeholder="e.g. Recheck kidney function labs" required>
+    </div>
+    <div class="form-group">
+      <label class="form-label" for="appt-notes">Notes <span class="chip chip-optional">Optional</span></label>
+      <textarea class="form-control" id="appt-notes" name="notes" maxlength="1000" rows="2" placeholder="Anything the patient should bring or know beforehand"></textarea>
+    </div>
+    <button class="button button-primary" type="submit">{{ icon('calendar') }}Schedule appointment</button>
+  </form>
+
+  {% if appointments %}
+  <ul class="appointment-list" role="list">
+    {% for appt in appointments %}
+    <li class="appointment-row appointment-status-{{ appt.status }}">
+      <div class="appointment-row-header">
+        <div>
+          <strong>{{ format_datetime(appt.scheduled_local) }}</strong>
+          <span class="badge {{ 'badge-info' if appt.status == 'scheduled' else 'risk-badge-low' if appt.status == 'completed' else 'risk-badge-high' }}">{{ appt.status|capitalize }}</span>
+        </div>
+        {% if appt.status == 'scheduled' %}
+        <div class="appointment-row-actions">
+          <form method="post" action="{{ url_for('authorization.complete_appointment', patient_id=patient.user_id, appointment_id=appt.appointment_id) }}">
+            {{ csrf_field() }}
+            <button class="icon-button" type="submit" aria-label="Mark complete" title="Mark complete">{{ icon('check') }}</button>
+          </form>
+          <form method="post" action="{{ url_for('authorization.cancel_appointment', patient_id=patient.user_id, appointment_id=appt.appointment_id) }}"
+                data-confirm="danger" data-confirm-name="{{ patient.full_name }}" data-confirm-title="Cancel this appointment?"
+                data-confirm-message="{name} will see it marked as cancelled. You can schedule a new one at any time."
+                data-confirm-accept="Cancel appointment" data-confirm-dismiss="Keep appointment">
+            {{ csrf_field() }}
+            <button class="icon-button" type="submit" aria-label="Cancel appointment" title="Cancel">{{ icon('x-circle') }}</button>
+          </form>
+          <form method="post" action="{{ url_for('authorization.delete_appointment', patient_id=patient.user_id, appointment_id=appt.appointment_id) }}"
+                data-confirm="danger" data-confirm-name="{{ patient.full_name }}" data-confirm-title="Delete this appointment?"
+                data-confirm-message="It will be removed for you and for {name}. This cannot be undone."
+                data-confirm-accept="Delete" data-confirm-dismiss="Keep it">
+            {{ csrf_field() }}
+            <button class="icon-button" type="submit" aria-label="Delete appointment" title="Delete">{{ icon('x') }}</button>
+          </form>
+        </div>
+        {% else %}
+        <form method="post" action="{{ url_for('authorization.delete_appointment', patient_id=patient.user_id, appointment_id=appt.appointment_id) }}"
+                data-confirm="danger" data-confirm-name="{{ patient.full_name }}" data-confirm-title="Delete this appointment?"
+                data-confirm-message="It will be removed for you and for {name}. This cannot be undone."
+                data-confirm-accept="Delete" data-confirm-dismiss="Keep it">
+          {{ csrf_field() }}
+          <button class="icon-button" type="submit" aria-label="Delete appointment" title="Delete">{{ icon('x') }}</button>
+        </form>
+        {% endif %}
+      </div>
+      <p class="appointment-purpose">{{ appt.purpose }}</p>
+      {% if appt.notes %}<p class="text-muted appointment-notes">{{ appt.notes }}</p>{% endif %}
+      {% if appt.status == 'scheduled' %}
+      <details class="appointment-edit">
+        <summary>Edit date, time, or details</summary>
+        <form method="post" action="{{ url_for('authorization.edit_appointment', patient_id=patient.user_id, appointment_id=appt.appointment_id) }}" class="appointment-form">
+          {{ csrf_field() }}
+          <div class="form-row">
+            <div class="form-group">
+              <label class="form-label" for="edit-date-{{ appt.appointment_id }}">Date</label>
+              <input class="form-control" type="date" id="edit-date-{{ appt.appointment_id }}" name="date" value="{{ appt.scheduled_local.strftime('%Y-%m-%d') }}" required>
+            </div>
+            <div class="form-group">
+              <label class="form-label" for="edit-time-{{ appt.appointment_id }}">Time</label>
+              <input class="form-control" type="time" id="edit-time-{{ appt.appointment_id }}" name="time" value="{{ appt.scheduled_local.strftime('%H:%M') }}" required>
+            </div>
+          </div>
+          <div class="form-group">
+            <label class="form-label" for="edit-purpose-{{ appt.appointment_id }}">Purpose</label>
+            <input class="form-control" type="text" id="edit-purpose-{{ appt.appointment_id }}" name="purpose" maxlength="200" value="{{ appt.purpose }}" required>
+          </div>
+          <div class="form-group">
+            <label class="form-label" for="edit-notes-{{ appt.appointment_id }}">Notes</label>
+            <textarea class="form-control" id="edit-notes-{{ appt.appointment_id }}" name="notes" maxlength="1000" rows="2">{{ appt.notes or '' }}</textarea>
+          </div>
+          <button class="button button-secondary" type="submit">{{ icon('check') }}Save changes</button>
+        </form>
+      </details>
+      {% endif %}
+    </li>
+    {% endfor %}
+  </ul>
+  {% else %}
+  <p class="empty-inline">{{ icon('info') }}No appointments scheduled yet.</p>
+  {% endif %}
+</section>
+
+{% if records %}
+{# One place to write a clinical note: choose the result, write, save. The cards below only show the notes. #}
+<section class="card reveal write-review" id="write-review" aria-labelledby="write-review-heading">
+  <div class="card-header"><h2 class="card-title" id="write-review-heading">{{ icon('message') }}Write a clinical review</h2></div>
+  <form method="post" action="{{ url_for('authorization.add_review', patient_id=patient.user_id) }}" class="write-review-form" novalidate
+        data-confirm="default" data-confirm-title="Save this review?" data-confirm-message="The note is added to the chosen result and the patient will see it. A saved note cannot be edited." data-confirm-accept="Save review" data-confirm-dismiss="Keep editing">
+    {{ csrf_field() }}
+    <div class="form-group">
+      <label class="form-label" for="review-assessment">Result to review</label>
+      <select class="form-control" id="review-assessment" name="assessment_id">
+        {% for record in records %}
+        {% set n = reviews_by_assessment.get(record.assessment_id, [])|length %}
+        <option value="{{ record.assessment_id }}" {{ 'selected' if record.assessment_id == selected_assessment_id }}>
+          {{ format_date(record.date) }} - {{ record.type }} - {{ level_label(record.level, record.assessment_type) }} - {{ 'awaiting review' if not n else (n ~ ' note' ~ ('s' if n != 1 else '')) }}
+        </option>
+        {% endfor %}
+      </select>
+    </div>
+    <div class="form-group">
+      <label class="form-label" for="review-note">Clinical note</label>
+      <textarea class="form-control" id="review-note" name="note" rows="4" maxlength="2000" required placeholder="Your clinical note on this result..."></textarea>
+    </div>
+    <button class="button button-primary" type="submit">{{ icon('message') }}Save review</button>
+  </form>
+</section>
+{% endif %}
+
+<div class="section-tight-inline">
+  <h2 class="section-heading">Assessment history</h2>
+  {% if not records %}
+  <section class="card reveal" style="--i: 2;"><p class="empty-inline">{{ icon('info') }}This patient has no assessments yet.</p></section>
+  {% else %}
+  {% for record in records %}
+  <section class="card reveal" id="assessment-{{ record.assessment_id }}" style="--i: {{ loop.index + 1 }};" aria-labelledby="assessment-{{ record.assessment_id }}-heading">
+    <div class="card-header">
+      <h3 class="card-title" id="assessment-{{ record.assessment_id }}-heading">{{ format_date(record.date) }} &middot; {{ record.type }}</h3>
+      <span class="card-tags">{{ risk_badge(record.level, assessment_type=record.assessment_type) }}</span>
+    </div>
+    <p class="text-muted">Predicted risk probability: {{ percent_text(record.probability) }}%</p>
+
+    {% set reviews = reviews_by_assessment.get(record.assessment_id, []) %}
+    {% if reviews %}
+    <ul class="review-list" role="list">
+      {% for review in reviews %}
+      <li class="review-item">
+        <div class="review-meta"><strong>{{ review.professional_name }}</strong>{% if review.profession_title %} &middot; {{ review.profession_title }}{% endif %} &middot; {{ format_date(review.date) }}</div>
+        <p>{{ review.note }}</p>
+      </li>
+      {% endfor %}
+    </ul>
+    {% endif %}
+
+    <a class="link-action" href="{{ url_for('authorization.patient_history', patient_id=patient.user_id, assessment=record.assessment_id) }}#write-review">{{ icon('message') }}Write a review for this result</a>
+  </section>
+  {% endfor %}
+  {% endif %}
+</div>
+
+{% if records %}
+<div class="section-tight-inline">
+  <section class="card reveal" style="--i: {{ records|length + 2 }};" aria-labelledby="report-heading">
+    <div class="card-header"><h2 class="card-title" id="report-heading">{{ icon('file-chart') }}Download a report</h2></div>
+    <form method="post" action="{{ url_for('reports.download_patient_report_for_professional', patient_id=patient.user_id) }}">
+      {{ csrf_field() }}
+      <fieldset class="form-group">
+        <legend class="form-label">What should the report cover?</legend>
+        <div class="choice-group">
+          <label class="choice"><input type="radio" name="report_type" value="single" checked><span class="choice-tile">One result</span></label>
+          <label class="choice"><input type="radio" name="report_type" value="history"><span class="choice-tile">{{ patient.full_name }}'s whole history ({{ records|length }})</span></label>
+        </div>
+      </fieldset>
+      <div class="form-group">
+        <label class="form-label" for="ph-assessment_id">Which result? <span class="text-muted">(only used if "One result" is chosen above)</span></label>
+        <select class="form-control" id="ph-assessment_id" name="assessment_id">
+          {% for record in records %}
+          <option value="{{ record.assessment_id }}">{{ format_date(record.date) }} &middot; {{ record.type }} &middot; {{ percent_text(record.probability) }}%</option>
+          {% endfor %}
+        </select>
+      </div>
+      <label class="form-check"><input class="pick" type="checkbox" name="include_reviews" checked><span>Include clinical review notes, if any</span></label>
+      <button class="button button-primary" type="submit" style="margin-top: var(--space-4);">{{ icon('download') }}Download PDF</button>
+    </form>
+  </section>
+</div>
+{% endif %}
+
+<div class="section-tight-inline">
+  <div class="notice">
+    {{ icon('info') }}
+    <div>
+      <h2>About this access</h2>
+      <p>{{ patient.full_name }} chose to share this history with you and can end that at any time. This is screening information, not a diagnosis.</p>
+    </div>
+  </div>
+</div>
+{% endblock %}

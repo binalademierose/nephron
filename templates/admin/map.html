@@ -1,0 +1,124 @@
+{# The LGU heatmap: Pangasinan by municipality/city or by barangay. Totals per place only - services/location_heatmap.py
+   builds them and drops every id first; a place with fewer than map.min_cell people screened shows no risk figure. #}
+{% extends "layouts/app_base.html" %}
+{% from "partials/_macros.html" import icon %}
+{% from "partials/_visuals.html" import icon_chip %}
+{% set active_nav = 'admin-map' %}
+{% block header_title %}Pangasinan map{% endblock %}
+{% block header_subtitle %}Where people have been screened, and where kidney risk is higher - by municipality or barangay.{% endblock %}
+
+{% macro area_text(a) -%}
+{{ a.name }}{% if a.town_name %}, {{ a.town_name }}{% endif %}: {% if not a.screened %}no one screened yet{% else %}{{ a.screened }} screened{% if a.high is not none %}, {{ a.high }} at higher risk ({{ a.share }}%){% else %} (fewer than {{ map.min_cell }}: risk not shown){% endif %}{% endif %}
+{%- endmacro %}
+
+{% block content %}
+{% set m = map %}
+{% set base = {'metric': m.metric, 'level': m.level} %}
+<div id="map-panel">
+<div class="stat-row kpi-row">
+  <article class="card stat-card">{{ icon_chip('users', 'lavender', 'icon-chip-lg') }}
+    <div class="stat-body"><p class="stat-label">Living in Pangasinan</p><p class="stat-value">{{ m.totals.registered }}</p><p class="stat-foot">General Users and professionals' patients who gave a barangay</p></div></article>
+  <article class="card stat-card">{{ icon_chip('clipboard-check', 'lavender', 'icon-chip-lg') }}
+    <div class="stat-body"><p class="stat-label">Screened</p><p class="stat-value">{{ m.totals.screened }}</p><p class="stat-foot">Each person once, by their latest result</p></div></article>
+  <article class="card stat-card">{{ icon_chip('alert-triangle', 'red', 'icon-chip-lg') }}
+    <div class="stat-body"><p class="stat-label">At higher risk</p><p class="stat-value stat-value-level stat-value-high">{{ m.totals.high if m.totals.high is not none else '-' }}</p>
+      <p class="stat-foot">{% if m.totals.share is not none %}{{ m.totals.share }}% of those screened{% else %}Shown once {{ m.min_cell }} people are screened{% endif %}</p></div></article>
+</div>
+
+<section class="card map-card" aria-labelledby="map-heading">
+  <div class="card-header"><h2 class="card-title" id="map-heading">{{ icon_chip('map-pin', 'lavender') }}{{ m.metric_label }}, by {{ 'barangay' if m.level == 'barangay' else 'municipality / city' }}{% if m.town_name %} &middot; {{ m.town_name }}{% endif %}</h2></div>
+
+  <div class="map-controls">
+    <nav class="segmented" aria-label="Map level">
+      <a class="segment{{ ' is-active' if m.level == 'municipality' }}" href="{{ url_for('admin.location_map', metric=m.metric, level='municipality') }}"{{ ' aria-current="page"'|safe if m.level == 'municipality' }}>By municipality</a>
+      <a class="segment{{ ' is-active' if m.level == 'barangay' }}" href="{{ url_for('admin.location_map', metric=m.metric, level='barangay', town=m.town) }}"{{ ' aria-current="page"'|safe if m.level == 'barangay' }}>By barangay</a>
+    </nav>
+    <nav class="segmented" aria-label="What the colours show">
+      {% for key, label in (('share', 'Share at higher risk'), ('high', 'At higher risk'), ('screened', 'People screened')) %}
+      <a class="segment{{ ' is-active' if m.metric == key }}" href="{{ url_for('admin.location_map', metric=key, level=m.level, town=m.town) }}"{{ ' aria-current="page"'|safe if m.metric == key }}>{{ label }}</a>
+      {% endfor %}
+    </nav>
+    {% if m.level == 'barangay' %}
+    <form class="map-town" method="get" action="{{ url_for('admin.location_map') }}" data-live-filter="map-panel">
+      <input type="hidden" name="metric" value="{{ m.metric }}"><input type="hidden" name="level" value="barangay">
+      <label for="map-town">Town</label>
+      <select class="form-control" id="map-town" name="town">
+        <option value="">All of Pangasinan</option>
+        {% for t in m.towns %}<option value="{{ t.code }}" {{ 'selected' if m.town == t.code }}>{{ t.name }}</option>{% endfor %}
+      </select>
+      <noscript><button class="button button-secondary button-sm" type="submit">Show</button></noscript>
+    </form>
+    {% endif %}
+  </div>
+
+  <div class="map-layout">
+    <figure class="map-figure">
+      {% set vb = m.viewbox %}
+      <svg class="map-svg" viewBox="{{ vb[0] }} {{ vb[1] }} {{ vb[2] }} {{ vb[3] }}" role="img" preserveAspectRatio="xMidYMid meet"
+           aria-label="Map of {{ m.town_name or 'Pangasinan' }} coloured by {{ m.metric_label|lower }}. The table beside it lists the same figures.">
+        <defs>
+          <pattern id="map-hatch" width="6" height="6" patternUnits="userSpaceOnUse" patternTransform="rotate(45)">
+            <rect width="6" height="6" fill="{{ m.none_fill }}"/><line x1="0" y1="0" x2="0" y2="6" stroke="#9AA0BD" stroke-width="2"/>
+          </pattern>
+        </defs>
+        {% set stroke = (vb[2] / 1000) %}
+        {% for a in m.areas if a.path %}
+        {% set fill = a.fill if a.state == 'value' else ('url(#map-hatch)' if a.state == 'suppressed' else m.none_fill) %}
+        {% if m.level == 'municipality' %}<a href="{{ url_for('admin.location_map', metric=m.metric, level='barangay', town=a.code) }}" class="map-link">{% endif %}
+        <path d="{{ a.path }}" class="map-area" fill="{{ fill }}" stroke-width="{{ stroke * (0.9 if m.level == 'municipality' else 0.35) }}"><title>{{ area_text(a) }}</title></path>
+        {% if m.level == 'municipality' %}</a>{% endif %}
+        {% endfor %}
+        {% for t in m.town_outlines if not m.town %}<path d="{{ t.path }}" class="map-town-outline" stroke-width="{{ stroke * 0.9 }}"/>{% endfor %}
+        {% if m.label_size %}
+        {% for a in m.areas if a.path and a.cx is not none %}<text x="{{ a.cx }}" y="{{ a.cy }}" class="map-label" font-size="{{ m.label_size }}" text-anchor="middle">{{ a.name|replace('City of ', '') }}</text>{% endfor %}
+        {% endif %}
+      </svg>
+      {% if m.level == 'municipality' %}<figcaption class="text-muted text-small">Select a municipality to see its barangays.</figcaption>{% endif %}
+    </figure>
+
+    <aside class="map-side">
+      <h3 class="map-side-title">Legend: {{ m.metric_label|lower }}</h3>
+      <ul class="map-legend">
+        {% for item in m.legend %}<li><span class="map-key" style="background: {{ item.fill }}"></span>{{ item.label }}</li>{% endfor %}
+        {% if m.metric != 'screened' %}<li><span class="map-key map-key-hatch"></span>Fewer than {{ m.min_cell }} screened - hidden for privacy</li>{% endif %}
+        <li><span class="map-key" style="background: {{ m.none_fill }}"></span>No one screened yet</li>
+      </ul>
+      {% if not m.legend %}<p class="text-muted text-small">Colours appear once people in Pangasinan are screened.</p>{% endif %}
+      <p class="text-muted text-small">Each person counted once, by their latest result. Totals only - no names.</p>
+
+      <h3 class="map-side-title">{{ 'Barangays' if m.level == 'barangay' else 'Municipalities and cities' }}{% if m.level == 'barangay' and not m.town %} with residents{% endif %}</h3>
+      {% if m.rows %}
+      <div class="table-scroll map-table-wrap">
+        <table class="data-table map-table">
+          <thead><tr><th scope="col">{{ 'Barangay' if m.level == 'barangay' else 'Place' }}</th><th scope="col">Screened</th><th scope="col">Higher risk</th></tr></thead>
+          <tbody>
+            {% for a in m.rows %}
+            <tr><th scope="row">{% if m.level == 'municipality' %}<a href="{{ url_for('admin.location_map', metric=m.metric, level='barangay', town=a.code) }}">{{ a.name }}</a>{% else %}{{ a.name }}{% if a.town_name and not m.town %} <span class="text-muted">&middot; {{ a.town_name }}</span>{% endif %}{% endif %}</th>
+              <td>{{ a.screened }}{% if a.registered > a.screened %} <span class="text-muted">/ {{ a.registered }}</span>{% endif %}</td>
+              <td>{% if a.high is not none %}{{ a.high }} <span class="text-muted">({{ a.share }}%)</span>{% elif a.screened %}<span class="text-muted">hidden</span>{% else %}-{% endif %}</td></tr>
+            {% endfor %}
+          </tbody>
+        </table>
+      </div>
+      <p class="text-muted text-small">Screened / living there. "Hidden": fewer than {{ m.min_cell }} screened.</p>
+      {% else %}<p class="empty-inline">{{ icon('info') }}No one has given a barangay here yet.</p>{% endif %}
+    </aside>
+  </div>
+  {% if m.no_outline %}<p class="text-muted text-small">No outline in the boundary data for: {{ m.no_outline|join(', ') }} - counted in the table, not drawn.</p>{% endif %}
+  <p class="text-muted text-small map-source">Boundaries: {{ m.source }}. Drawn here, without a map service.</p>
+</section>
+</div>
+
+{% if others %}
+<section class="card" aria-labelledby="others-heading">
+  <div class="card-header"><h2 class="card-title" id="others-heading">{{ icon_chip('users', 'lavender') }}Elsewhere in the Philippines, by province</h2></div>
+  <div class="table-scroll">
+    <table class="data-table">
+      <thead><tr><th scope="col">Province</th><th scope="col">Living there</th><th scope="col">Screened</th><th scope="col">Higher risk</th></tr></thead>
+      <tbody>{% for r in others %}<tr><th scope="row">{{ r.name }}</th><td>{{ r.registered }}</td><td>{{ r.screened }}</td><td>{% if r.high is not none %}{{ r.high }} <span class="text-muted">({{ r.share }}%)</span>{% elif r.screened %}<span class="text-muted">hidden</span>{% else %}-{% endif %}</td></tr>{% endfor %}</tbody>
+    </table>
+  </div>
+  <p class="text-muted text-small">Only Pangasinan residents are asked their municipality and barangay; other provinces are counted as a whole.</p>
+</section>
+{% endif %}
+{% endblock %}

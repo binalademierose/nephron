@@ -1,0 +1,36 @@
+{# The month-view calendar shared by the patient's Follow-up page and the professional's Follow-up section.
+   weeks come from services/followup_calendar.py. show_patient adds the patient's name to each event (the
+   professional's calendar spans many patients; the patient's own calendar is only ever theirs). #}
+{% from "partials/_macros.html" import icon %}
+{% macro month_calendar(weeks, month_label, previous_url, today_url, next_url, show_patient=False) %}
+<div class="calendar-header">
+  <h2 class="card-title" id="calendar-heading">{{ icon('calendar') }}{{ month_label }}</h2>
+  <div class="calendar-nav">
+    <a class="icon-button" href="{{ previous_url }}" aria-label="Previous month">{{ icon('chevron-left') }}</a>
+    <a class="button button-secondary" href="{{ today_url }}">Today</a>
+    <a class="icon-button" href="{{ next_url }}" aria-label="Next month">{{ icon('chevron-right') }}</a>
+  </div>
+</div>
+<div class="calendar-grid" role="table" aria-label="{{ month_label }}">
+  <div class="calendar-weekday-row" role="row">
+    {% for name in ('Sun','Mon','Tue','Wed','Thu','Fri','Sat') %}<div class="calendar-weekday" role="columnheader">{{ name }}</div>{% endfor %}
+  </div>
+  {% for week in weeks %}
+  <div class="calendar-week" role="row">
+    {% for day in week %}
+    {% if day is none %}
+    <div class="calendar-day calendar-day-blank" role="cell"></div>
+    {% else %}
+    <div class="calendar-day{{ ' is-today' if day.is_today }}{{ ' has-appointment' if day.appointments }}" role="cell"{{ ' aria-current="date"'|safe if day.is_today }}>
+      <span class="calendar-day-head"><span class="calendar-day-number">{{ day.day }}</span>{% if day.is_today %}<span class="calendar-today-label">Today</span>{% endif %}</span>
+      {% for appt in day.appointments %}
+      {% set who = (appt.patient.display_name ~ ' - ') if show_patient and appt.patient else '' %}
+      <span class="calendar-event calendar-event-{{ appt.status }}" title="{{ who }}{{ appt.purpose }}">{{ format_datetime(appt.scheduled_local).split(', ')[-1] }} &middot; {{ who }}{{ appt.purpose }}</span>
+      {% endfor %}
+    </div>
+    {% endif %}
+    {% endfor %}
+  </div>
+  {% endfor %}
+</div>
+{% endmacro %}

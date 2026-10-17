@@ -1,0 +1,156 @@
+{# A real saved result. Everything here comes from the saved assessment (probability, classification, threshold, answers)
+   and, for "What affected your result most", from the saved answers run through the loaded model, but only when it is the same
+   model that produced this result. #}
+{% extends "layouts/app_base.html" %}
+{% from "partials/_macros.html" import icon, csrf_field, alert_box %}
+{% from "partials/_visuals.html" import icon_chip, ring, mini_meter, source_note %}
+{% set active_nav = 'laboratory' if record.assessment_type == 'enhanced' else 'assessment' %}
+{% block header_title %}Screening result{% endblock %}
+{% block header_subtitle %}{{ record.type }}, {{ format_date(record.date) }}{% endblock %}
+
+{# What to notice first: the ring and the classification. Second: what it means. Third: the next step. #}
+{% block content %}
+<div class="page-actions reveal">
+  <p>Saved as a permanent record. It is never changed by a later screening.</p>
+  <span class="page-actions-links">
+    <a class="button button-secondary button-sm" href="{{ url_for('history.index') }}">{{ icon('clipboard-list') }}View history</a>
+    <a class="button button-secondary button-sm" href="{{ url_for('account.dashboard') }}">{{ icon('home') }}Back to overview</a>
+  </span>
+</div>
+
+<div class="result-layout">
+<div class="result-frame">
+  {% if record.assessment_type == 'preliminary' %}
+  {% set preliminary_message %}A preliminary screening uses lifestyle and history answers only - it is less reliable than
+    <a href="{{ url_for('lab.start') }}">Enhanced Screening</a>, which adds your actual lab values. Consider completing
+    Enhanced Screening for a more dependable estimate.{% endset %}
+  {{ alert_box('warning', preliminary_message|trim, dismissible=False, title='Preliminary results are a starting point, not a final answer') }}
+  {% endif %}
+  {{ alert_box('warning', 'Nephron gives a risk estimate. It is never a substitute for a doctor. If you are not feeling well, contact a healthcare professional right away, regardless of what this result says.', dismissible=False, title='Not a replacement for medical care') }}
+  <section class="card card-hero result-card reveal" style="--i: 1;" aria-labelledby="category-heading">
+    <div class="result-main">
+      {{ ring(record.probability, threshold=threshold, large=True) }}
+      <div class="result-copy">
+        <span class="result-meaning-label">Risk Classification</span>
+        <div class="result-classification">
+          {{ icon_chip('alert-triangle' if level == 'high' else 'check-circle', 'red' if level == 'high' else 'green', 'icon-chip-lg') }}
+          <h2 id="category-heading" class="level-{{ level }}">{{ level_label(level, record.assessment_type) }}</h2>
+        </div>
+        <div class="result-meaning">
+          <span class="result-meaning-label">What this means</span>
+          {% if level == 'high' %}
+            <p>Higher-risk group. This is screening information, not a diagnosis. Consider professional evaluation.</p>
+          {% else %}
+            <p>Lower-risk group. It does not mean you are free of kidney disease.</p>
+          {% endif %}
+        </div>
+        {% if threshold is not none %}<span class="chip">{{ icon('gauge') }}Validated threshold: {{ percent_text(threshold) }}%</span>{% endif %}
+      </div>
+    </div>
+  </section>
+
+{% if record.assessment_type == 'enhanced' %}
+<div class="section-tight-inline">
+  <div class="notice">
+    {{ icon('flask') }}
+    <div>
+      <h2>About Enhanced Screening</h2>
+      <p>This result uses laboratory values that are closely tied to how CKD is defined, so it is a confirmation-level estimate built
+        on top of your preliminary screening, not independent evidence on its own.
+        {% if source_id %}<a class="link-action" href="{{ url_for('screening.result', assessment_id=source_id) }}">View the preliminary screening it extends {{ icon('arrow-right') }}</a>{% endif %}</p>
+    </div>
+  </div>
+</div>
+{% endif %}
+
+{% set is_sample = False %}
+{% include "screening/_outside_training.html" %}
+{% include "screening/_explanation.html" %}
+
+<div class="result-side result-side-row">
+    <section class="card card-lavender next-step reveal" style="--i: 3;" aria-labelledby="next-heading">
+      <h2 id="next-heading" class="card-title">{{ 'Consider professional evaluation' if level == 'high' else 'Keep this result' }}</h2>
+      <p>{% if level == 'high' %}Talk to a healthcare professional about this result.{% else %}Compare it with future screenings.{% endif %}</p>
+      <a class="button button-primary" href="{{ url_for('authorization.share') }}">{{ icon('share') }}Share with a professional</a>
+      <form method="post" action="{{ url_for('reports.download_patient_report') }}" style="margin-top: var(--space-3);">
+        {{ csrf_field() }}
+        <input type="hidden" name="report_type" value="single">
+        <input type="hidden" name="assessment_id" value="{{ record.assessment_id }}">
+        <input type="hidden" name="include_reviews" value="on">
+        <button class="button button-secondary" type="submit">{{ icon('download') }}Download PDF</button>
+      </form>
+    </section>
+
+    {% if change %}
+    <section class="card reveal" style="--i: 4;" aria-labelledby="compare-heading">
+      <div class="card-header"><h2 class="card-title" id="compare-heading">Compared with previous</h2><span class="card-tags"><span class="chip change-chip">{{ icon('trending-up') }}{{ 'No change' if change.direction == 'same' else (percent_text(change.points) ~ ' points ' ~ change.direction) }}</span></span></div>
+      <dl class="compare">
+        <div class="compare-row"><dt>{{ short_date(previous.date) }}</dt><dd class="compare-meter">{% if previous.threshold is not none %}{{ mini_meter(previous.probability, previous.threshold, previous.level) }}{% endif %}</dd><dd>{{ percent_text(previous.probability) }}%</dd></div>
+        <div class="compare-row"><dt>{{ short_date(record.date) }}</dt><dd class="compare-meter">{% if threshold is not none %}{{ mini_meter(record.probability, threshold, record.level) }}{% endif %}</dd><dd>{{ percent_text(record.probability) }}%</dd></div>
+      </dl>
+      <a class="link-action compare-more" href="{{ url_for('history.compare', id=[record.assessment_id, previous.assessment_id]) }}">Compare in detail {{ icon('arrow-right') }}</a>
+    </section>
+    {% endif %}
+
+    {% if reviews %}
+    <section class="card reveal" style="--i: 5;" aria-labelledby="reviews-heading">
+      <div class="card-header"><h2 class="card-title" id="reviews-heading">{{ icon('message') }}Notes from your professional</h2></div>
+      <ul class="review-list" role="list">
+        {% for review in reviews %}
+        <li class="review-item">
+          <div class="review-meta"><strong>{{ review.professional_name }}</strong>{% if review.profession_title %} &middot; {{ review.profession_title }}{% endif %} &middot; {{ format_date(review.date) }}</div>
+          <p>{{ review.note }}</p>
+        </li>
+        {% endfor %}
+      </ul>
+    </section>
+    {% endif %}
+
+    {% if answers %}
+    <section class="card reveal" style="--i: 6;" aria-labelledby="answers-heading">
+      <details class="answers">
+        <summary id="answers-heading" class="card-title">Your answers</summary>
+        {% for title, rows in answers %}
+        <h3 class="subsection-heading answers-step">{{ title }}</h3>
+        <dl class="summary-list">
+          {% for label, text in rows %}<div class="summary-row"><dt>{{ label }}</dt><dd>{{ text }}</dd></div>{% endfor %}
+        </dl>
+        {% endfor %}
+      </details>
+    </section>
+    {% endif %}
+</div>
+
+<div class="section-tight-inline">
+  <div class="notice">
+    {{ icon('info') }}
+    <div>
+      <h2>About this result</h2>
+      <p>{{ MEDICAL_DISCLAIMER }}</p>
+    </div>
+  </div>
+</div>
+{# ^ that /div closes "section-tight-inline"; this next one closes "result-frame" itself, opened way above -
+   everything from the hero through here is the LEFT column, and .result-tips below is the right one #}
+</div>
+
+{% if tips %}
+<aside class="result-tips reveal" style="--i: 1;" aria-labelledby="tips-heading">
+  <div class="card-header"><h2 class="card-title" id="tips-heading">{{ icon_chip('heart', 'lavender') }}Kidney health tips for you</h2></div>
+  <p class="text-muted result-tips-intro">Based on your answers, in line with KDIGO kidney-care guidelines - not a personal prescription. Always check with your doctor before changing medication.</p>
+  <div class="result-tips-scroll">
+    {% for group in tips %}
+    <div class="result-tips-group">
+      <h3 class="result-tips-category">{{ group.category_label }}</h3>
+      <ul class="result-tips-list">
+        {% for tip in group.tips %}
+        <li>{{ tip.text }} {{ source_note(tip.source) }}</li>
+        {% endfor %}
+      </ul>
+    </div>
+    {% endfor %}
+  </div>
+</aside>
+{% endif %}
+</div>
+{% endblock %}

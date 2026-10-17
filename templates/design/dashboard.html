@@ -1,0 +1,8 @@
+{# DESIGN PREVIEW of the signed-in overview, using the SAME markup as the real dashboard (dashboard/_overview.html).
+   It opens in its REAL state (a new person with no assessments). Add ?data=sample to review the filled-in design;
+   every chart is then tagged as sample data. #}
+{% extends "layouts/app_base.html" %}
+{% set active_nav = 'overview' %}
+{% block body_class %}app-body has-preview-bar has-aside{% endblock %}
+{% block preview_bar %}{% include "partials/_preview_bar.html" %}{% endblock %}
+{% block content %}{% include "dashboard/_overview.html" %}{% endblock %}

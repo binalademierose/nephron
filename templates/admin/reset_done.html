@@ -1,0 +1,19 @@
+{# The temporary password, shown this once. It is not stored readable anywhere and this page is not cached. #}
+{% extends "layouts/app_base.html" %}
+{% from "partials/_macros.html" import icon %}
+{% set active_nav = 'admin-users' %}
+{% block header_title %}Temporary password{% endblock %}
+{% block header_subtitle %}For {{ account.full_name }} ({{ account.email }}){% endblock %}
+
+{% block content %}
+<section class="card reveal" style="--i: 1;" aria-labelledby="temp-heading">
+  <div class="card-header"><h2 class="card-title" id="temp-heading">{{ icon('lock') }}Give this password to {{ account.full_name }}</h2></div>
+  <p class="text-muted">It is shown <strong>only this once</strong>. Every device where {{ account.full_name }} was signed in has been signed out, and at their next sign-in they must choose their own password before doing anything else.</p>
+  <div class="temp-password">
+    <code id="temp-password-value">{{ temporary }}</code>
+    <button class="button button-secondary button-sm" type="button" data-copy-target="temp-password-value">{{ icon('clipboard-list') }}Copy</button>
+  </div>
+  <p class="text-muted text-small">Share it privately - in person or by phone, never in a group chat or an email others can read.</p>
+  <a class="button button-primary" href="{{ url_for('admin.users') }}">{{ icon('arrow-right') }}Done</a>
+</section>
+{% endblock %}

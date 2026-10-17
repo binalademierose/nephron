@@ -1,0 +1,51 @@
+{# Professional review (Healthcare Professional): shared assessments waiting for this professional's clinical
+   note, and those already reviewed. The note itself is written on the patient's history page - "Write review"
+   jumps straight to that result's own form. #}
+{% extends "layouts/app_base.html" %}
+{% from "partials/_macros.html" import icon, risk_badge %}
+{% from "partials/_visuals.html" import icon_chip %}
+{% set active_nav = 'review' %}
+{% block header_title %}Professional review{% endblock %}
+{% block header_subtitle %}Shared assessments that need your clinical note.{% endblock %}
+
+{% block content %}
+<section class="card reveal" style="--i: 1;" aria-labelledby="queue-heading">
+  <div class="card-header"><h2 class="card-title" id="queue-heading">{{ icon_chip('message', 'lavender') }}Review queue</h2></div>
+  <div class="tab-row" role="tablist" aria-label="Review status">
+    {% for key, label in (('awaiting_review', 'Awaiting review'), ('reviewed', 'Reviewed')) %}
+    <a class="tab-link{{ ' is-active' if status == key }}" role="tab" aria-selected="{{ 'true' if status == key else 'false' }}"
+       href="{{ url_for('authorization.review_queue', status=key if key != 'awaiting_review' else none) }}">{{ label }} <span class="tab-count">{{ counts[key] }}</span></a>
+    {% endfor %}
+  </div>
+  {% if records %}
+  <div class="table-scroll">
+    <table class="data-table">
+      <thead><tr><th scope="col">Patient</th><th scope="col">Assessment</th><th scope="col">Date</th><th scope="col">Risk</th><th scope="col"></th></tr></thead>
+      <tbody>
+        {% for row in records %}
+        <tr>
+          <td>{{ row.patient_name }}</td>
+          <td>#{{ row.assessment_id }} &middot; {{ row.type }}</td>
+          <td>{{ format_date(row.date) }}</td>
+          <td>{{ risk_badge(row.level, assessment_type=row.assessment_type) }}</td>
+          <td class="table-actions">
+            <a class="button {{ 'button-primary' if status == 'awaiting_review' else 'button-secondary' }} button-sm"
+               href="{{ url_for('authorization.patient_history', patient_id=row.patient_user_id, assessment=row.assessment_id) }}#{{ 'write-review' if status == 'awaiting_review' else 'assessment-' ~ row.assessment_id }}">
+              {{ icon('message') }}{{ 'Write review' if status == 'awaiting_review' else 'View notes' }}</a>
+          </td>
+        </tr>
+        {% endfor %}
+      </tbody>
+    </table>
+  </div>
+  {% elif status == 'awaiting_review' %}
+  <div class="empty-state">
+    <span class="empty-visual" aria-hidden="true">{{ icon('check-circle') }}</span>
+    <h3>You are all caught up</h3>
+    <p>No shared assessment is waiting for your review.</p>
+  </div>
+  {% else %}
+  <p class="empty-inline">{{ icon('info') }}You have not reviewed any shared assessment yet.</p>
+  {% endif %}
+</section>
+{% endblock %}

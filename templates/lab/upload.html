@@ -1,0 +1,56 @@
+{# The start of Enhanced Screening. Uploading is optional: "Enter values by hand" skips straight to the same
+   confirmation form, blank, since every lab value except Serum_Creatinine is optional anyway. #}
+{% extends "layouts/app_base.html" %}
+{% from "partials/_macros.html" import icon, csrf_field %}
+{% from "partials/_visuals.html" import icon_chip %}
+{% set active_nav = 'laboratory' %}
+{% block header_title %}Enhanced Screening{% endblock %}
+{% block header_subtitle %}Add lab values to your most recent preliminary screening for a closer estimate.{% endblock %}
+
+{% block content %}
+{% if ocr_available %}
+<div class="result-frame">
+  <section class="card card-hero reveal" style="--i: 1;" aria-labelledby="upload-heading">
+    <div class="card-header"><h2 class="card-title" id="upload-heading">{{ icon_chip('flask', 'lavender') }}Upload a lab report</h2></div>
+    <p>A photo or scan of a recent lab report ({% if ocr_pdf_available %}JPEG, PNG or PDF{% else %}JPEG or PNG{% endif %}, up to 10&nbsp;MB). We read what we can from it and show it to you to
+      check and correct before anything is analysed - nothing from the file is used without your confirmation.</p>
+    <form method="post" action="{{ url_for('lab.upload') }}" enctype="multipart/form-data" class="upload-form">
+      {{ csrf_field() }}
+      <label class="form-label" for="document">Lab report</label>
+      <input class="form-control" type="file" id="document" name="document" accept="{% if ocr_pdf_available %}image/jpeg,image/png,application/pdf{% else %}image/jpeg,image/png{% endif %}" required>
+      <button class="button button-primary" type="submit">{{ icon('upload') }}Upload and read</button>
+    </form>
+  </section>
+</div>
+
+<div class="section-tight-inline">
+  <section class="card reveal" style="--i: 2;" aria-labelledby="manual-heading">
+    <div class="card-header"><h2 class="card-title" id="manual-heading">Prefer to type them in?</h2></div>
+    <p>You can skip the upload and enter your lab values directly. Only serum creatinine is required; leave anything you do not have blank.</p>
+    <a class="button button-secondary" href="{{ url_for('lab.manual') }}">{{ icon('arrow-right') }}Enter values by hand</a>
+  </section>
+</div>
+{% else %}
+{# Reading values from a photo/PDF needs the Tesseract program, which is not available on this server, so the
+   honest path is to enter the values directly. #}
+<div class="result-frame">
+  <section class="card card-hero reveal" style="--i: 1;" aria-labelledby="manual-heading">
+    <div class="card-header"><h2 class="card-title" id="manual-heading">{{ icon_chip('flask', 'lavender') }}Enter your lab values</h2></div>
+    <p>Enter the values from your most recent lab report. Only serum creatinine is required; leave anything you do not have blank.
+      We show you everything to confirm before anything is analysed.</p>
+    <a class="button button-primary" href="{{ url_for('lab.manual') }}">{{ icon('arrow-right') }}Enter values</a>
+  </section>
+</div>
+{% endif %}
+
+<div class="section-tight-inline">
+  <div class="notice">
+    {{ icon('info') }}
+    <div>
+      <h2>About Enhanced Screening</h2>
+      <p>This adds laboratory values closely tied to how CKD is defined, so its result is a confirmation-level estimate on top of your
+        preliminary screening, not independent evidence on its own. This is screening information, not a diagnosis.</p>
+    </div>
+  </div>
+</div>
+{% endblock %}

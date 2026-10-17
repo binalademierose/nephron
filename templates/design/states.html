@@ -1,0 +1,121 @@
+{% extends "layouts/app_base.html" %}
+{% from "partials/_macros.html" import icon, alert_box, risk_badge %}
+{% from "partials/_visuals.html" import sample_tag %}
+{% set active_nav = 'history' %}
+{% block body_class %}app-body has-preview-bar{% endblock %}
+{% block preview_bar %}{% include "partials/_preview_bar.html" %}{% endblock %}
+
+{% block header_title %}Empty, loading and error states{% endblock %}
+{% block header_subtitle %}Every screen has an answer for &ldquo;nothing here yet&rdquo;, &ldquo;please wait&rdquo; and &ldquo;something went wrong&rdquo;.{% endblock %}
+
+{% block content %}
+<section class="guide-section" aria-labelledby="empty-heading">
+  <h2 id="empty-heading">Empty states</h2>
+  <div class="states-grid">
+    <div class="empty-state">
+      <span class="empty-visual">{{ icon('clipboard-plus') }}</span>
+      <h3>No assessments yet</h3>
+      <p>Complete your first screening to begin building your assessment history.</p>
+      <a class="button button-primary button-sm" href="{{ url_for('design.assessment') }}">Start a screening</a>
+    </div>
+    <div class="empty-state">
+      <span class="empty-visual">{{ icon('users') }}</span>
+      <h3>Nothing shared yet</h3>
+      <p>When you share an assessment with a healthcare professional, it appears here with the review status.</p>
+      <a class="button button-secondary button-sm" href="#" data-preview-link>Share an assessment</a>
+    </div>
+    <div class="empty-state">
+      <span class="empty-visual">{{ icon('calendar-check') }}</span>
+      <h3>No follow-ups</h3>
+      <p>Follow-up plans that a professional creates for you will appear here.</p>
+    </div>
+    <div class="empty-state">
+      <span class="empty-visual">{{ icon('flask') }}</span>
+      <h3>No laboratory results</h3>
+      <p>Upload a laboratory result to use it in enhanced screening. You will check every value first.</p>
+      <a class="button button-secondary button-sm" href="#" data-preview-link>Upload a result</a>
+    </div>
+    <div class="empty-state">
+      <span class="empty-visual">{{ icon('file-text') }}</span>
+      <h3>No reports yet</h3>
+      <p>Reports you generate from an assessment are kept here.</p>
+    </div>
+  </div>
+</section>
+
+<section class="guide-section" aria-labelledby="loading-heading">
+  <h2 id="loading-heading">Loading states</h2>
+  <p class="text-muted">Skeleton cards hold the shape of the page while data loads. Short waits use a spinner. Long tasks use the busy screen with a specific message.</p>
+  <div class="guide-row">
+    <button type="button" class="button button-primary" data-busy-title="Analyzing your information..." data-busy-message="This usually takes a few seconds." data-busy-demo>Analysis screen</button>
+    <button type="button" class="button button-secondary" data-busy-title="Reading your laboratory result..." data-busy-message="You will check every value before it is used." data-busy-demo>Laboratory reading screen</button>
+    <button type="button" class="button button-secondary" data-busy-title="Preparing your report..." data-busy-message="Your download will start when it is ready." data-busy-demo>Report screen</button>
+  </div>
+  <div class="loading-demo">
+    <div class="card skeleton-card" aria-hidden="true">
+      <span class="skeleton skeleton-circle"></span>
+      <span class="skeleton skeleton-title"></span>
+      <span class="skeleton skeleton-line is-short"></span>
+    </div>
+    <div class="card skeleton-card" aria-hidden="true">
+      <span class="skeleton skeleton-circle"></span>
+      <span class="skeleton skeleton-title"></span>
+      <span class="skeleton skeleton-line is-short"></span>
+    </div>
+    <div class="card">
+      <p class="text-label">Progress with a known length</p>
+      <div class="progress-bar" role="progressbar" aria-valuenow="60" aria-valuemin="0" aria-valuemax="100" aria-label="Upload progress"><span class="progress-bar-fill" style="--progress: 60%"></span></div>
+      <p class="text-small text-muted loading-note"><span class="spinner spinner-sm"></span>Uploading...</p>
+    </div>
+  </div>
+</section>
+
+<section class="guide-section" aria-labelledby="errors-heading">
+  <h2 id="errors-heading">Error and feedback states</h2>
+  <p class="text-muted">Each message says what happened, why if it helps, and what to do next.</p>
+  {{ alert_box('error', 'The file is larger than 10 MB. Choose a smaller file, or take a clearer photo at a lower resolution.', dismissible=False, title="We couldn't upload that file") }}
+  {{ alert_box('warning', 'Two values could not be read clearly. Check them below before continuing.', dismissible=False, title='Please check your values') }}
+  <div class="guide-form">
+    <div class="form-group">
+      <label class="form-label" for="demo-age">Age</label>
+      <input class="form-control is-invalid" id="demo-age" value="212" aria-invalid="true" aria-describedby="demo-age-error">
+      <p class="form-error" id="demo-age-error">{{ icon('alert-circle') }}<span>Enter an age between 0 and 120.</span></p>
+    </div>
+  </div>
+  <div class="guide-row">
+    <button type="button" class="button button-secondary" data-toast-type="success" data-toast-title="Assessment saved" data-toast-message="You can find it in your history.">Success toast</button>
+    <button type="button" class="button button-secondary" data-toast-type="error" data-toast-title="Couldn't share this assessment" data-toast-message="The professional's account was not found. Check the email address and try again.">Error toast</button>
+    <button type="button" class="button button-secondary" data-dialog-open="confirm-dialog">Confirmation dialog</button>
+  </div>
+</section>
+
+<section class="guide-section" aria-labelledby="table-heading">
+  <h2 id="table-heading">Tables on small screens {{ sample_tag() }}</h2>
+  <p class="text-muted">Resize the window below 40rem: each row becomes a labeled block instead of scrolling sideways.</p>
+  <div class="table-wrap">
+    <table class="data-table table-stack">
+      <caption class="visually-hidden">Assessment history</caption>
+      <thead><tr><th scope="col">Date</th><th scope="col">Type</th><th scope="col">Result</th><th scope="col">Probability</th></tr></thead>
+      <tbody>
+        {% for item in history %}
+        <tr>
+          <td data-label="Date">{{ format_date(item.date) }}</td>
+          <td data-label="Type">{{ item.type }}</td>
+          <td data-label="Result">{{ risk_badge(item.level) }}</td>
+          <td data-label="Probability">{{ '%g'|format(item.probability) }}%</td>
+        </tr>
+        {% endfor %}
+      </tbody>
+    </table>
+  </div>
+</section>
+
+<dialog class="dialog" id="confirm-dialog" aria-labelledby="confirm-title">
+  <div class="dialog-header"><h2 id="confirm-title">Stop sharing this assessment?</h2></div>
+  <div class="dialog-body"><p>The healthcare professional will no longer be able to open this assessment. You can share it again later.</p></div>
+  <div class="dialog-footer">
+    <button type="button" class="button button-secondary" data-dialog-close>Keep sharing</button>
+    <button type="button" class="button button-danger" data-dialog-close data-toast-type="success" data-toast-title="Sharing stopped" data-toast-message="This is a preview, so nothing was changed.">Stop sharing</button>
+  </div>
+</dialog>
+{% endblock %}

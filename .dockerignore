@@ -1,0 +1,22 @@
+# Keep the image small and clean: nothing here is needed to RUN the app.
+.git
+.gitignore
+.venv
+venv
+__pycache__
+**/__pycache__
+*.pyc
+.ipynb_checkpoints
+tests
+*.ipynb
+screenshots*
+*.zip
+*.csv
+logs/*.log
+uploads/*
+!uploads/.gitkeep
+.env
+.vercel
+vercel.json
+README.md
+DEPLOYMENT.md

@@ -1,0 +1,21 @@
+{# Shown instead of the upload/confirm form when Enhanced Screening cannot honestly be used. Nothing is analysed
+   and nothing is saved. kind is one of: no_preliminary, unavailable. #}
+{% extends "layouts/app_base.html" %}
+{% from "partials/_macros.html" import icon %}
+{% set active_nav = 'laboratory' %}
+{% block header_title %}Enhanced Screening{% endblock %}
+{% block header_subtitle %}Nothing has been saved.{% endblock %}
+
+{% block content %}
+<section class="card card-lavender empty-state empty-state-centered reveal" aria-labelledby="unavailable-heading">
+  <span class="empty-visual" aria-hidden="true">{{ icon('flask') }}</span>
+  <h2 id="unavailable-heading">{{ title }}</h2>
+  {% if kind == 'no_preliminary' %}
+  <p>Enhanced Screening builds on a preliminary screening: it reuses those answers and adds your lab values. Complete a preliminary screening first.</p>
+  <a class="button button-primary" href="{{ url_for('screening.screening') }}">{{ icon('arrow-right') }}Start preliminary screening</a>
+  {% else %}
+  <p>We cannot analyse lab values right now, so nothing has been asked and nothing has been saved. Please try again later. The team has been told through the server log.</p>
+  {% endif %}
+  <a class="button button-secondary" href="{{ url_for('account.dashboard') }}">{{ icon('home') }}Back to overview</a>
+</section>
+{% endblock %}

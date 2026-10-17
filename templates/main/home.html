@@ -1,0 +1,161 @@
+{# The public home page. Everything that moves is illustration or motion only - no number here is a real result -
+   and the page is complete and readable with no JavaScript or with reduced motion (see static/css/motion.css). #}
+{% extends "base.html" %}
+{% from "partials/_macros.html" import icon, risk_badge %}
+{% from "partials/_visuals.html" import icon_chip %}
+{% from "main/_motion_visuals.html" import mini_ring, journey_visual %}
+{% block content %}
+
+<section class="container home-hero" aria-labelledby="hero-heading">
+  <div class="hero-frame">
+    <div class="hero-card hero-home" data-parallax>
+      <div class="hero-copy">
+        <p class="eyebrow hero-in" style="--h: 0">Early risk stratification</p>
+        <h1 class="hero-title" id="hero-heading">
+          <span class="hw" style="--w: 0">Early kidney health risk screening,</span>
+          <span class="hw" style="--w: 4">with your <span class="accent-text">care team</span></span>
+          <span class="hw" style="--w: 8">in the loop.</span>
+        </h1>
+        <p class="hero-text hero-in" style="--h: 6">Estimate your risk of chronic kidney disease, see which of your answers affected your result most, and share the result with a healthcare professional.</p>
+        <div class="hero-actions hero-in" style="--h: 7">
+          {% if current_user %}
+          <a class="button button-primary button-lg" href="{{ url_for('account.professional_home' if current_user.role == 'professional' else 'account.dashboard') }}">{{ icon('arrow-right') }}Go to my home page</a>
+          {% else %}
+          <a class="button button-primary button-lg" href="{{ url_for('auth.register') }}">{{ icon('arrow-right') }}Create your account</a>
+          <a class="button button-secondary button-lg" href="{{ url_for('main.about') }}">See how screening works</a>
+          {% endif %}
+        </div>
+        <ul class="assurance-list hero-in" style="--h: 8">
+          <li>{{ icon('shield-check') }}Screening, not diagnosis</li>
+          <li>{{ icon('lock') }}You choose who sees a result</li>
+          <li>{{ icon('activity') }}Explanations in plain language</li>
+        </ul>
+      </div>
+      <div class="hero-visual">
+        <span class="hero-glow" aria-hidden="true"></span>
+        <span class="hero-ripple" aria-hidden="true"></span>
+        <span class="hero-ripple hero-ripple-2" aria-hidden="true"></span>
+        <img class="hero-art" src="{{ url_for('static', filename='images/art/kidney-hero.png') }}" alt="" width="752" height="596" aria-hidden="true">
+        <div class="hero-float hero-float-risk" aria-hidden="true">
+          <div class="hero-float-card">
+            {{ mini_ring(34) }}
+            <div class="hero-float-text"><span class="sc-tag">Illustration</span>{{ risk_badge('low') }}<small>Predicted risk probability</small></div>
+          </div>
+        </div>
+        <div class="hero-float hero-float-lock" aria-hidden="true">
+          <div class="hero-float-card hero-float-chip">{{ icon('lock') }}<span>You choose who sees it</span></div>
+        </div>
+      </div>
+    </div>
+  </div>
+</section>
+
+<section class="section-tight" aria-labelledby="outputs-heading">
+  <div class="container">
+    <h2 id="outputs-heading" data-animate>What you get from a screening</h2>
+    <p class="text-lead text-muted" data-animate style="--d: 1">Three outputs, shown as pictures. Illustrations only, not real results.</p>
+    <div class="outputs" data-stagger>
+      <article class="card card-lavender output-card card-interactive" data-animate>
+        <div class="output-visual">{{ mini_ring(38, extra_class='output-ring') }}</div>
+        <div><h3>Predicted Risk Probability</h3><p>The model's estimate, with its threshold marked.</p></div>
+      </article>
+      <article class="card output-card card-interactive" data-animate>
+        <div class="output-visual"><div class="output-badges" data-stagger><span data-animate="pop">{{ risk_badge('low', large=True) }}</span><span data-animate="pop">{{ risk_badge('high', large=True) }}</span></div></div>
+        <div><h3>Risk Classification</h3><p>Low or High, always in words too.</p></div>
+      </article>
+      <article class="card output-card card-interactive" data-animate>
+        <div class="output-visual">
+          <div class="output-factors" aria-hidden="true">
+            {% for share in [100, 66, 42] %}
+            <div class="output-factor"><span class="icon-chip icon-chip-lavender">{{ loop.index }}</span><span class="factor-bar"><span class="factor-fill" style="--share: {{ share }}; --order: {{ loop.index0 }};"></span></span></div>
+            {% endfor %}
+          </div>
+        </div>
+        <div><h3>Explainable risk factors</h3><p>What affected your result most.</p></div>
+      </article>
+    </div>
+  </div>
+</section>
+
+<section class="section section-tint" aria-labelledby="journey-heading">
+  <div class="container">
+    <div class="journey-head">
+      <div>
+        <h2 id="journey-heading" data-animate>How screening works</h2>
+        <p class="text-lead text-muted" data-animate style="--d: 1">Five steps. You stay in control.</p>
+      </div>
+      <a class="button button-secondary" href="{{ url_for('main.about') }}" data-animate style="--d: 2">{{ icon('arrow-right') }}See the full walkthrough</a>
+    </div>
+    <ol class="journey" data-animate="journey">
+      {% for title, text, icon_name in (
+        ('Answer a few questions', 'Health and lifestyle answers, plus lab values if you have them. You check every value before it is used.', 'clipboard-plus'),
+        ('Get a risk estimate', 'A predicted risk probability and a Low or High classification, measured against a validated threshold.', 'gauge'),
+        ('See what affected it', 'Which of your answers moved the estimate most, and whether each one raised or lowered it.', 'bar-chart'),
+        ('Share only if you choose', 'You agree before anything is shared with a professional, and you can end access at any time.', 'shield-check'),
+        ('Follow up and screen again', 'Compare results over time, keep the appointments a professional schedules, and work through your checklist.', 'calendar')) %}
+      <li class="journey-step" style="--d: {{ loop.index0 }}">
+        <span class="journey-node" aria-hidden="true">{{ icon(icon_name) }}</span>
+        {% if not loop.last %}<span class="journey-line" aria-hidden="true"></span>{% endif %}
+        <div class="journey-body">
+          <div class="journey-visual">{{ journey_visual(loop.index) }}</div>
+          <h3>{{ title }}</h3>
+          <p>{{ text }}</p>
+        </div>
+      </li>
+      {% endfor %}
+    </ol>
+  </div>
+</section>
+
+<section class="section-tight" aria-labelledby="principles-heading">
+  <div class="container">
+    <h2 id="principles-heading" data-animate>Built to support clinical judgment</h2>
+    <div class="card card-glass trust-strip" data-stagger>
+      <div class="trust-item" data-animate>
+        {{ icon_chip('shield-check', 'lavender') }}
+        <div><h3>Screening, not diagnosis</h3><p>Nephron estimates risk. It never diagnoses.</p></div>
+      </div>
+      <div class="trust-item" data-animate>
+        {{ icon_chip('lock', 'lavender') }}
+        <div><h3>You decide who sees a result</h3><p>Nothing is shared without your choice.</p></div>
+      </div>
+      <div class="trust-item" data-animate>
+        {{ icon_chip('activity', 'lavender') }}
+        <div><h3>Explanations describe the model</h3><p>They show how your answers moved the estimate, not what caused anything.</p></div>
+      </div>
+    </div>
+  </div>
+</section>
+
+<section class="section-tight" aria-labelledby="not-heading">
+  <div class="container">
+    <div class="notice" data-animate>
+      {{ icon('info') }}
+      <div>
+        <h2 id="not-heading">What Nephron does not do</h2>
+        <p>Nephron estimates risk. It does not diagnose kidney disease, replace a physician, or make clinical decisions.</p>
+        <p>A High Preliminary Risk result is a reason to consider professional evaluation. A Low Preliminary Risk result does not mean you are free of kidney disease.</p>
+      </div>
+    </div>
+  </div>
+</section>
+
+<section class="container cta-section" aria-labelledby="cta-heading">
+  <div class="cta-band" data-animate="scale-in">
+    <span class="cta-orb cta-orb-1" aria-hidden="true"></span><span class="cta-orb cta-orb-2" aria-hidden="true"></span>
+    <div class="cta-copy">
+      <h2 id="cta-heading">Start with a preliminary screening whenever you are ready.</h2>
+      <p>It is a starting point, not a diagnosis - and you choose who, if anyone, sees the result.</p>
+    </div>
+    <div class="cta-actions">
+      {% if current_user %}
+      <a class="button button-primary button-lg" href="{{ url_for('account.professional_home' if current_user.role == 'professional' else 'account.dashboard') }}">{{ icon('arrow-right') }}Go to my home page</a>
+      {% else %}
+      <a class="button button-primary button-lg" href="{{ url_for('auth.register') }}">{{ icon('arrow-right') }}Create your account</a>
+      <a class="button button-secondary button-lg" href="{{ url_for('auth.login') }}">Sign in</a>
+      {% endif %}
+    </div>
+  </div>
+</section>
+
+{% endblock %}

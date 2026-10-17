@@ -1,0 +1,96 @@
+{# Reusable template pieces. Import with:
+   {% from "partials/_macros.html" import icon, alert_box, risk_badge, logo_mark, logo_lockup, flow_wave, csrf_field %} #}
+
+{% macro icon(name, extra_class='') -%}
+<svg class="icon {{ extra_class }}" aria-hidden="true" focusable="false"><use href="#i-{{ name }}"></use></svg>
+{%- endmacro %}
+
+{# Official Nephron logo: the two-kidney mark with its flowing line. The file has no wordmark, so where the
+   brand name should be readable use logo_lockup(): the mark plus the word "Nephron" as real text.
+   Sizes are set in CSS; the height stays automatic so the mark is never stretched. #}
+{% macro logo_mark(extra_class='') -%}
+<img class="logo-mark {{ extra_class }}" src="{{ url_for('static', filename='images/brand/nephron-logo.png') }}" alt="Nephron" width="351" height="188">
+{%- endmacro %}
+
+{# The mark and the name. The text gives the accessible name, so the picture itself is decorative. #}
+{% macro logo_lockup(extra_class='') -%}
+<span class="logo-lockup {{ extra_class }}"><img class="logo-mark" src="{{ url_for('static', filename='images/brand/nephron-logo.png') }}" alt="" width="351" height="188" aria-hidden="true"><span class="brand-name">Nephron</span></span>
+{%- endmacro %}
+
+{# The message beside a field that failed the server's check. Pair it with aria-describedby="NAME-error" on the field. #}
+{% macro field_error(errors, name) -%}
+{% if errors.get(name) %}<p class="form-error" id="{{ name }}-error">{{ icon('alert-circle') }}<span>{{ errors[name] }}</span></p>{% endif %}
+{%- endmacro %}
+
+{# The hidden field every POST form must contain. The server rejects a POST without the right value. #}
+{% macro csrf_field() -%}
+<input type="hidden" name="csrf_token" value="{{ csrf_token() }}">
+{%- endmacro %}
+
+{# kind is one of: info, success, warning, error. title is optional. #}
+{% macro alert_box(kind, message, dismissible=True, title=None) -%}
+{% set icon_for = {'info': 'info', 'success': 'check-circle', 'warning': 'alert-triangle', 'error': 'alert-circle'} %}
+<div class="alert alert-{{ kind }}" role="{{ 'alert' if kind == 'error' else 'status' }}">
+  {{ icon(icon_for[kind]) }}
+  <div class="alert-text">{% if title %}<strong class="alert-title">{{ title }}</strong>{% endif %}{{ message }}</div>
+  {% if dismissible %}<button type="button" class="alert-dismiss" data-dismiss-alert aria-label="Dismiss message">{{ icon('x') }}</button>{% endif %}
+</div>
+{%- endmacro %}
+
+{# A short confirmation that slides in and leaves on its own (static/js/main.js takes over once it loads - until then
+   CSS alone fades it out, so it never gets stuck on screen). Used by partials/_flash_messages.html for every
+   "success" message. #}
+{% macro toast_item(kind, message, title=None, modal=False) -%}
+{% set icon_for = {'info': 'info', 'success': 'check-circle', 'warning': 'alert-triangle', 'error': 'alert-circle'} %}
+<div class="toast toast-{{ kind }} toast-static"{{ ' data-modal="1"'|safe if modal }} role="{{ 'alert' if kind == 'error' else 'status' }}">
+  <span class="toast-icon" aria-hidden="true">{{ icon(icon_for[kind]) }}</span>
+  <div class="toast-body">{% if title %}<strong class="toast-title">{{ title }}</strong>{% endif %}{{ message }}</div>
+  <button type="button" class="toast-close" data-toast-close aria-label="Dismiss notification">{{ icon('x') }}</button>
+</div>
+{%- endmacro %}
+
+{# risk_level is 'low' or 'high'; assessment_type is 'preliminary' (default) or 'enhanced'. Always an icon AND
+   words, never colour alone. The words themselves come from services/visuals.py:level_label, the one place they
+   are spelled out - kept in sync with it by tests/test_visuals.py. #}
+{% macro risk_badge(risk_level, large=False, assessment_type='preliminary') -%}
+{% if risk_level == 'high' %}
+<span class="badge risk-badge-high{{ ' badge-lg' if large }}">{{ icon('alert-triangle') }}{{ level_label(risk_level, assessment_type) }}</span>
+{% else %}
+<span class="badge risk-badge-low{{ ' badge-lg' if large }}">{{ icon('check-circle') }}{{ level_label(risk_level, assessment_type) }}</span>
+{% endif %}
+{%- endmacro %}
+
+{# The flowing line with end nodes, echoing the logo. Decorative only. #}
+{% macro flow_wave(extra_class='') -%}
+<svg class="flow-wave {{ extra_class }}" viewBox="0 0 480 90" fill="none" stroke-linecap="round" aria-hidden="true" focusable="false">
+  <path class="flow-wave-line" pathLength="1" d="M18 66C70 66 84 22 144 30s84 44 150 34 92-46 140-42" stroke="url(#brand-line-gradient)" stroke-width="4"/>
+  <circle class="flow-wave-node" cx="14" cy="66" r="8" stroke="#302B91" stroke-width="3.5" fill="#fff"/>
+  <circle class="flow-wave-node" cx="440" cy="22" r="9" fill="#7D75EE"/>
+</svg>
+{%- endmacro %}
+
+{# A small risk meter: the predicted probability as a marker on a line.
+   probability and threshold are percentages (0-100). The position comes from the
+   inline style so it is correct even before any JavaScript runs. #}
+{% macro risk_meter(probability, threshold, level, illustration=False) -%}
+<div class="risk-meter" data-level="{{ level }}" style="--value: {{ probability }}; --threshold: {{ threshold }};"
+     {% if illustration %}aria-hidden="true"{% else %}role="img" aria-label="Predicted risk probability {{ probability }} percent, shown against the model's validated threshold."{% endif %}>
+  <span class="risk-meter-threshold-label" aria-hidden="true">Validated threshold</span>
+  <div class="risk-meter-track">
+    <span class="risk-meter-zone risk-meter-zone-low"></span>
+    <span class="risk-meter-zone risk-meter-zone-high"></span>
+    <span class="risk-meter-threshold"></span>
+    <span class="risk-meter-marker"></span>
+  </div>
+  <div class="risk-meter-zone-labels" aria-hidden="true">
+    <span>Low zone</span><span>High zone</span>
+  </div>
+</div>
+{%- endmacro %}
+
+
+{# The person's chosen avatar (picked at registration), or their initials when none was chosen. #}
+{% macro avatar_face(person) -%}
+{%- if person and person.get('avatar') -%}<img class="avatar-img" src="{{ url_for('static', filename='images/avatars/' ~ person.avatar ~ '.svg') }}" alt="" width="40" height="40">
+{%- else -%}{{ person.initials if person else '' }}{%- endif -%}
+{%- endmacro %}

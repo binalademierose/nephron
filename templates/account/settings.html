@@ -1,0 +1,67 @@
+{% extends "layouts/app_base.html" %}
+{% from "partials/_macros.html" import icon, csrf_field, field_error %}
+{% from "partials/_visuals.html" import icon_chip %}
+{% from "partials/_location_fields.html" import location_fields %}
+{% set active_nav = 'profile' %}
+{% block header_title %}Your account{% endblock %}
+{% block header_subtitle %}Your details and how you sign in.{% endblock %}
+
+{% block content %}
+<div class="account-grid">
+  <section class="card reveal" style="--i: 0;" aria-labelledby="details-heading">
+    <div class="card-header"><h2 class="card-title" id="details-heading">{{ icon_chip('user', 'lavender') }}Your details</h2></div>
+    {% include "account/_details.html" %}
+  </section>
+
+  <section class="card reveal" style="--i: 1;" aria-labelledby="password-heading">
+    <div class="card-header"><h2 class="card-title" id="password-heading">{{ icon_chip('lock', 'lavender') }}Change your password</h2></div>
+    <form method="post" action="{{ url_for('account.change_password') }}" novalidate data-confirm="default" data-confirm-title="Change your password?" data-confirm-message="Every other device signed in to your account will be signed out. You will use the new password from now on." data-confirm-accept="Change password" data-confirm-dismiss="Not now">
+      {{ csrf_field() }}
+      <div class="form-group">
+        <label class="form-label" for="current_password">Current password</label>
+        <div class="input-wrap has-icon has-action">
+          {{ icon('lock', 'input-icon') }}
+          <input class="form-control{{ ' is-invalid' if errors.get('current_password') }}" id="current_password" name="current_password" type="password" autocomplete="current-password" required aria-describedby="current_password-error"{{ ' aria-invalid="true" autofocus'|safe if errors.get('current_password') }}>
+          <button type="button" class="input-action" data-toggle-password aria-controls="current_password" aria-pressed="false" aria-label="Show password">{{ icon('eye') }}</button>
+        </div>
+        {{ field_error(errors, 'current_password') }}
+      </div>
+      <div class="form-group">
+        <label class="form-label" for="new_password">New password</label>
+        <div class="input-wrap has-icon has-action">
+          {{ icon('lock', 'input-icon') }}
+          <input class="form-control{{ ' is-invalid' if errors.get('new_password') }}" id="new_password" name="new_password" type="password" autocomplete="new-password" maxlength="128" required aria-describedby="new_password-hint new_password-error"{{ ' aria-invalid="true"'|safe if errors.get('new_password') }}{{ ' autofocus'|safe if errors.get('new_password') and not errors.get('current_password') }}>
+          <button type="button" class="input-action" data-toggle-password aria-controls="new_password" aria-pressed="false" aria-label="Show password">{{ icon('eye') }}</button>
+        </div>
+        <p class="form-helper" id="new_password-hint">At least 10 characters. Changing it signs out every other device.</p>
+        {{ field_error(errors, 'new_password') }}
+      </div>
+      <button class="button button-primary" type="submit" data-loading-text="Saving...">Change password</button>
+    </form>
+  </section>
+</div>
+
+{% if current_user.role == 'general' and current_user.get('country') == 'Philippines' %}
+{% set place = describe_location(current_user) %}
+<section class="card reveal location-card" style="--i: 1.5;" id="location" aria-labelledby="location-heading">
+  <div class="card-header"><h2 class="card-title" id="location-heading">{{ icon_chip('map-pin', 'lavender') }}Where you live</h2>
+    {% if place %}<span class="text-muted text-small">Saved: {{ place }}</span>{% endif %}</div>
+  <form method="post" action="{{ url_for('account.save_location') }}" novalidate>
+    {{ csrf_field() }}
+    {{ location_fields(location_values or current_user, location_errors or {}, country_field=None, country='Philippines') }}
+    <button class="button button-primary" type="submit" data-loading-text="Saving...">Save where you live</button>
+  </form>
+</section>
+{% endif %}
+
+<section class="card signout-card reveal" style="--i: 2;" aria-labelledby="signout-heading">
+  <div>
+    <h2 class="card-title" id="signout-heading">Sign out</h2>
+    <p>You are signed out automatically after {{ (config.PERMANENT_SESSION_LIFETIME.total_seconds() // 60) | int }} minutes without activity.</p>
+  </div>
+  <form method="post" action="{{ url_for('auth.logout') }}" data-confirm="default" data-confirm-title="Sign out?" data-confirm-message="You will need your email and password to sign in again." data-confirm-accept="Sign out" data-confirm-dismiss="Stay signed in">
+    {{ csrf_field() }}
+    <button class="button button-secondary" type="submit">{{ icon('log-out') }}Sign out</button>
+  </form>
+</section>
+{% endblock %}

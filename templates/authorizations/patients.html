@@ -1,0 +1,150 @@
+{# The professional's own view of sharing: requests waiting for an answer, and patients who have accepted. #}
+{% extends "layouts/app_base.html" %}
+{% from "partials/_macros.html" import icon, csrf_field, risk_badge %}
+{% from "partials/_visuals.html" import icon_chip %}
+{% set active_nav = 'shared' %}
+{% block header_title %}Shared assessments{% endblock %}
+{% block header_subtitle %}Patients who have shared their assessment history with you, and requests waiting for your answer.{% endblock %}
+
+{% block content %}
+<section class="card card-hero reveal" style="--i: 1;" aria-labelledby="pending-heading">
+  <div class="card-header"><h2 class="card-title" id="pending-heading">{{ icon_chip('clock', 'lavender') }}Pending requests</h2></div>
+  {% if not pending %}
+  <p class="empty-inline">{{ icon('info') }}No requests are waiting for an answer.</p>
+  {% else %}
+  <ul class="authorization-list" role="list">
+    {% for row in pending %}
+    <li class="authorization-row">
+      <div>
+        <strong>{{ row.patient_name }}</strong>
+        <p class="text-muted">{{ row.patient_email }}</p>
+      </div>
+      <form method="post" action="{{ url_for('authorization.respond', patient_id=row.patient_user_id) }}">
+        {{ csrf_field() }}
+        <input type="hidden" name="action" value="decline">
+        <button class="button button-secondary" type="submit">{{ icon('x') }}Decline</button>
+      </form>
+      <form method="post" action="{{ url_for('authorization.respond', patient_id=row.patient_user_id) }}"
+            data-confirm="consent" data-confirm-name="{{ row.patient_name }}"
+            data-confirm-title="Accept {name}'s request?"
+            data-confirm-message="You will be able to see the date, type and risk result of each of {name}'s screenings, and download reports that include the answers and lab values behind them."
+            data-confirm-check="I will keep {name}'s health information confidential and use it only for their care."
+            data-confirm-accept="Accept and view history">
+        {{ csrf_field() }}
+        <input type="hidden" name="action" value="accept">
+        <button class="button button-primary" type="submit">{{ icon('check') }}Accept</button>
+      </form>
+    </li>
+    {% endfor %}
+  </ul>
+  {% endif %}
+</section>
+
+<div class="section-tight-inline">
+  <section class="card reveal" style="--i: 2;" aria-labelledby="authorized-heading">
+    <div class="card-header"><h2 class="card-title" id="authorized-heading">Authorized patients</h2></div>
+    {% if not accepted %}
+    <p class="empty-inline">{{ icon('info') }}No patient has shared their history with you yet.</p>
+    {% else %}
+    <ul class="authorization-list" role="list">
+      {% for row in accepted %}
+      <li class="authorization-row">
+        <div>
+          <strong>{{ row.patient_name }}</strong>
+          <p class="text-muted">{{ row.patient_email }}</p>
+        </div>
+        <a class="button button-secondary" href="{{ url_for('authorization.patient_history', patient_id=row.patient_user_id) }}">{{ icon('clipboard-list') }}View history</a>
+        <form method="post" action="{{ url_for('authorization.revoke_patient', patient_id=row.patient_user_id) }}"
+              data-confirm="danger" data-confirm-name="{{ row.patient_name }}"
+              data-confirm-title="Stop viewing {name}'s history?"
+              data-confirm-message="You will lose access to {name}'s assessment history right away. They would need to send a new request to share it again."
+              data-confirm-accept="End access" data-confirm-dismiss="Keep access">
+          {{ csrf_field() }}
+          <button class="button button-secondary" type="submit">{{ icon('x') }}End access</button>
+        </form>
+      </li>
+      {% endfor %}
+    </ul>
+    {% endif %}
+  </section>
+</div>
+
+<section class="card reveal" style="--i: 3;" aria-labelledby="shared-assessments-heading">
+  <div class="card-header"><h2 class="card-title" id="shared-assessments-heading">{{ icon_chip('clipboard-list', 'lavender') }}Shared assessments</h2></div>
+
+  <div class="tab-row" role="tablist" aria-label="Date">
+    {% for key, label in (('all', 'All dates'), ('today', 'Today'), ('this_week', 'This week'), ('this_month', 'This month')) %}
+    <a class="tab-link{{ ' is-active' if date_period == key }}" role="tab" aria-selected="{{ 'true' if date_period == key else 'false' }}"
+       href="{{ url_for('authorization.patients', q=query or none, risk=risk or none, review_status=review_status or none, date_period=key if key != 'all' else none) }}">{{ label }}</a>
+    {% endfor %}
+  </div>
+
+  <form method="get" action="{{ url_for('authorization.patients') }}" class="filter-form" role="search" data-live-filter="live-shared-results">
+    <div class="form-group filter-form-search">
+      <label class="form-label" for="shared-q">Patient or assessment ID</label>
+      <input class="form-control" type="text" id="shared-q" name="q" value="{{ query }}" placeholder="Search patient or assessment ID" autocomplete="off">
+    </div>
+    <div class="form-group">
+      <label class="form-label" for="shared-risk">Risk</label>
+      <select class="form-control" id="shared-risk" name="risk">
+        <option value="" {{ 'selected' if not risk }}>All</option>
+        <option value="low" {{ 'selected' if risk == 'low' }}>Low Risk</option>
+        <option value="high" {{ 'selected' if risk == 'high' }}>High Risk</option>
+      </select>
+    </div>
+    <div class="form-group">
+      <label class="form-label" for="shared-review">Review status</label>
+      <select class="form-control" id="shared-review" name="review_status">
+        <option value="" {{ 'selected' if not review_status }}>All</option>
+        <option value="awaiting_review" {{ 'selected' if review_status == 'awaiting_review' }}>Awaiting Review</option>
+        <option value="reviewed" {{ 'selected' if review_status == 'reviewed' }}>Reviewed</option>
+      </select>
+    </div>
+    {% if date_period != 'all' %}<input type="hidden" name="date_period" value="{{ date_period }}">{% endif %}
+    <div class="filter-form-actions">
+      <button class="button button-primary" type="submit">{{ icon('search') }}Apply filters</button>
+      <a class="button button-secondary" href="{{ url_for('authorization.patients') }}">{{ icon('refresh') }}Reset</a>
+    </div>
+  </form>
+  <div id="live-shared-results" class="live-results" aria-live="polite">
+
+  {% if shared_assessments %}
+  <div class="table-scroll">
+    <table class="data-table">
+      <thead>
+        <tr>
+          <th scope="col">Patient</th>
+          <th scope="col">Assessment ID</th>
+          <th scope="col">Date</th>
+          <th scope="col">Type</th>
+          <th scope="col">Risk result</th>
+          <th scope="col">Review status</th>
+          <th scope="col"></th>
+        </tr>
+      </thead>
+      <tbody>
+        {% for row in shared_assessments %}
+        <tr>
+          <td>{{ row.patient_name }}</td>
+          <td>#{{ row.assessment_id }}</td>
+          <td>{{ format_date(row.date) }}</td>
+          <td>{{ row.type }}</td>
+          <td>{{ risk_badge(row.level, assessment_type=row.assessment_type) }}</td>
+          <td>
+            {% if row.review_status == 'reviewed' %}<span class="badge risk-badge-low">Reviewed</span>
+            {% else %}<span class="badge risk-badge-high">Awaiting review</span>{% endif %}
+          </td>
+          <td class="table-actions"><a class="button button-secondary button-sm" href="{{ url_for('authorization.patient_history', patient_id=row.patient_user_id) }}">View</a></td>
+        </tr>
+        {% endfor %}
+      </tbody>
+    </table>
+  </div>
+  {% elif query or risk or review_status or date_period != 'all' %}
+  <p class="empty-inline">{{ icon('info') }}No shared assessment matches these filters.</p>
+  {% else %}
+  <p class="empty-inline">{{ icon('info') }}No assessments have been shared with you yet.</p>
+  {% endif %}
+  </div>
+</section>
+{% endblock %}

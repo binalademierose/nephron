@@ -1,0 +1,115 @@
+{# Terms & Conditions. A plain, readable agreement for a CKD risk-screening capstone. It restates the medical
+   disclaimer, the eligibility and account rules the app already enforces, and how screening data is used (matching
+   the registration data-use note and the admin privacy design). It is a reviewed draft, not legal advice - the
+   closing note says so. #}
+{% extends "base.html" %}
+{% from "partials/_macros.html" import icon %}
+{% block content %}
+<div class="container legal-page">
+  <header class="legal-header">
+    <span class="badge badge-neutral">Legal</span>
+    <h1 class="display-title">Terms &amp; Conditions</h1>
+    <p class="text-lead">The agreement for using {{ APP_NAME }}. Please read it before creating an account or starting a screening.</p>
+    <p class="text-small text-muted">Last updated: {{ effective_date }}</p>
+  </header>
+
+  <div class="notice legal-disclaimer">
+    {{ icon('alert-triangle') }}
+    <div>
+      <h2>{{ APP_NAME }} is screening information, not a diagnosis</h2>
+      <p>{{ MEDICAL_DISCLAIMER }} It does not create a doctor–patient relationship. Never use {{ APP_NAME }} for an
+        emergency — if you think you may have a medical emergency, contact your local emergency service or go to the
+        nearest hospital.</p>
+    </div>
+  </div>
+
+  <section class="legal-body">
+    <h2>1. Accepting these terms</h2>
+    <p>By creating an account or using {{ APP_NAME }}, you agree to these Terms &amp; Conditions. If you do not agree,
+      please do not use the service.</p>
+
+    <h2>2. What {{ APP_NAME }} is</h2>
+    <p>{{ APP_NAME }} is a kidney-disease (CKD) risk-screening and decision-support tool built as an academic
+      capstone project. It estimates a <em>risk level</em> from the information you provide using a trained machine-
+      learning model and shows which of your answers most affected that estimate. It is a screening aid only. It does
+      not diagnose any condition, prescribe treatment, or replace professional medical evaluation or clinical
+      judgment. A result — low or high — is never a statement that you do or do not have kidney disease.</p>
+
+    <h2>3. Who may use it</h2>
+    <p>You must be at least 18 years old to create an account. By registering you confirm that the information you
+      give is true and that any patient information a healthcare professional enters is handled with the patient's
+      knowledge and consent.</p>
+
+    <h2>4. Your account</h2>
+    <ul>
+      <li>Give accurate information and keep your password confidential; you are responsible for activity under your
+        account.</li>
+      <li>Tell the administrator and change your password if you believe your account has been accessed by someone
+        else.</li>
+      <li>We may suspend an account that is misused or that puts other people's information at risk.</li>
+    </ul>
+
+    <h2>5. Healthcare professional accounts</h2>
+    <p>Professional accounts may view a person's assessments only after that person shares them, and may add clinical
+      notes and follow-ups. A "verified" badge means an administrator recorded a self-reported professional licence
+      number; it is informational and is not a guarantee of anyone's credentials or clinical competence. Professionals
+      are responsible for their own licensure and for their own clinical decisions. {{ APP_NAME }} does not provide
+      medical advice through professionals using it.</p>
+
+    <h2>6. Acceptable use</h2>
+    <ul>
+      <li>Use {{ APP_NAME }} only for its intended screening purpose and only for yourself or for people whose
+        information you are authorised to handle.</li>
+      <li>Do not upload another person's lab report or health information without their consent.</li>
+      <li>Do not attempt to break, overload, probe, or gain unauthorised access to the service or other users' data.</li>
+      <li>Do not misrepresent who you are or your professional status.</li>
+    </ul>
+
+    <h2>7. Your information and privacy</h2>
+    <ul>
+      <li><strong>Your results.</strong> Your screenings and results are private to your account and visible to a
+        healthcare professional only if and when you choose to share them. You can end that access at any time.</li>
+      <li><strong>Improving the model.</strong> Your screening answers may be used to improve {{ APP_NAME }}'s model
+        with your name, contact details, gender and exact location removed.</li>
+      <li><strong>Location.</strong> If you say where you live, it is shown to health officials only as totals per
+        place, never tied to your name.</li>
+      <li><strong>Administrators.</strong> Administrators manage accounts and the service. They do not see a named
+        person's screening answers or results — only totals and de-identified data.</li>
+      <li><strong>Security.</strong> Passwords are stored only as a salted, slow hash; the connection is served over
+        HTTPS. No online system can be guaranteed perfectly secure.</li>
+    </ul>
+
+    <h2>8. Accuracy and limitations</h2>
+    <p>{{ APP_NAME }}'s models were trained on datasets for this project and produce estimates, not certainties. A
+      result can be wrong in either direction. Values outside the range the model was trained on, or unusual
+      combinations of answers, make an estimate less reliable. Always confirm anything that matters with a qualified
+      healthcare professional and appropriate laboratory testing.</p>
+
+    <h2>9. Availability</h2>
+    <p>The service is provided "as is" and "as available", without warranties of any kind. It may be unavailable,
+      interrupted, or changed at any time. Screening may show as temporarily unavailable, in which case nothing is
+      analysed and nothing is saved.</p>
+
+    <h2>10. Limitation of liability</h2>
+    <p>To the extent permitted by law, {{ APP_NAME }} and the project team are not liable for any decision made, or
+      harm arising, from reliance on the service's output. {{ APP_NAME }} supports a decision; it does not make one
+      for you, and it is not a substitute for professional care.</p>
+
+    <h2>11. Changes</h2>
+    <p>These terms and the service may be updated from time to time. Continued use after a change means you accept the
+      updated terms. The "last updated" date above shows when they last changed.</p>
+
+    <h2>12. Contact</h2>
+    <p>Questions about these terms can be sent to the project team at the contact address published with this
+      deployment.</p>
+  </section>
+
+  <p class="text-small text-muted legal-footnote">This document is a draft prepared for an academic capstone project
+    and is provided for information only; it is not legal advice. Have it reviewed by your institution or a qualified
+    adviser before relying on it in a real deployment, and set the contact details and governing law for your context.</p>
+
+  <div class="legal-actions">
+    <a class="button button-secondary" href="{{ url_for('main.home') }}">{{ icon('home') }}Back to home</a>
+  </div>
+</div>
+{% endblock %}

@@ -1,0 +1,99 @@
+{# One patient's profile: identity, latest assessment, assessment history, and reports - for the professional
+   managing this patient record directly. #}
+{% extends "layouts/app_base.html" %}
+{% from "partials/_macros.html" import icon, risk_badge %}
+{% from "partials/_visuals.html" import icon_chip %}
+{% set active_nav = 'patients' %}
+{% block header_title %}{{ record.full_name }}{% endblock %}
+{% block header_subtitle %}{{ record.patient_code }} &middot; {{ record.age }} years old &middot; {{ record.get('gender') or record.sex }}{% endblock %}
+
+{% block content %}
+<div class="page-actions reveal">
+  <p></p>
+  <span class="page-actions-links">
+    <a class="button button-secondary button-sm" href="{{ url_for('patient_records.index') }}">{{ icon('chevron-left') }}All patients</a>
+    <a class="button button-primary button-sm" href="{{ url_for('patient_records.choose_assessment', patient_code=record.patient_code) }}">{{ icon('plus') }}New assessment</a>
+  </span>
+</div>
+
+{% for draft in drafts %}
+<section class="card card-soft continue-card reveal" aria-labelledby="continue-{{ loop.index }}">
+  <div class="card-header">
+    <h2 class="card-title" id="continue-{{ loop.index }}">{{ icon('clipboard-list') }}Unfinished {{ draft.type_label|lower }}</h2>
+    <span class="text-muted text-small">{{ draft.percent }}% complete &middot; last saved {{ format_date(draft.updated_at) }}</span>
+  </div>
+  <div class="progress-bar" role="progressbar" aria-valuemin="0" aria-valuemax="100" aria-valuenow="{{ draft.percent }}" aria-label="Unfinished screening progress"><span class="progress-bar-fill" style="--progress: {{ draft.percent }}%"></span></div>
+  <a class="button button-primary" href="{{ url_for('patient_records.screening', patient_code=record.patient_code) }}">{{ icon('arrow-right') }}Continue where you left off</a>
+</section>
+{% endfor %}
+
+<div class="dash-row">
+  <section class="card reveal" style="--i: 1;" aria-labelledby="info-heading">
+    <div class="card-header"><h2 class="card-title" id="info-heading">{{ icon('user-round') }}Patient information</h2></div>
+    <dl class="term-list">
+      <div class="term-row"><dt>Patient name</dt><dd>{{ record.full_name }}</dd></div>
+      <div class="term-row"><dt>Patient ID</dt><dd><span class="chip chip-mono">{{ record.patient_code }}</span></dd></div>
+      <div class="term-row"><dt>Age</dt><dd>{{ record.age }}</dd></div>
+      {% if record.get('gender') %}<div class="term-row"><dt>Gender</dt><dd>{{ record.gender }}</dd></div>{% endif %}
+      <div class="term-row"><dt>Sex at birth</dt><dd>{{ record.sex }}</dd></div>
+      <div class="term-row"><dt>Current status</dt><dd>{% if latest %}<span class="badge badge-info">Active - {{ assessment_records|length }} assessment{{ 's' if assessment_records|length != 1 }}</span>{% else %}<span class="badge badge-neutral">New - no assessment yet</span>{% endif %}</dd></div>
+      <div class="term-row"><dt>Added</dt><dd>{{ format_date(added_date) }}</dd></div>
+    </dl>
+  </section>
+
+  <section class="card reveal" style="--i: 2;" aria-labelledby="latest-heading">
+    <div class="card-header"><h2 class="card-title" id="latest-heading">{{ icon('gauge') }}Latest assessment</h2></div>
+    {% if latest %}
+    <div class="latest-assessment-summary">
+      <div>
+        <p class="text-muted">{{ latest.type }} &middot; {{ format_date(latest.date) }}</p>
+        {{ risk_badge(latest.level, large=True, assessment_type=latest.assessment_type) }}
+        <p class="latest-assessment-probability">{{ percent_text(latest.probability) }}% predicted risk probability</p>
+      </div>
+      <a class="button button-primary" href="{{ url_for('patient_records.risk_analysis', patient_code=record.patient_code, assessment_id=latest.assessment_id) }}">{{ icon('arrow-right') }}View Latest Assessment</a>
+    </div>
+    {% else %}
+    <p class="empty-inline">{{ icon('info') }}No assessment has been performed for this patient yet.</p>
+    <a class="button button-primary" href="{{ url_for('patient_records.choose_assessment', patient_code=record.patient_code) }}">{{ icon('plus') }}Start an assessment</a>
+    {% endif %}
+  </section>
+</div>
+
+<div class="section-tight-inline">
+  <h2 class="section-heading">Assessment history</h2>
+  {% if assessment_records %}
+  <div class="table-scroll">
+    <table class="data-table">
+      <thead>
+        <tr><th scope="col">Date</th><th scope="col">Type</th><th scope="col">Risk probability</th><th scope="col">Risk category</th><th scope="col"></th></tr>
+      </thead>
+      <tbody>
+        {% for row in assessment_records %}
+        <tr>
+          <td>{{ format_date(row.date) }}</td>
+          <td>{{ row.type }}</td>
+          <td>{{ percent_text(row.probability) }}%</td>
+          <td>{{ risk_badge(row.level, assessment_type=row.assessment_type) }}</td>
+          <td class="table-actions"><a class="button button-secondary button-sm" href="{{ url_for('patient_records.risk_analysis', patient_code=record.patient_code, assessment_id=row.assessment_id) }}">View</a></td>
+        </tr>
+        {% endfor %}
+      </tbody>
+    </table>
+  </div>
+  {% else %}
+  <p class="empty-inline">{{ icon('info') }}No previous assessments.</p>
+  {% endif %}
+</div>
+
+<div class="section-tight-inline">
+  <div class="card reveal" aria-labelledby="reports-heading">
+    <div class="card-header"><h2 class="card-title" id="reports-heading">{{ icon('file-chart') }}Reports</h2></div>
+    {% if assessment_records %}
+    <p class="text-muted">Download a PDF report for this patient's latest result or their full history.</p>
+    <a class="button button-secondary" href="{{ url_for('reports.patient_reports') }}">{{ icon('download') }}Go to Reports</a>
+    {% else %}
+    <p class="empty-inline">{{ icon('info') }}A report becomes available once this patient has an assessment.</p>
+    {% endif %}
+  </div>
+</div>
+{% endblock %}

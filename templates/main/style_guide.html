@@ -1,0 +1,248 @@
+{% extends "base.html" %}
+{% from "partials/_macros.html" import icon, alert_box, risk_badge, risk_meter, logo_mark, logo_lockup %}
+{% from "partials/_visuals.html" import icon_chip, ring, donut, mini_meter, sample_tag, path_steps, risk_pill, info_tip %}
+{% block body_class %}has-preview-bar{% endblock %}
+{% block preview_bar %}{% include "partials/_preview_bar.html" %}{% endblock %}
+{% block content %}
+<div class="container section-tight">
+  <h1>Style guide</h1>
+  <p class="text-lead">Every part of the Nephron interface, in one place. Available only while FLASK_DEBUG=1.</p>
+
+  <section class="guide-section" aria-labelledby="g-logo">
+    <h2 id="g-logo">Logo</h2>
+    <p class="text-muted">The logo is the two-kidney mark with its flowing line. The file has no wordmark, so wherever the name should be readable (public header, footer, sign-in) the mark is paired with the word "Nephron" as real text. Inside the signed-in app the circular badge sits at the top left. None of them is ever stretched, recoloured or redrawn.</p>
+    <div class="guide-row guide-logos">
+      {{ logo_lockup() }}
+      {{ logo_mark() }}
+      <img src="{{ url_for('static', filename='images/brand/nephron-badge.png') }}" alt="Nephron badge" width="96" height="96">
+    </div>
+  </section>
+
+  <section class="guide-section" aria-labelledby="g-colour">
+    <h2 id="g-colour">Colour</h2>
+    <p class="text-muted">The palette from the project blueprint. Lavender is pale on purpose: it is a fill with dark text on it. Status colours always come with an icon and words, so colour is never the only signal.</p>
+    <div class="swatch-grid">
+      <div class="swatch"><div class="swatch-color" style="background:var(--lavender)"></div><div class="swatch-info"><strong>Lavender</strong>#E3E2FF. The primary identity colour: highlights, the active state</div></div>
+      <div class="swatch"><div class="swatch-color" style="background:var(--lavender-strong)"></div><div class="swatch-info"><strong>Lavender strong</strong>#D2D0FB. Hover and pressed</div></div>
+      <div class="swatch"><div class="swatch-color" style="background:var(--lavender-wash)"></div><div class="swatch-info"><strong>Lavender wash</strong>#F1F0FF. Soft panels and selected rows</div></div>
+      <div class="swatch"><div class="swatch-color" style="background:var(--indigo)"></div><div class="swatch-info"><strong>Deep indigo</strong>#302B91. The logo mark, strong accents, links</div></div>
+      <div class="swatch"><div class="swatch-color" style="background:var(--violet)"></div><div class="swatch-info"><strong>Violet</strong>#7D75EE. Graphics only: chart line, ring, dots</div></div>
+      <div class="swatch"><div class="swatch-color" style="background:var(--navy)"></div><div class="swatch-info"><strong>Navy</strong>#0C0D35. Headings and main text</div></div>
+      <div class="swatch"><div class="swatch-color" style="background:var(--navy-button)"></div><div class="swatch-info"><strong>Navy button</strong>#17193F. The dark pill button</div></div>
+      <div class="swatch"><div class="swatch-color" style="background:var(--page)"></div><div class="swatch-info"><strong>Off-white</strong>#F6F7FC. The page</div></div>
+      <div class="swatch"><div class="swatch-color" style="background:var(--surface)"></div><div class="swatch-info"><strong>White</strong>#FFFFFF. Cards</div></div>
+      <div class="swatch"><div class="swatch-color" style="background:var(--muted)"></div><div class="swatch-info"><strong>Muted text</strong>#5F6892. Secondary text, 5.4:1 on white</div></div>
+      <div class="swatch"><div class="swatch-color" style="background:var(--green)"></div><div class="swatch-info"><strong>Teal / green</strong>#0FA287. Low Preliminary Risk (always with words)</div></div>
+      <div class="swatch"><div class="swatch-color" style="background:var(--red)"></div><div class="swatch-info"><strong>Red</strong>#D64560. High Preliminary Risk or an error (always with words)</div></div>
+      <div class="swatch"><div class="swatch-color" style="background:var(--amber)"></div><div class="swatch-info"><strong>Amber</strong>#C97C00. Pending or attention</div></div>
+      <div class="swatch"><div class="swatch-color" style="background:var(--gray)"></div><div class="swatch-info"><strong>Gray</strong>#8A90B2. Unavailable or inactive</div></div>
+    </div>
+    <p class="text-muted guide-note">The logo's flowing line, indigo to violet:</p>
+    <div class="flow-divider" aria-hidden="true"></div>
+  </section>
+
+  <section class="guide-section" aria-labelledby="g-depth">
+    <h2 id="g-depth">Cards, depth and shape</h2>
+    <p class="text-muted">The same white card everywhere (28px corners, a restrained border, a soft lavender shadow), so the page feels ordered. Variants have one job each.</p>
+    <div class="guide-grid">
+      <article class="card"><div class="card-header"><h3 class="card-title">White card</h3></div><p class="text-small text-muted">The default. Most content lives here.</p></article>
+      <article class="card card-lavender"><div class="card-header"><h3 class="card-title">Lavender card</h3></div><p class="text-small text-muted">White fading to lavender: the main action.</p></article>
+      <article class="card card-attention"><div class="card-header"><h3 class="card-title">Attention card</h3></div><p class="text-small text-muted">Only for a High Preliminary Risk result.</p></article>
+      <article class="card card-hero"><div class="card-header"><h3 class="card-title">Hero card</h3></div><p class="text-small">The lavender gradient of the dashboard hero and the result.</p><button class="button button-primary" type="button">Navy button</button></article>
+      <article class="card stat-card"><span class="icon-chip icon-chip-lg" aria-hidden="true">{{ icon('clipboard-list') }}</span><div class="stat-body"><p class="stat-label">Stat card</p><p class="stat-value">3</p></div></article>
+      <div class="empty-state"><span class="empty-visual">{{ icon('inbox') }}</span><h3>Empty state</h3><p>Used when there is no real data yet.</p></div>
+    </div>
+    <div class="guide-grid guide-note">
+      <div class="card" style="box-shadow: var(--shadow-xs);"><strong>shadow-xs</strong><p class="text-small text-muted">Buttons and chips.</p></div>
+      <div class="card"><strong>shadow-card</strong><p class="text-small text-muted">Resting cards.</p></div>
+      <div class="card" style="box-shadow: var(--shadow-lift);"><strong>shadow-lift</strong><p class="text-small text-muted">Hover.</p></div>
+    </div>
+    <div class="guide-row guide-note">
+      {{ icon_chip('bar-chart', 'lavender') }}{{ icon_chip('alert-triangle', 'amber') }}{{ icon_chip('info', 'neutral') }}{{ icon_chip('clipboard-plus', 'solid') }}{{ icon_chip('shield-check', 'green') }}{{ icon_chip('alert-triangle', 'red') }}
+      <span class="chip chip-required">Required</span><span class="chip chip-optional">Optional</span><span class="sample-tag">{{ icon('flask') }}Sample data</span>
+    </div>
+  </section>
+
+  <section class="guide-section" aria-labelledby="g-type">
+    <h2 id="g-type">Typography</h2>
+    <p class="display-title type-sample">Display title</p>
+    <h1 class="type-sample">Page title (h1)</h1>
+    <h2 class="type-sample">Section heading (h2)</h2>
+    <h3 class="type-sample">Subsection heading (h3)</h3>
+    <p class="text-lead">Lead paragraph for introductions.</p>
+    <p>Body text is 16px on a comfortable line height. <a href="#g-type">A link</a> is underlined so colour is not the only cue.</p>
+    <p class="text-small text-muted">Small and helper text. The probability figure uses tabular numerals: <span class="text-number text-label">31%</span></p>
+  </section>
+
+  <section class="guide-section" aria-labelledby="g-icons">
+    <h2 id="g-icons">Icons</h2>
+    <p class="text-muted">One family, drawn on a 24px grid with one stroke weight and rounded ends. Used next to words, never instead of them.</p>
+    <div class="icon-grid">
+        <div class="icon-cell">{{ icon('home') }}<span>home</span></div>
+        <div class="icon-cell">{{ icon('clipboard-plus') }}<span>clipboard-plus</span></div>
+        <div class="icon-cell">{{ icon('history') }}<span>history</span></div>
+        <div class="icon-cell">{{ icon('users') }}<span>users</span></div>
+        <div class="icon-cell">{{ icon('calendar-check') }}<span>calendar-check</span></div>
+        <div class="icon-cell">{{ icon('file-text') }}<span>file-text</span></div>
+        <div class="icon-cell">{{ icon('user') }}<span>user</span></div>
+        <div class="icon-cell">{{ icon('log-out') }}<span>log-out</span></div>
+        <div class="icon-cell">{{ icon('menu') }}<span>menu</span></div>
+        <div class="icon-cell">{{ icon('x') }}<span>x</span></div>
+        <div class="icon-cell">{{ icon('chevron-right') }}<span>chevron-right</span></div>
+        <div class="icon-cell">{{ icon('chevron-left') }}<span>chevron-left</span></div>
+        <div class="icon-cell">{{ icon('chevron-down') }}<span>chevron-down</span></div>
+        <div class="icon-cell">{{ icon('arrow-right') }}<span>arrow-right</span></div>
+        <div class="icon-cell">{{ icon('check') }}<span>check</span></div>
+        <div class="icon-cell">{{ icon('check-circle') }}<span>check-circle</span></div>
+        <div class="icon-cell">{{ icon('alert-triangle') }}<span>alert-triangle</span></div>
+        <div class="icon-cell">{{ icon('alert-circle') }}<span>alert-circle</span></div>
+        <div class="icon-cell">{{ icon('info') }}<span>info</span></div>
+        <div class="icon-cell">{{ icon('lock') }}<span>lock</span></div>
+        <div class="icon-cell">{{ icon('shield-check') }}<span>shield-check</span></div>
+        <div class="icon-cell">{{ icon('mail') }}<span>mail</span></div>
+        <div class="icon-cell">{{ icon('eye') }}<span>eye</span></div>
+        <div class="icon-cell">{{ icon('eye-off') }}<span>eye-off</span></div>
+        <div class="icon-cell">{{ icon('upload') }}<span>upload</span></div>
+        <div class="icon-cell">{{ icon('flask') }}<span>flask</span></div>
+        <div class="icon-cell">{{ icon('activity') }}<span>activity</span></div>
+        <div class="icon-cell">{{ icon('search') }}<span>search</span></div>
+        <div class="icon-cell">{{ icon('download') }}<span>download</span></div>
+        <div class="icon-cell">{{ icon('plus') }}<span>plus</span></div>
+        <div class="icon-cell">{{ icon('clock') }}<span>clock</span></div>
+        <div class="icon-cell">{{ icon('refresh') }}<span>refresh</span></div>
+        <div class="icon-cell">{{ icon('inbox') }}<span>inbox</span></div>
+        <div class="icon-cell">{{ icon('layout') }}<span>layout</span></div>
+        <div class="icon-cell">{{ icon('help-circle') }}<span>help-circle</span></div>
+        <div class="icon-cell">{{ icon('settings') }}<span>settings</span></div>
+        <div class="icon-cell">{{ icon('bell') }}<span>bell</span></div>
+        <div class="icon-cell">{{ icon('book-open') }}<span>book-open</span></div>
+        <div class="icon-cell">{{ icon('share') }}<span>share</span></div>
+        <div class="icon-cell">{{ icon('message') }}<span>message</span></div>
+        <div class="icon-cell">{{ icon('file-chart') }}<span>file-chart</span></div>
+        <div class="icon-cell">{{ icon('clipboard-list') }}<span>clipboard-list</span></div>
+        <div class="icon-cell">{{ icon('clipboard-check') }}<span>clipboard-check</span></div>
+        <div class="icon-cell">{{ icon('file-up') }}<span>file-up</span></div>
+        <div class="icon-cell">{{ icon('file-lines') }}<span>file-lines</span></div>
+        <div class="icon-cell">{{ icon('kidneys') }}<span>kidneys</span></div>
+        <div class="icon-cell">{{ icon('user-round') }}<span>user-round</span></div>
+    </div>
+  </section>
+
+  <section class="guide-section" aria-labelledby="g-buttons">
+    <h2 id="g-buttons">Buttons</h2>
+    <div class="guide-row">
+      <button class="button button-primary" type="button">Primary</button>
+      <button class="button button-lavender" type="button">Lavender</button>
+      <button class="button button-secondary" type="button">Secondary</button>
+      <button class="button button-quiet" type="button">Quiet</button>
+      <button class="button button-danger" type="button">Danger</button>
+      <button class="button button-primary" type="button" disabled>Disabled</button>
+    </div>
+    <div class="guide-row">
+      <button class="button button-primary button-sm" type="button">{{ icon('plus') }}Small</button>
+      <button class="button button-secondary" type="button" data-demo-loading data-loading-text="Working...">Loading demo</button>
+      <button class="button button-primary" type="button" data-demo-success>Success demo</button>
+      <button class="icon-button" type="button" aria-label="Search">{{ icon('search') }}</button>
+    </div>
+  </section>
+
+  <section class="guide-section" aria-labelledby="g-forms">
+    <h2 id="g-forms">Forms</h2>
+    <div class="guide-form">
+      <div class="form-group">
+        <label class="form-label" for="g-default">Default</label>
+        <input class="form-control" id="g-default" placeholder="Type here">
+        <p class="form-helper">Helper text explains what is expected.</p>
+      </div>
+      <div class="form-group">
+        <label class="form-label" for="g-icon">With icon</label>
+        <div class="input-wrap has-icon">{{ icon('mail', 'input-icon') }}<input class="form-control" id="g-icon" placeholder="name@example.com"></div>
+      </div>
+      <div class="form-group">
+        <label class="form-label" for="g-valid">Valid</label>
+        <input class="form-control is-valid" id="g-valid" value="Looks good">
+        <p class="form-success">{{ icon('check-circle') }}<span>This value is accepted.</span></p>
+      </div>
+      <div class="form-group">
+        <label class="form-label" for="g-invalid">Invalid</label>
+        <input class="form-control is-invalid" id="g-invalid" value="212" aria-invalid="true" aria-describedby="g-invalid-error">
+        <p class="form-error" id="g-invalid-error">{{ icon('alert-circle') }}<span>Enter an age between 0 and 120.</span></p>
+      </div>
+      <div class="form-group">
+        <label class="form-label" for="g-disabled">Disabled</label>
+        <input class="form-control" id="g-disabled" value="Not editable" disabled>
+      </div>
+      <fieldset class="form-fieldset">
+        <legend>Choice tiles</legend>
+        <div class="choice-group">
+          <label class="choice"><input type="radio" name="g-choice" checked><span class="choice-tile">Selected</span></label>
+          <label class="choice"><input type="radio" name="g-choice"><span class="choice-tile">Not selected</span></label>
+        </div>
+      </fieldset>
+    </div>
+  </section>
+
+  <section class="guide-section" aria-labelledby="g-badges">
+    <h2 id="g-badges">Badges and risk labels</h2>
+    <p class="text-muted">Risk is always shown with words, never colour alone: green for Low Preliminary Risk, red for High Preliminary Risk, amber for pending.</p>
+    <div class="guide-row">
+      {{ risk_badge('low', large=True) }}
+      {{ risk_badge('high', large=True) }}
+      {{ risk_pill('low') }}{{ risk_pill('high') }}
+      <span class="badge badge-neutral">Not shared</span>
+      <span class="badge badge-info">{{ icon('info') }}Pending review</span>
+    </div>
+    <div class="guide-meter">{{ risk_meter(12, 21, 'low') }}</div>
+    <div class="guide-meter">{{ risk_meter(31, 21, 'high') }}</div>
+  </section>
+
+  <section class="guide-section" aria-labelledby="g-viz">
+    <h2 id="g-viz">Visualizations</h2>
+    <p class="text-muted">They only draw values they are given, from <code>services/visuals.py</code>. The first ring has no number because it only explains the idea. Filled examples carry a sample tag.</p>
+    <div class="guide-grid">
+      <div class="card card-lavender"><p class="text-label">Probability ring (illustration)</p>{{ ring(38, show_value=False) }}</div>
+      <div class="card"><p class="text-label">Probability ring {{ sample_tag() }}</p>{{ ring(31, threshold=21, large=True) }}</div>
+      <div class="card"><p class="text-label">Donut {{ sample_tag() }}</p><div class="summary-body">{{ donut(2, 1) }}<div class="legend-block"><p class="legend-title">Preliminary risk</p><ul class="legend"><li class="legend-low"><span class="legend-dot"></span>Low<span class="legend-count">2</span></li><li class="legend-high"><span class="legend-dot"></span>High<span class="legend-count">1</span></li></ul></div></div></div>
+      <div class="card"><p class="text-label">Mini meter {{ sample_tag() }}</p>
+        <dl class="compare">
+          <div class="compare-row"><dt>Earlier</dt><dd class="compare-meter">{{ mini_meter(18, 21, 'low') }}</dd><dd>18%</dd></div>
+          <div class="compare-row"><dt>Later</dt><dd class="compare-meter">{{ mini_meter(31, 21, 'high') }}</dd><dd>31%</dd></div>
+        </dl>
+      </div>
+      <div class="card card-hero"><p class="text-label">Path steps: Screening is the current step</p>{{ path_steps(0, ['Screening', 'Analysis', 'Results', 'Follow-up']) }}</div>
+      <div class="card"><p class="text-label">Path steps: three done</p>{{ path_steps(3, ['Screening', 'Analysis', 'Results', 'Follow-up']) }}</div>
+      <div class="card">
+        <p class="text-label">Ranked factors {{ sample_tag() }}</p>
+        <ol class="factor-list">
+          <li class="factor"><span class="factor-rank">1</span><span class="factor-name">First factor</span><span class="factor-bar"><span class="factor-fill" style="--share: 100; --order: 0;"></span></span></li>
+          <li class="factor"><span class="factor-rank">2</span><span class="factor-name">Second factor</span><span class="factor-bar"><span class="factor-fill" style="--share: 60; --order: 1;"></span></span></li>
+        </ol>
+      </div>
+    </div>
+    <p class="text-small text-muted guide-note">The trend chart, the sparkline and the timeline are on the <a href="{{ url_for('design.dashboard', data='sample') }}">sample-data overview</a>. It needs at least two real assessments.</p>
+  </section>
+
+  <section class="guide-section" aria-labelledby="g-alerts">
+    <h2 id="g-alerts">Messages, toasts and dialogs</h2>
+    {{ alert_box('info', 'Information that helps, shown in the page.', title='Note') }}
+    {{ alert_box('success', 'Your assessment was saved.') }}
+    {{ alert_box('warning', 'Check the highlighted values before continuing.') }}
+    {{ alert_box('error', 'We could not save your changes. Try again.') }}
+    <div class="guide-row">
+      <button type="button" class="button button-secondary" data-toast-type="success" data-toast-title="Saved" data-toast-message="Your changes were saved.">Success toast</button>
+      <button type="button" class="button button-secondary" data-toast-type="error" data-toast-title="Something went wrong" data-toast-message="Nothing was changed. Try again in a moment.">Error toast</button>
+      <button type="button" class="button button-secondary" data-dialog-open="g-dialog">Open dialog</button>
+    </div>
+    <dialog class="dialog" id="g-dialog" aria-labelledby="g-dialog-title">
+      <div class="dialog-header"><h2 id="g-dialog-title">Dialog title</h2></div>
+      <div class="dialog-body"><p>Dialogs use the browser's own dialog element. Focus stays inside, Esc closes it, and it returns focus to the button that opened it.</p></div>
+      <div class="dialog-footer"><button type="button" class="button button-secondary" data-dialog-close>Close</button></div>
+    </dialog>
+  </section>
+
+  <section class="guide-section" aria-labelledby="g-notice">
+    <h2 id="g-notice">Notice</h2>
+    <div class="notice">{{ icon('info') }}<div><h3>Contextual notice</h3><p>Used for the medical disclaimer and other important context that should stay readable and calm.</p></div></div>
+  </section>
+</div>
+{% endblock %}

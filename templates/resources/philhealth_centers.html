@@ -1,0 +1,52 @@
+{# The PhilHealth accredited centers directory. Server-renders the first page of results (so the page works
+   with no JavaScript at all - the search form is a plain GET), then a small script upgrades the same search box
+   into a live, debounced search against /philhealth-centers/search once JS is available. #}
+{% extends "layouts/app_base.html" %}
+{% from "partials/_macros.html" import icon %}
+{% set active_nav = 'resources' %}
+{% block header_title %}PhilHealth Accredited Centers{% endblock %}
+{% block header_subtitle %}Dialysis and kidney-care facilities accredited by PhilHealth, as of the list PhilHealth itself provided.{% endblock %}
+
+{% block content %}
+<section class="card card-hero reveal" style="--i: 1;" aria-labelledby="search-heading">
+  <div class="card-header"><h2 class="card-title" id="search-heading">{{ icon('search') }}Find a facility</h2></div>
+  <form method="get" action="{{ url_for('resources.philhealth_directory') }}" class="facility-search-form" data-facility-search role="search">
+    <div class="form-group facility-search-field" style="flex: 2; margin-bottom: 0;">
+      <label class="form-label" for="q">Facility name, city or municipality</label>
+      <input class="form-control" type="text" id="q" name="q" value="{{ term }}" placeholder="e.g. Baguio, or a facility name" autocomplete="off" data-facility-search-input>
+    </div>
+    <div class="form-group" style="margin-bottom: 0;">
+      <label class="form-label" for="region">Region</label>
+      <select class="form-control" id="region" name="region" data-facility-search-input>
+        <option value="">All regions</option>
+        {% for r in regions %}<option value="{{ r }}" {{ 'selected' if region == r }}>{{ r|title }}</option>{% endfor %}
+      </select>
+    </div>
+    <div class="form-group" style="margin-bottom: 0;">
+      <label class="form-label" for="sector">Sector</label>
+      <select class="form-control" id="sector" name="sector" data-facility-search-input>
+        <option value="">Any</option>
+        <option value="Private" {{ 'selected' if sector == 'Private' }}>Private</option>
+        <option value="Government" {{ 'selected' if sector == 'Government' }}>Government</option>
+      </select>
+    </div>
+    <noscript><button class="button button-primary" type="submit">{{ icon('search') }}Search</button></noscript>
+  </form>
+</section>
+
+<div class="section-tight-inline">
+  <section class="card reveal" style="--i: 2;" aria-labelledby="results-heading">
+    <div class="card-header">
+      <h2 class="card-title" id="results-heading">Facilities</h2>
+      <span class="card-tags" data-facility-count>{{ "Showing %d of %d"|format(results|length, total) if total else "" }}</span>
+    </div>
+    <div data-facility-results>
+      {% include "resources/_philhealth_results.html" %}
+    </div>
+  </section>
+</div>
+{% endblock %}
+
+{% block scripts %}
+<script src="{{ url_for('static', filename='js/facility_search.js') }}" defer></script>
+{% endblock %}

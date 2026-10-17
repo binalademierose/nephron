@@ -1,0 +1,122 @@
+{# Model performance: measured metrics (model_report.py), what drives each model overall, and its model card.
+   Every number shown is either measured on labelled data or recorded in model_metadata.json - none is typed in. #}
+{% extends "layouts/app_base.html" %}
+{% from "partials/_macros.html" import icon %}
+{% from "partials/_visuals.html" import icon_chip %}
+{% set active_nav = 'admin-model' %}
+{% block header_title %}Model performance{% endblock %}
+{% block header_subtitle %}How well each model performs on labelled data, what drives it, and its model card.{% endblock %}
+
+{% macro pct(v) %}{{ '%.1f'|format(v * 100) }}%{% endmacro %}
+{% macro metric(label, value, help, as_percent=True) %}
+<div class="metric-tile">
+  <p class="metric-label">{{ label }}</p>
+  <p class="metric-value">{% if value is none %}-{% elif as_percent %}{{ pct(value) }}{% else %}{{ value }}{% endif %}</p>
+  {% if as_percent and value is not none %}<span class="metric-bar" aria-hidden="true"><span style="width: {{ (value * 100)|round(1) }}%"></span></span>{% endif %}
+  <p class="metric-help">{{ help }}</p>
+</div>
+{% endmacro %}
+
+{% block content %}
+<nav class="tab-row model-jump" aria-label="Models">
+  {% for m in models %}<a class="tab-link" href="#model-{{ m.key }}">{{ m.title }} <span class="tab-count">{{ 'Ready' if m.ready else 'Unavailable' }}</span></a>{% endfor %}
+</nav>
+
+{% for m in models %}
+<section class="model-section" id="model-{{ m.key }}" aria-labelledby="h-{{ m.key }}">
+  <div class="model-section-head">
+    <h2 id="h-{{ m.key }}">{{ m.title }} model</h2>
+    <span class="badge {{ 'risk-badge-low' if m.ready else 'risk-badge-high' }}">{{ 'Ready - in use' if m.ready else 'Unavailable' }}</span>
+  </div>
+
+  {% if m.warning %}
+  <div class="notice notice-warning model-warning" role="note">{{ icon('alert-triangle') }}
+    <div><h3>A note from the model's author</h3><p>{{ m.warning }}</p></div>
+  </div>
+  {% endif %}
+
+  {# ---------------- measured performance ---------------- #}
+  <section class="card" aria-labelledby="perf-{{ m.key }}">
+    <div class="card-header"><h3 class="card-title" id="perf-{{ m.key }}">{{ icon_chip('gauge', 'lavender') }}Measured performance</h3>
+      {% if m.metrics %}<span class="text-muted text-small">{{ m.metrics.rows }} rows from {{ m.metrics.source }} &middot; {{ m.metrics.computed_at }}</span>{% endif %}</div>
+    {% if m.metrics %}
+    {% set k = m.metrics %}
+    <div class="metric-grid">
+      {{ metric('ROC-AUC', k.roc_auc, 'How well it ranks higher-risk people above lower-risk people (0.5 = chance, 1 = perfect).') }}
+      {{ metric('Accuracy', k.accuracy, 'Share of all people classified correctly at the threshold.') }}
+      {{ metric('Sensitivity (recall)', k.sensitivity, 'Of the people who ARE high risk, how many it flags. Missing them is the costly error in screening.') }}
+      {{ metric('Specificity', k.specificity, 'Of the people who are NOT high risk, how many it correctly leaves unflagged.') }}
+      {{ metric('Precision', k.precision, 'Of the people it flags, how many truly are high risk.') }}
+      {{ metric('F1 score', k.f1, 'One number balancing precision and sensitivity.') }}
+      {{ metric('PR-AUC', k.pr_auc, 'Ranking quality focused on the high-risk group - useful when it is the smaller group.') }}
+      {{ metric('Brier score', k.brier, 'Average squared error of the probabilities (lower is better; 0 = perfect).', as_percent=False) }}
+    </div>
+
+    <div class="model-charts">
+      <figure class="model-chart">
+        <figcaption>Confusion matrix at the {{ pct(k.threshold) }} threshold</figcaption>
+        <table class="confusion" aria-label="Confusion matrix">
+          <thead><tr><td></td><th scope="col">Flagged high risk</th><th scope="col">Not flagged</th></tr></thead>
+          <tbody>
+            <tr><th scope="row">Truly high risk</th><td class="cm-good">{{ k.confusion.tp }}<small>correctly flagged</small></td><td class="cm-bad">{{ k.confusion.fn }}<small>missed</small></td></tr>
+            <tr><th scope="row">Truly lower risk</th><td class="cm-bad">{{ k.confusion.fp }}<small>false alarm</small></td><td class="cm-good">{{ k.confusion.tn }}<small>correctly not flagged</small></td></tr>
+          </tbody>
+        </table>
+        <p class="text-muted text-small">{{ k.positives }} of {{ k.rows }} rows were high risk ({{ pct(k.prevalence) }}).</p>
+      </figure>
+      <figure class="model-chart">
+        <figcaption>ROC curve (AUC {{ '%.3f'|format(k.roc_auc) }})</figcaption>
+        <svg class="roc-svg" viewBox="-30 -10 250 250" role="img" aria-label="ROC curve with an area under the curve of {{ '%.3f'|format(k.roc_auc) }}">
+          <rect x="0" y="0" width="200" height="200" class="roc-frame"/>
+          {% for t in (50, 100, 150) %}<line x1="{{ t }}" y1="0" x2="{{ t }}" y2="200" class="roc-grid"/><line x1="0" y1="{{ t }}" x2="200" y2="{{ t }}" class="roc-grid"/>{% endfor %}
+          <line x1="0" y1="200" x2="200" y2="0" class="roc-chance"/>
+          <polyline points="{{ m.roc }}" class="roc-line"/>
+          <text x="100" y="225" class="roc-axis" text-anchor="middle">False positive rate</text>
+          <text x="-100" y="-16" class="roc-axis" text-anchor="middle" transform="rotate(-90)">True positive rate</text>
+          <text x="2" y="214" class="roc-tick">0</text><text x="192" y="214" class="roc-tick">1</text>
+        </svg>
+        <p class="text-muted text-small">The dashed line is chance. The closer the curve hugs the top-left corner, the better.</p>
+      </figure>
+    </div>
+    {% else %}
+    <div class="empty-state model-empty">
+      <span class="empty-visual" aria-hidden="true">{{ icon('gauge') }}</span>
+      <h4>Not measured yet</h4>
+      <p>Run this once on the computer that has the model and a labelled test set (rows it was not trained on):</p>
+      <pre class="admin-code"><code>python model_report.py --stage {{ m.stage }} --csv {{ m.test_csv }} --target CKD</code></pre>
+      <p class="text-muted text-small">It measures the model on real predictions and saves model_metrics.json next to it. Nothing is estimated or typed in.</p>
+    </div>
+    {% endif %}
+  </section>
+
+  {# ---------------- what drives the model ---------------- #}
+  <div class="dash-row model-row">
+    <section class="card" aria-labelledby="imp-{{ m.key }}">
+      <div class="card-header"><h3 class="card-title" id="imp-{{ m.key }}">{{ icon_chip('bar-chart', 'lavender') }}Feature importance</h3></div>
+      {% if m.importance %}
+      <p class="text-muted text-small">How much each input weighs in the model overall (its top {{ m.importance|length }}). This describes the model, not any one person's result.</p>
+      <ol class="importance-list">
+        {% for f in m.importance %}
+        <li><span class="importance-name">{{ f.label }}</span>
+          <span class="importance-bar" role="img" aria-label="{{ f.percent }}% of the model's total importance"><span style="width: {{ f.share }}%"></span></span>
+          <span class="importance-value">{{ f.percent }}%</span></li>
+        {% endfor %}
+      </ol>
+      {% else %}<p class="empty-inline">{{ icon('info') }}Shown once the model is installed and ready.</p>{% endif %}
+    </section>
+
+    <section class="card" aria-labelledby="card-{{ m.key }}">
+      <div class="card-header"><h3 class="card-title" id="card-{{ m.key }}">{{ icon_chip('file-lines', 'lavender') }}Model card</h3></div>
+      {% if m.facts %}
+      <dl class="term-list">{% for label, value in m.facts %}<div class="term-row"><dt>{{ label }}</dt><dd>{{ value }}</dd></div>{% endfor %}</dl>
+      {% else %}<p class="empty-inline">{{ icon('info') }}No model_metadata.json has been installed for this model.</p>{% endif %}
+      {% if m.checks %}
+      <details class="model-checks"><summary>Startup checks ({{ m.checks|selectattr('ok')|list|length }} of {{ m.checks|length }} passed)</summary>
+        <ul>{% for c in m.checks %}<li class="{{ 'is-ok' if c.ok else 'is-bad' }}">{{ icon('check-circle' if c.ok else 'alert-triangle') }}<span>{{ c.name }}{% if not c.ok and c.detail %} - <span class="text-muted">{{ c.detail }}</span>{% endif %}</span></li>{% endfor %}</ul>
+      </details>
+      {% elif not m.ready and m.reason %}<p class="text-muted text-small model-reason">{{ m.reason }}</p>{% endif %}
+    </section>
+  </div>
+</section>
+{% endfor %}
+{% endblock %}

@@ -1,0 +1,80 @@
+{# Every real person's account (never a patient record's shadow account). An administrator can switch an account
+   off or on again - records are never deleted - and cannot switch off their own. #}
+{% extends "layouts/app_base.html" %}
+{% from "partials/_macros.html" import icon, csrf_field %}
+{% set active_nav = 'admin-users' %}
+{% block header_title %}Accounts{% endblock %}
+{% block header_subtitle %}{{ total }} account{{ 's' if total != 1 }}. Switching one off keeps every record; the person simply cannot sign in.{% endblock %}
+
+{% block content %}
+<section class="card reveal" style="--i: 1;" aria-labelledby="accounts-heading">
+  <div class="card-header"><h2 class="card-title" id="accounts-heading">{{ icon('users') }}All accounts</h2></div>
+  <form method="get" action="{{ url_for('admin.users') }}" class="filter-form" role="search" data-live-filter="live-accounts">
+    <div class="form-group filter-form-search">
+      <label class="form-label" for="q">Name, email or username</label>
+      <input class="form-control" type="text" id="q" name="q" value="{{ query }}" autocomplete="off">
+    </div>
+    <div class="form-group">
+      <label class="form-label" for="role">Role</label>
+      <select class="form-control" id="role" name="role">
+        <option value="">All</option>
+        {% for key, label in (('general','General User'),('professional','Healthcare Professional'),('admin','Administrator')) %}<option value="{{ key }}" {{ 'selected' if role == key }}>{{ label }}</option>{% endfor %}
+      </select>
+    </div>
+    <div class="form-group">
+      <label class="form-label" for="status">Status</label>
+      <select class="form-control" id="status" name="status">
+        <option value="">All</option><option value="active" {{ 'selected' if status == 'active' }}>Active</option><option value="inactive" {{ 'selected' if status == 'inactive' }}>Switched off</option>
+      </select>
+    </div>
+    <div class="filter-form-actions">
+      <button class="button button-primary" type="submit">{{ icon('search') }}Apply filters</button>
+      <a class="button button-secondary" href="{{ url_for('admin.users') }}">{{ icon('refresh') }}Reset</a>
+    </div>
+  </form>
+  <div id="live-accounts" class="live-results" aria-live="polite">
+  {% if accounts %}
+  <div class="table-scroll"><table class="data-table">
+    <thead><tr><th scope="col">Name</th><th scope="col">Email</th><th scope="col">Role</th><th scope="col">Status</th><th scope="col">Last sign-in</th><th scope="col"></th></tr></thead>
+    <tbody>
+    {% for a in accounts %}
+      {% set r = role_of(a) %}
+      <tr>
+        <td>{{ a.full_name }}{% if a.user_id == current_user.user_id %} <span class="badge badge-neutral">You</span>{% endif %}</td>
+        <td>{{ a.email }}</td>
+        <td>{{ {'general':'General User','professional':'Healthcare Professional','admin':'Administrator'}[r] }}
+          {% if r == 'professional' %}<span class="badge {{ 'risk-badge-low' if a.verification_status == 'verified' else ('risk-badge-high' if a.verification_status == 'rejected' else 'badge-neutral') }}">{{ (a.verification_status or 'pending')|capitalize }}</span>{% endif %}</td>
+        <td>{% if a.is_active %}<span class="badge risk-badge-low">Active</span>{% else %}<span class="badge risk-badge-high">Switched off</span>{% endif %}</td>
+        <td>{{ format_date(a.last_login_at.date()) if a.last_login_at else 'Never' }}</td>
+        <td class="table-actions">
+          {% if a.user_id != current_user.user_id %}
+            <form method="post" action="{{ url_for('admin.reset_password', user_id=a.user_id) }}" class="inline-form"
+                  data-confirm="danger" data-confirm-name="{{ a.full_name }}" data-confirm-title="Reset {name}'s password?"
+                  data-confirm-message="{name} will be signed out everywhere and given a temporary password, shown to you once. They must choose their own at their next sign-in."
+                  data-confirm-accept="Reset password" data-confirm-dismiss="Go back">
+              {{ csrf_field() }}<button class="button button-secondary button-sm" type="submit">{{ icon('lock') }}Reset password</button>
+            </form>
+            {% if a.is_active %}
+            <form method="post" action="{{ url_for('admin.deactivate', user_id=a.user_id) }}" class="inline-form"
+                  data-confirm="danger" data-confirm-name="{{ a.full_name }}" data-confirm-title="Switch off {name}'s account?"
+                  data-confirm-message="{name} will not be able to sign in. Nothing is deleted, and you can switch the account on again at any time."
+                  data-confirm-accept="Switch off" data-confirm-dismiss="Keep active">
+              {{ csrf_field() }}<button class="button button-secondary button-sm" type="submit">{{ icon('x') }}Switch off</button>
+            </form>
+            {% else %}
+            <form method="post" action="{{ url_for('admin.reactivate', user_id=a.user_id) }}" class="inline-form"
+                  data-confirm="default" data-confirm-name="{{ a.full_name }}" data-confirm-title="Switch {name}'s account on again?"
+                  data-confirm-message="{name} will be able to sign in again." data-confirm-accept="Switch on" data-confirm-dismiss="Go back">
+              {{ csrf_field() }}<button class="button button-secondary button-sm" type="submit">{{ icon('check') }}Switch on</button>
+            </form>
+            {% endif %}
+          {% endif %}
+        </td>
+      </tr>
+    {% endfor %}
+    </tbody>
+  </table></div>
+  {% else %}<p class="empty-inline">{{ icon('info') }}No account matches these filters.</p>{% endif %}
+  </div>
+</section>
+{% endblock %}

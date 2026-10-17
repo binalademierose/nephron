@@ -1,0 +1,111 @@
+{# The one, single-page confirmation form: every value is shown editable (never applied silently), grouped the way
+   a lab report usually is. Only Serum_Creatinine is required. The SERVER checks every value again on submit
+   (services/lab_contract.py), so nothing here needs to be trusted on its own. #}
+{% extends "layouts/app_base.html" %}
+{% from "partials/_macros.html" import icon, alert_box, csrf_field, field_error %}
+{% set active_nav = nav_key or 'laboratory' %}
+{% block header_title %}{{ heading or 'Confirm your lab values' }}{% endblock %}
+{% block header_subtitle %}
+{% if subheading %}{{ subheading }}{% elif document %}Review what we read from your upload and correct anything that looks wrong.{% else %}Enter what you have. Leave the rest blank.{% endif %}
+{% endblock %}
+
+{% block content %}
+{% if document and document.ocr_values %}
+{% set whose = "the patient's" if upload_action else "your" %}
+{{ alert_box('info', "We found " ~ document.ocr_values|length ~ " value" ~ ('' if document.ocr_values|length == 1 else 's') ~ " in the upload. Check each one against " ~ whose ~ " report before continuing.", dismissible=False, title='Suggested from the upload') }}
+{% elif document %}
+{{ alert_box('warning', "We could not read any values from that file. Please type them in below.", dismissible=False, title='Nothing was found automatically') }}
+{% endif %}
+{% if document and document.verification %}
+{% set v = document.verification %}
+{% set owner = "the patient's" if upload_action else "your" %}
+<section class="card report-checks reveal" aria-labelledby="report-checks-heading">
+  <div class="card-header"><h2 class="card-title" id="report-checks-heading">{{ icon('shield-check') }}Report checks</h2></div>
+  <p class="text-muted report-checks-note">Signs read from the report that it is genuine and about the right person. They are signs, not proof - a photo cannot prove a report is real - so please also look at the report itself.</p>
+  <ul class="report-check-list">
+    <li class="report-check is-{{ 'ok' if v.name.status == 'match' else 'warn' }}">
+      {{ icon('check-circle' if v.name.status == 'match' else 'alert-triangle') }}
+      <div><strong>Name</strong>
+        {% if v.name.status == 'match' %}<span>"{{ v.name.found }}" matches {{ owner }} name.</span>
+        {% elif v.name.status == 'mismatch' %}<span>The report says "{{ v.name.found }}", which does not match {{ owner }} name. Make sure this is the right report.</span>
+        {% else %}<span>No patient name could be read from the report.</span>{% endif %}</div>
+    </li>
+    <li class="report-check is-{{ 'ok' if v.date.status == 'recent' else 'warn' }}">
+      {{ icon('check-circle' if v.date.status == 'recent' else 'alert-triangle') }}
+      <div><strong>Date</strong>
+        {% if v.date.status == 'recent' %}<span>{{ v.date.found }} - {{ v.date.age_days }} day{{ 's' if v.date.age_days != 1 }} ago.</span>
+        {% elif v.date.status == 'old' %}<span>{{ v.date.found }} - more than six months ago. Older results may no longer reflect current kidney function.</span>
+        {% elif v.date.status == 'future' %}<span>{{ v.date.found }} is in the future. Please check the report's date.</span>
+        {% else %}<span>No date could be read from the report.</span>{% endif %}</div>
+    </li>
+    <li class="report-check is-{{ 'ok' if v.signature.status == 'found' else 'warn' }}">
+      {{ icon('check-circle' if v.signature.status == 'found' else 'alert-triangle') }}
+      <div><strong>Signed or attested</strong>
+        {% if v.signature.status == 'found' %}<span>Found: {{ v.signature.found|join(', ') }}.</span>
+        {% else %}<span>No signature, licence number, or "verified by" line could be read. Check that the report is signed by a pathologist or medical technologist.</span>{% endif %}</div>
+    </li>
+    <li class="report-check is-{{ 'ok' if v.facility.status == 'found' else 'warn' }}">
+      {{ icon('check-circle' if v.facility.status == 'found' else 'alert-triangle') }}
+      <div><strong>Laboratory or hospital</strong>
+        {% if v.facility.status == 'found' %}<span>The report names a {{ v.facility.found|lower }}.</span>
+        {% else %}<span>No laboratory, clinic, or hospital name could be read.</span>{% endif %}</div>
+    </li>
+  </ul>
+</section>
+{% endif %}
+
+{% if upload_action and not document and ocr_available %}
+<section class="card card-soft lab-upload-inline reveal" aria-labelledby="upload-heading">
+  <div class="card-header"><h2 class="card-title" id="upload-heading">{{ icon('upload') }}Read values from a lab report</h2></div>
+  <p class="text-muted">Upload a photo or {% if ocr_pdf_available %}PDF {% endif %}of the patient's lab report. The values found pre-fill the form below - check each one before analysing.</p>
+  <form method="post" action="{{ upload_action }}" enctype="multipart/form-data" class="upload-form">
+    {{ csrf_field() }}
+    <label class="form-label" for="document">Lab report</label>
+    <input class="form-control" type="file" id="document" name="document" accept="{% if ocr_pdf_available %}image/jpeg,image/png,application/pdf{% else %}image/jpeg,image/png{% endif %}" required>
+    <button class="button button-primary" type="submit" data-loading-text="Reading the report...">{{ icon('upload') }}Upload and read</button>
+  </form>
+</section>
+{% endif %}
+<form class="lab-confirm-form" method="post" action="{{ form_action or (url_for('lab.confirm', lab_document_id=document.lab_document_id) if document else url_for('lab.confirm_manual')) }}" novalidate data-busy-text="Analysing the lab values..." data-confirm="default" data-confirm-title="Analyse these lab values?" data-confirm-message="Please check every value against the lab report itself - the estimate can only be as accurate as the values behind it. Results can vary between tests, and this is a screening estimate, not a diagnosis." data-confirm-accept="Yes, analyse" data-confirm-dismiss="Check again">
+  {{ csrf_field() }}
+  {% for group in catalog.groups %}
+  {% set fields = catalog.fields|selectattr('group', 'equalto', group.key)|list %}
+  <section class="card reveal" style="--i: {{ loop.index }};" aria-labelledby="group-{{ group.key }}-heading">
+    <div class="card-header"><h2 class="card-title" id="group-{{ group.key }}-heading">{{ group.title }}</h2></div>
+    <div class="lab-field-grid">
+      {% for f in fields %}
+      {% set name = f.name %}
+      {% set value = values.get(name, '') %}
+      {% set was_suggested = document and document.ocr_values and name in document.ocr_values %}
+      <div class="form-group">
+        <label class="form-label" for="f-{{ name }}">{{ f.label }}{% if f.required %} <span class="required-mark" aria-hidden="true">*</span>{% endif %}{% if f.get('explain') %} <button type="button" class="field-help-button" data-field-help="{{ f.explain }}" aria-label="What is {{ f.short }}?">?</button>{% endif %}</label>
+        <div class="input-wrap has-suffix">
+          <input class="form-control{{ ' is-invalid' if errors.get(name) }}{{ ' is-suggested' if was_suggested }}" id="f-{{ name }}" name="{{ name }}"
+                type="text" inputmode="decimal" autocomplete="off" value="{{ value }}"
+                aria-describedby="{{ name }}-hint {{ name }}-error"{{ ' aria-invalid=\"true\"'|safe if errors.get(name) }}
+                {{ 'required' if f.required }}>
+          <span class="input-suffix" aria-hidden="true">{{ f.unit }}</span>
+        </div>
+        {% if was_suggested and not errors.get(name) %}<p class="form-helper form-helper-suggested" id="{{ name }}-hint">{{ icon('search') }}Found in the upload - check it</p>
+        {% elif f.get('hint') %}<p class="form-helper" id="{{ name }}-hint">{{ f.hint }}</p>{% endif %}
+        {{ field_error(errors, name) }}
+      </div>
+      {% endfor %}
+    </div>
+  </section>
+  {% endfor %}
+
+  {% if document %}
+  <div class="card attest-card{{ ' is-invalid' if errors.get('attest') }}">
+    <label class="attest-label">
+      <input type="checkbox" name="attest" value="1"{{ ' checked' if values.get('attest') == '1' }}{{ ' aria-invalid="true"'|safe if errors.get('attest') }} aria-describedby="attest-error">
+      <span>{% if upload_action %}I confirm this report belongs to this patient and that the values above match it.{% else %}I confirm this report is mine and that the values above match it.{% endif %}</span>
+    </label>
+    {{ field_error(errors, 'attest') }}
+  </div>
+  {% endif %}
+  <div class="section-tight-inline">
+    <button class="button button-primary" type="submit">{{ icon('arrow-right') }}Analyse</button>
+  </div>
+</form>
+{% endblock %}

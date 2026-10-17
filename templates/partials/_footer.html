@@ -1,0 +1,16 @@
+{% from "partials/_macros.html" import logo_lockup %}
+<footer class="site-footer">
+  <div class="container">
+    <div class="flow-divider" aria-hidden="true"></div>
+    <div class="footer-brand">
+      <a class="footer-logo" href="{{ url_for('main.home') }}" aria-label="{{ APP_NAME }} home">{{ logo_lockup() }}</a>
+      <div>
+        <p class="footer-disclaimer text-small text-muted">{{ MEDICAL_DISCLAIMER }}</p>
+        <p class="text-small text-muted">&copy; {{ current_year }} {{ APP_NAME }}. Capstone project.
+          <a href="{{ url_for('main.terms') }}">Terms &amp; Conditions</a>
+          {% if config.DEBUG %}&middot; <a href="{{ url_for('design.index') }}">Design previews</a>{% endif %}
+        </p>
+      </div>
+    </div>
+  </div>
+</footer>

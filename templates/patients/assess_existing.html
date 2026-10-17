@@ -1,0 +1,52 @@
+{# Section 13: search your own patients, see each match's basic info, then start their assessment. Scoped to
+   patient records only - a shared patient already has their own account and screens themselves. #}
+{% extends "layouts/app_base.html" %}
+{% from "partials/_macros.html" import icon, risk_badge %}
+{% set active_nav = 'patients' %}
+{% block header_title %}Assess an existing patient{% endblock %}
+{% block header_subtitle %}Search for a patient you manage directly, then start their assessment.{% endblock %}
+
+{% block content %}
+<div class="page-actions reveal">
+  <p></p>
+  <a class="button button-secondary button-sm" href="{{ url_for('patient_records.new_assessment') }}">{{ icon('chevron-left') }}Back</a>
+</div>
+
+<section class="card reveal" style="--i: 1;" aria-labelledby="search-heading">
+  <div class="card-header"><h2 class="card-title" id="search-heading">{{ icon('search') }}Find a patient</h2></div>
+  <form method="get" action="{{ url_for('patient_records.assess_existing') }}" class="upload-form" role="search" data-live-filter="live-existing-results">
+    <div class="form-group" style="flex: 1; margin-bottom: 0;">
+      <label class="form-label" for="q">Patient name or patient ID</label>
+      <input class="form-control" type="text" id="q" name="q" value="{{ query }}" placeholder="Juan Dela Cruz, or NPH-0001" autocomplete="off" autofocus>
+    </div>
+    <button class="button button-primary" type="submit">{{ icon('search') }}Search</button>
+  </form>
+  <div id="live-existing-results" class="live-results" aria-live="polite">
+
+  {% if query %}
+  {% if results %}
+  <ul class="search-result-list" role="list">
+    {% for row in results %}
+    <li class="search-result-row existing-patient-row">
+      <div class="existing-patient-info">
+        <strong>{{ row.full_name }}</strong>
+        <span class="chip chip-mono">{{ row.patient_code }}</span>
+        <span class="text-muted">{{ row.age }} years old &middot; {{ row.get('gender') or row.sex }}</span>
+        {% if row.latest %}
+        <span class="text-muted">&middot; Last assessment {{ format_date(row.latest.date) }}</span>
+        {{ risk_badge(row.latest.level, assessment_type=row.latest.assessment_type) }}
+        {% else %}
+        <span class="badge badge-neutral">No assessment yet</span>
+        {% endif %}
+      </div>
+      <a class="button button-primary button-sm" href="{{ url_for('patient_records.choose_assessment', patient_code=row.patient_code) }}">{{ icon('arrow-right') }}Start assessment</a>
+    </li>
+    {% endfor %}
+  </ul>
+  {% else %}
+  <p class="empty-inline">{{ icon('info') }}No patient matches "{{ query }}".</p>
+  {% endif %}
+  {% endif %}
+  </div>
+</section>
+{% endblock %}

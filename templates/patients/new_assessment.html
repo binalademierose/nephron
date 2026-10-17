@@ -1,0 +1,28 @@
+{# The starting point for a new assessment: choose an existing patient (search and select) or register a new
+   one. Neither choice has started an assessment yet. #}
+{% extends "layouts/app_base.html" %}
+{% from "partials/_macros.html" import icon %}
+{% set active_nav = 'patients' %}
+{% block header_title %}New assessment{% endblock %}
+{% block header_subtitle %}Choose who this assessment is for.{% endblock %}
+
+{% block content %}
+<div class="page-actions reveal">
+  <p></p>
+  <a class="button button-secondary button-sm" href="{{ url_for('patient_records.index') }}">{{ icon('chevron-left') }}Back to patients</a>
+</div>
+
+<section class="card reveal" style="--i: 1;" aria-labelledby="choose-heading">
+  <div class="card-header"><h2 class="card-title" id="choose-heading">{{ icon('user-round') }}Who is this assessment for?</h2></div>
+  <div class="outputs">
+    <a class="card output-card card-interactive card-lavender assessment-choice" href="{{ url_for('patient_records.assess_existing') }}">
+      <div class="output-visual">{{ icon('search') }}</div>
+      <div><h3>Existing Patient</h3><p>Search your own patients and start a new screening for one of them.</p></div>
+    </a>
+    <a class="card output-card card-interactive card-lavender assessment-choice" href="{{ url_for('patient_records.new_patient') }}">
+      <div class="output-visual">{{ icon('plus') }}</div>
+      <div><h3>New Patient</h3><p>Register a new patient - a patient ID is generated automatically - then start their assessment.</p></div>
+    </a>
+  </div>
+</section>
+{% endblock %}

@@ -1,0 +1,125 @@
+{# Administrator overview: accounts and how much the system is used - counts only, never anyone's health data. #}
+{% extends "layouts/app_base.html" %}
+{% from "partials/_macros.html" import icon %}
+{% from "partials/_visuals.html" import icon_chip, community_risk_card, gender_count_plot %}
+{% set active_nav = 'admin-overview' %}
+{% block header_title %}Administrator{% endblock %}
+{% block header_subtitle %}Accounts, professional verification, and system use - totals only, never a named person's health information.{% endblock %}
+
+{% block content %}
+<div class="stat-row kpi-row">
+  <article class="card stat-card reveal" style="--i: 0;">
+    {{ icon_chip('users', 'lavender', 'icon-chip-lg') }}
+    <div class="stat-body"><p class="stat-label">People using Nephron</p><p class="stat-value">{{ kpis.users }}</p>
+      <p class="stat-foot">{{ kpis.active_recently }} signed in during the last {{ kpis.days }} days &middot; {{ kpis.new_this_month }} new this month</p></div>
+  </article>
+  <article class="card stat-card reveal" style="--i: 0;">
+    {{ icon_chip('clipboard-check', 'lavender', 'icon-chip-lg') }}
+    <div class="stat-body"><p class="stat-label">People screened</p><p class="stat-value">{{ risk.people }}</p>
+      <p class="stat-foot">Each counted once, by their latest result</p></div>
+  </article>
+  <article class="card stat-card reveal" style="--i: 0;">
+    {{ icon_chip('alert-triangle', 'red', 'icon-chip-lg') }}
+    <div class="stat-body"><p class="stat-label">Higher risk</p><p class="stat-value stat-value-level stat-value-high">{{ risk.high }}</p>
+      <p class="stat-foot">{{ risk.high_percent }}% of people screened{% if risk.most_high %} &middot; most in {{ risk.most_high }}{% endif %}</p></div>
+  </article>
+</div>
+
+<section class="card reveal admin-age" style="--i: 1;" aria-labelledby="age-heading">
+  <div class="card-header"><h2 class="card-title" id="age-heading">{{ icon_chip('bar-chart', 'lavender') }}Higher risk by age group</h2></div>
+  <p class="text-muted text-small">Each person counted once, by their most recent result. Totals only - no one can be identified from this.</p>
+  {% if risk.people %}
+  <div class="table-scroll">
+  <table class="data-table admin-age-table">
+    <thead><tr><th scope="col">Age group</th><th scope="col">People screened</th><th scope="col">Higher risk</th><th scope="col" class="admin-age-bar-col">Share of the higher-risk total</th></tr></thead>
+    <tbody>
+    {% for g in risk.groups %}
+      <tr>
+        <th scope="row">{{ g.label }}</th>
+        <td>{{ g.people }}</td>
+        <td>{{ g.high }}{% if g.people %} <span class="text-muted">({{ g.high_percent }}% of the group)</span>{% endif %}</td>
+        <td class="admin-age-bar-col"><span class="admin-bar" role="img" aria-label="{{ g.high }} higher-risk people"><span style="width: {{ g.bar }}%"></span></span></td>
+      </tr>
+    {% endfor %}
+    </tbody>
+  </table>
+  </div>
+  {% else %}<p class="empty-inline">{{ icon('info') }}No one has been screened yet.</p>{% endif %}
+</section>
+
+{# People who answered that they live in the Philippines: how many are at higher risk, and how that compares by
+   the gender they chose. Counts only (services/community_stats.py) - a gender with fewer than 3 people is folded
+   into "Other answers" or left out, so no one's result can be picked out. #}
+{% set own = "Nephron's own anonymous count: each person's latest result, for everyone who answered that they live in the Philippines." %}
+<section class="card reveal admin-philippines" style="--i: 1.5;" aria-labelledby="philippines-heading">
+  <div class="card-header"><h2 class="card-title" id="philippines-heading">{{ icon_chip('map-pin', 'lavender') }}People living in the Philippines</h2></div>
+  <p class="text-muted text-small">{{ philippines.risk.people }} of the {{ philippines.everyone }} people screened live in the Philippines. Totals only - genders with fewer than 3 people are combined or left out.</p>
+  <div class="admin-philippines-grid">
+    {{ community_risk_card(philippines.risk, "Who is at risk", "people living in the Philippines are at higher risk", own,
+                           "No one living in the Philippines has been screened yet.") }}
+    {{ gender_count_plot(philippines.gender, "Risk by gender", own, "No one living in the Philippines has been screened yet.") }}
+  </div>
+</section>
+
+<div class="stat-row">
+  <article class="card stat-card reveal" style="--i: 1;">
+    {{ icon_chip('users', 'lavender', 'icon-chip-lg') }}
+    <div class="stat-body"><p class="stat-label">Accounts</p><p class="stat-value">{{ counts.total }}</p>
+      <p class="stat-foot">{{ counts.general }} general &middot; {{ counts.professional }} professional &middot; {{ counts.admin }} admin</p></div>
+  </article>
+  <article class="card stat-card reveal" style="--i: 2;">
+    {{ icon_chip('shield-check', 'lavender', 'icon-chip-lg') }}
+    <div class="stat-body"><p class="stat-label">Professionals awaiting verification</p><p class="stat-value">{{ counts.pending_professionals }}</p>
+      <p class="stat-foot"><a href="{{ url_for('admin.professionals') }}">Review licences</a></p></div>
+  </article>
+  <article class="card stat-card reveal" style="--i: 3;">
+    {{ icon_chip('clipboard-list', 'lavender', 'icon-chip-lg') }}
+    <div class="stat-body"><p class="stat-label">Assessments</p><p class="stat-value">{{ usage.total }}</p>
+      <p class="stat-foot">{{ usage.recent }} in the last {{ usage.days }} days</p></div>
+  </article>
+</div>
+
+<div class="dash-row admin-row">
+  <section class="card reveal" style="--i: 4;" aria-labelledby="usage-heading">
+    <div class="card-header"><h2 class="card-title" id="usage-heading">{{ icon_chip('bar-chart', 'lavender') }}System use</h2></div>
+    <dl class="term-list">
+      <div class="term-row"><dt>Preliminary screenings</dt><dd>{{ usage.preliminary }}</dd></div>
+      <div class="term-row"><dt>Enhanced screenings</dt><dd>{{ usage.enhanced }}</dd></div>
+      <div class="term-row"><dt>Classified lower risk</dt><dd>{{ usage.low }}</dd></div>
+      <div class="term-row"><dt>Classified higher risk</dt><dd>{{ usage.high }}</dd></div>
+      <div class="term-row"><dt>Active / switched-off accounts</dt><dd>{{ counts.active }} / {{ counts.inactive }}</dd></div>
+    </dl>
+  </section>
+  <section class="card reveal" style="--i: 5;" aria-labelledby="models-heading">
+    <div class="card-header"><h2 class="card-title" id="models-heading">{{ icon_chip('gauge', 'lavender') }}Models</h2>
+      <a class="link-action" href="{{ url_for('admin.model') }}">Performance {{ icon('arrow-right') }}</a></div>
+    <ul class="admin-model-list">
+      {% for label, service in models %}
+      <li>
+        <span class="badge {{ 'risk-badge-low' if service and service.ready else 'risk-badge-high' }}">{{ 'Ready' if service and service.ready else 'Unavailable' }}</span>
+        <div><strong>{{ label }}</strong>
+          {% if service and service.ready %}<span class="text-muted">Version {{ service.metadata.get('model_version', '-') if service.metadata else '-' }}</span>
+          {% else %}
+            {% set reason = service.reason if service and service.reason else 'Not installed.' %}
+            <span class="text-muted">{{ 'No model has been installed yet.' if ('missing' in reason or 'Not installed' in reason) else ('A library the model needs is missing.' if 'installed' in reason else 'The model failed its startup checks.') }}</span>
+            <details class="admin-model-details"><summary>Technical details</summary><p>{{ reason }}</p></details>
+          {% endif %}</div>
+      </li>
+      {% endfor %}
+    </ul>
+  </section>
+</div>
+
+<section class="card reveal" style="--i: 6;" aria-labelledby="new-accounts-heading">
+  <div class="card-header"><h2 class="card-title" id="new-accounts-heading">{{ icon_chip('users', 'lavender') }}Newest accounts</h2>
+    <a class="link-action" href="{{ url_for('admin.users') }}">All accounts {{ icon('arrow-right') }}</a></div>
+  {% if recent_accounts %}
+  <div class="table-scroll"><table class="data-table">
+    <thead><tr><th scope="col">Name</th><th scope="col">Email</th><th scope="col">Role</th><th scope="col">Joined</th></tr></thead>
+    <tbody>{% for a in recent_accounts %}<tr><td>{{ a.full_name }}</td><td>{{ a.email }}</td>
+      <td>{{ 'Administrator' if a.is_admin else ('Healthcare Professional' if a.role == 'professional' else 'General User') }}</td>
+      <td>{{ format_date(a.created_at.date()) }}</td></tr>{% endfor %}</tbody>
+  </table></div>
+  {% else %}<p class="empty-inline">{{ icon('info') }}No accounts yet.</p>{% endif %}
+</section>
+{% endblock %}

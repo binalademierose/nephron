@@ -1,0 +1,5 @@
+{# The real dashboard of a General User. Same markup as the design preview; the data comes from their own saved assessments. #}
+{% extends "layouts/app_base.html" %}
+{% set active_nav = 'overview' %}
+{% block body_class %}app-body has-aside{% endblock %}
+{% block content %}{% include "dashboard/_overview.html" %}{% endblock %}

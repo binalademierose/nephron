@@ -1,0 +1,27 @@
+{# The sign-in / register layout: a lavender brand panel with the kidney artwork beside the form. Used by the real sign-in and register pages (and their design previews). #}
+{% extends "layouts/document.html" %}
+{% from "partials/_macros.html" import logo_lockup, icon %}
+{% block body_class %}auth-body{% endblock %}
+{% block shell %}
+<div class="auth-layout">
+  <section class="auth-brand" aria-label="About Nephron">
+    <a class="auth-logo" href="{{ url_for('main.home') }}" aria-label="{{ APP_NAME }} home">{{ logo_lockup() }}</a>
+    <div class="auth-message">
+      {% block auth_message %}
+      <h2>Risk screening that supports the conversation with your care team.</h2>
+      <p>Nephron estimates your risk of chronic kidney disease, shows which of your answers affected your result most, and lets you share results with a healthcare professional.</p>
+      {% endblock %}
+      {% block auth_points %}{% endblock %}
+    </div>
+    {% block auth_art %}<img class="auth-art" src="{{ url_for('static', filename='images/art/kidney-hero.png') }}" alt="" width="752" height="596" aria-hidden="true">{% endblock %}
+  </section>
+  <main id="main-content" class="auth-panel page-fade" tabindex="-1">
+    <div class="auth-panel-inner">
+      {% with flash_wrapper='flash-region' %}{% include "partials/_flash_messages.html" %}{% endwith %}
+      {% block content %}{% endblock %}
+      <p class="text-helper auth-panel-footer">{{ MEDICAL_DISCLAIMER }}
+        <a href="{{ url_for('main.terms') }}">Terms &amp; Conditions</a></p>
+    </div>
+  </main>
+</div>
+{% endblock %}

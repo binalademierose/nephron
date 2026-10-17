@@ -1,0 +1,82 @@
+{% extends "layouts/app_base.html" %}
+{% from "partials/_macros.html" import icon %}
+{% from "partials/_visuals.html" import icon_chip, ring, mini_meter, sample_tag %}
+{% set active_nav = 'history' %}
+{% block body_class %}app-body has-preview-bar{% endblock %}
+{% block preview_bar %}{% include "partials/_preview_bar.html" %}{% endblock %}
+{% block header_title %}Screening result{% endblock %}
+{% block header_subtitle %}Preliminary screening, {{ format_date(summary.latest.date) }}{% endblock %}
+
+{# What to notice first: the ring and the classification. Second: what it means. Third: the next step. #}
+{% block content %}
+{% set current = summary.latest %}
+{% set change = summary.change %}
+<div class="page-actions reveal">
+  <span>{{ sample_tag() }}</span>
+  <a class="button button-secondary button-sm" href="#" data-preview-link>{{ icon('download') }}Download report</a>
+</div>
+
+<div class="result-frame">
+  <section class="card card-hero result-card reveal" style="--i: 1;" aria-labelledby="category-heading">
+    <div class="result-main">
+      {{ ring(current.probability, threshold=threshold, large=True) }}
+      <div class="result-copy">
+        <span class="result-meaning-label">Risk Classification</span>
+        <div class="result-classification">
+          {{ icon_chip('alert-triangle' if level == 'high' else 'check-circle', 'red' if level == 'high' else 'green', 'icon-chip-lg') }}
+          <h2 id="category-heading" class="level-{{ level }}">{{ level_label(level) }}</h2>
+        </div>
+        <div class="result-meaning">
+          <span class="result-meaning-label">What this means</span>
+          {% if level == 'high' %}
+            <p>Higher-risk group. This is screening information, not a diagnosis. Consider professional evaluation.</p>
+          {% else %}
+            <p>Lower-risk group. It does not mean you are free of kidney disease.</p>
+          {% endif %}
+        </div>
+        <span class="chip">{{ icon('gauge') }}Validated threshold: {{ threshold }}%</span>
+      </div>
+    </div>
+  </section>
+</div>
+
+{% set is_sample = True %}
+{% include "screening/_explanation.html" %}
+
+<div class="result-side result-side-row">
+    <section class="card card-lavender next-step reveal" style="--i: 3;" aria-labelledby="next-heading">
+      <h2 id="next-heading" class="card-title">{{ 'Consider professional evaluation' if level == 'high' else 'Keep this result' }}</h2>
+      <p>{% if level == 'high' %}Share this assessment with a healthcare professional.{% else %}Compare it with future screenings, or share it any time.{% endif %}</p>
+      <a class="button button-primary" href="#" data-preview-link>Share with a professional</a>
+    </section>
+
+    <section class="card reveal" style="--i: 4;" aria-labelledby="compare-heading">
+      <div class="card-header"><h2 class="card-title" id="compare-heading">Compared with previous</h2><span class="card-tags">{{ sample_tag() }}<span class="chip change-chip">{{ icon('trending-up') }}{{ 'No change' if change.direction == 'same' else ('%g points %s'|format(change.points, change.direction)) }}</span></span></div>
+      <dl class="compare">
+        <div class="compare-row"><dt>{{ short_date(change.previous.date) }}</dt><dd class="compare-meter">{{ mini_meter(change.previous.probability, threshold, change.previous.level) }}</dd><dd>{{ '%g'|format(change.previous.probability) }}%</dd></div>
+        <div class="compare-row"><dt>{{ short_date(current.date) }}</dt><dd class="compare-meter">{{ mini_meter(current.probability, threshold, current.level) }}</dd><dd>{{ '%g'|format(current.probability) }}%</dd></div>
+      </dl>
+    </section>
+
+    <section class="card reveal" style="--i: 5;" aria-labelledby="review-heading">
+      <div class="card-header" style="margin-bottom: 0;"><h2 class="card-title" id="review-heading">Professional review</h2><span class="badge badge-neutral">Not shared</span></div>
+    </section>
+  </div>
+</div>
+
+<p class="text-small variant-switch">
+  Preview variant:
+  <a href="{{ url_for('design.result', level='high') }}" {% if level == 'high' %}aria-current="true"{% endif %}>High</a> or
+  <a href="{{ url_for('design.result', level='low') }}" {% if level == 'low' %}aria-current="true"{% endif %}>Low</a>
+</p>
+
+<div class="section-tight-inline">
+  <div class="notice">
+    {{ icon('info') }}
+    <div>
+      <h2>About this result</h2>
+      <p>{{ MEDICAL_DISCLAIMER }}</p>
+    </div>
+  </div>
+</div>
+{% endblock %}

@@ -1,0 +1,795 @@
+{
+  "schema_version": 1,
+  "stage": "preliminary",
+  "note": "The questions of the preliminary (no laboratory) screening: the 28 Stage 1 predictors of the project, with the value ranges seen in the training data (CKD_400k.csv; the earlier CKD_Risk_Progression_Dataset_2026.csv has the same ones). Nothing is asked that the model does not use. The model file is checked against this list (names, answers and ranges) before screening is switched on, and the training notebook reads this same file; see ml/README.md. Three diet questions (SugaryDrinksAddedSugar, UltraProcessedFoodFrequency, SaturatedFatDairyIntake) were added after a column-by-column audit of CKD_400k.csv found a plausible, consistent direction for each; see ml/DATASET_AUDIT_CKD_400k.md. Blank answers in the training data for SugaryDrinksAddedSugar (10.7%) were recoded to 'None' and blank answers for UltraProcessedFoodFrequency (2.3%) were recoded to 'Never' (an assumption, the same kind already made for Alcohol_Consumption); SaturatedFatDairyIntake had no blanks.",
+  "steps": [
+    {
+      "key": "about",
+      "title": "About you",
+      "icon": "user",
+      "intro": "A few basic facts. Kidney risk is estimated for adults."
+    },
+    {
+      "key": "history",
+      "title": "Health history",
+      "icon": "heart",
+      "intro": "Conditions a doctor has told you about. Answer from what you know; you can leave the rest as No."
+    },
+    {
+      "key": "medicines",
+      "title": "Medicines",
+      "icon": "clipboard-list",
+      "intro": "Medicines you take now. Some are used for the heart or blood pressure, and some can affect the kidneys."
+    },
+    {
+      "key": "lifestyle",
+      "title": "Lifestyle",
+      "icon": "activity",
+      "intro": "Everyday habits. Choose the answer that fits most weeks."
+    }
+  ],
+  "questions": [
+    {
+      "name": "Country",
+      "short": "Country",
+      "step": "about",
+      "kind": "choice",
+      "display": "select",
+      "label": "Where do you live?",
+      "hint": "If your country is not listed, choose Other.",
+      "why": "The model was built with data from several countries.",
+      "options": [
+        {
+          "value": "USA",
+          "label": "United States"
+        },
+        {
+          "value": "UK",
+          "label": "United Kingdom"
+        },
+        {
+          "value": "India",
+          "label": "India"
+        },
+        {
+          "value": "Canada",
+          "label": "Canada"
+        },
+        {
+          "value": "Australia",
+          "label": "Australia"
+        },
+        {
+          "value": "Philippines",
+          "label": "Philippines",
+          "model_value": "Other"
+        },
+        {
+          "value": "Other",
+          "label": "Other country"
+        }
+      ]
+    },
+    {
+      "name": "Sex",
+      "short": "Sex at birth",
+      "step": "about",
+      "kind": "choice",
+      "display": "radio",
+      "label": "Sex assigned at birth",
+      "hint": "Asked only when your gender answer does not already tell us.",
+      "why": "The model was trained on sex assigned at birth, and some kidney test results are worked out differently for the two. Your gender answer is still saved exactly as you chose it.",
+      "options": [
+        {
+          "value": "Female",
+          "label": "Female"
+        },
+        {
+          "value": "Male",
+          "label": "Male"
+        }
+      ],
+      "asked_through": {
+        "field": "Gender",
+        "short": "Gender",
+        "label": "Gender",
+        "hint": "Choose the one that describes you best. It is saved as you chose it.",
+        "why": "Nephron shows, without names, how kidney risk compares between genders among people who use it. For the risk estimate itself, an answer like Gay man is read as male and Lesbian woman as female; for the others we ask one extra question.",
+        "options": [
+          {
+            "value": "Male",
+            "label": "Male",
+            "sex": "Male"
+          },
+          {
+            "value": "Female",
+            "label": "Female",
+            "sex": "Female"
+          },
+          {
+            "value": "Gay man",
+            "label": "Gay man",
+            "sex": "Male"
+          },
+          {
+            "value": "Lesbian woman",
+            "label": "Lesbian woman",
+            "sex": "Female"
+          },
+          {
+            "value": "Bisexual man",
+            "label": "Bisexual man",
+            "sex": "Male"
+          },
+          {
+            "value": "Bisexual woman",
+            "label": "Bisexual woman",
+            "sex": "Female"
+          },
+          {
+            "value": "Transgender man",
+            "label": "Transgender man"
+          },
+          {
+            "value": "Transgender woman",
+            "label": "Transgender woman"
+          },
+          {
+            "value": "Non-binary",
+            "label": "Non-binary"
+          },
+          {
+            "value": "Queer or another identity",
+            "label": "Queer or another identity"
+          },
+          {
+            "value": "Prefer not to say",
+            "label": "Prefer not to say"
+          }
+        ]
+      }
+    },
+    {
+      "name": "Ethnicity",
+      "short": "Ethnicity",
+      "step": "about",
+      "kind": "choice",
+      "display": "select",
+      "label": "Ethnic background",
+      "hint": "Choose the closest group.",
+      "why": "Risk differs between groups in the data the model learned from.",
+      "options": [
+        {
+          "value": "White",
+          "label": "White"
+        },
+        {
+          "value": "Hispanic",
+          "label": "Hispanic or Latino"
+        },
+        {
+          "value": "Black",
+          "label": "Black"
+        },
+        {
+          "value": "Asian",
+          "label": "Asian"
+        },
+        {
+          "value": "Other",
+          "label": "Other or mixed"
+        }
+      ]
+    },
+    {
+      "name": "Age",
+      "short": "Age",
+      "step": "about",
+      "kind": "number",
+      "label": "Age",
+      "unit": "years",
+      "integer": true,
+      "min": 18,
+      "max": 95,
+      "step_size": 1,
+      "why": "The chance of kidney disease rises with age.",
+      "range_note": "Enter your age in whole years.",
+      "valid_min": 1,
+      "valid_max": 120
+    },
+    {
+      "name": "BMI",
+      "short": "Body mass index",
+      "step": "about",
+      "kind": "bmi",
+      "label": "Height and weight",
+      "min": 15.0,
+      "max": 53.2,
+      "height": {
+        "field": "height_cm",
+        "label": "Height",
+        "unit": "cm",
+        "min": 120,
+        "max": 230,
+        "step_size": 1,
+        "valid_min": 45,
+        "valid_max": 272
+      },
+      "weight": {
+        "field": "weight_kg",
+        "label": "Weight",
+        "unit": "kg",
+        "min": 25,
+        "max": 300,
+        "step_size": 0.1,
+        "valid_min": 2,
+        "valid_max": 650
+      },
+      "why": "Body mass index is worked out from your height and weight.",
+      "range_note": "Your height and weight give a body mass index (BMI).",
+      "valid_min": 10.0,
+      "valid_max": 90.0
+    },
+    {
+      "name": "Obesity",
+      "short": "Obesity (from BMI)",
+      "step": "about",
+      "kind": "derived",
+      "rule": "bmi_at_least",
+      "of": "BMI",
+      "value": 30,
+      "label": "Obesity",
+      "why": "Worked out from your BMI (30 or more). You are not asked this separately."
+    },
+    {
+      "name": "Diabetes",
+      "short": "Diabetes",
+      "label": "Has a doctor told you that you have diabetes?",
+      "kind": "yesno",
+      "hint": "Type 1, type 2 or diabetes found in pregnancy that has stayed.",
+      "why": "Long-term high blood sugar can damage the kidneys' filters.",
+      "step": "history",
+      "options": [
+        {
+          "value": "1",
+          "label": "Yes"
+        },
+        {
+          "value": "0",
+          "label": "No"
+        }
+      ]
+    },
+    {
+      "name": "Hypertension",
+      "short": "High blood pressure",
+      "label": "Has a doctor told you that you have high blood pressure?",
+      "kind": "yesno",
+      "hint": "Also called hypertension.",
+      "why": "High blood pressure can damage the small blood vessels of the kidneys.",
+      "step": "history",
+      "options": [
+        {
+          "value": "1",
+          "label": "Yes"
+        },
+        {
+          "value": "0",
+          "label": "No"
+        }
+      ]
+    },
+    {
+      "name": "Cardiovascular_Disease",
+      "short": "Heart or blood-vessel disease",
+      "label": "Do you have heart or blood-vessel disease?",
+      "kind": "yesno",
+      "hint": "For example a heart attack, angina or a stroke.",
+      "why": "The heart and kidneys share many of the same risk factors.",
+      "step": "history",
+      "options": [
+        {
+          "value": "1",
+          "label": "Yes"
+        },
+        {
+          "value": "0",
+          "label": "No"
+        }
+      ]
+    },
+    {
+      "name": "Heart_Failure",
+      "short": "Heart failure",
+      "label": "Has a doctor told you that you have heart failure?",
+      "kind": "yesno",
+      "hint": "",
+      "why": "A weak heart can reduce blood flow to the kidneys.",
+      "step": "history",
+      "options": [
+        {
+          "value": "1",
+          "label": "Yes"
+        },
+        {
+          "value": "0",
+          "label": "No"
+        }
+      ]
+    },
+    {
+      "name": "Hyperlipidemia",
+      "short": "High cholesterol",
+      "label": "Do you have high cholesterol or other high blood fats?",
+      "kind": "yesno",
+      "hint": "Also called hyperlipidemia.",
+      "why": "Blood fats are linked to blood-vessel disease, including in the kidneys.",
+      "step": "history",
+      "options": [
+        {
+          "value": "1",
+          "label": "Yes"
+        },
+        {
+          "value": "0",
+          "label": "No"
+        }
+      ]
+    },
+    {
+      "name": "Kidney_Stones",
+      "short": "Kidney stones",
+      "label": "Have you ever had kidney stones?",
+      "kind": "yesno",
+      "hint": "",
+      "why": "Stones can affect how well the kidneys work over time.",
+      "step": "history",
+      "options": [
+        {
+          "value": "1",
+          "label": "Yes"
+        },
+        {
+          "value": "0",
+          "label": "No"
+        }
+      ]
+    },
+    {
+      "name": "Recurrent_UTI",
+      "short": "Repeated urinary infections",
+      "label": "Do you often get urinary tract infections (UTIs)?",
+      "kind": "yesno",
+      "hint": "Several in a year.",
+      "why": "Repeated infections can affect the kidneys.",
+      "step": "history",
+      "options": [
+        {
+          "value": "1",
+          "label": "Yes"
+        },
+        {
+          "value": "0",
+          "label": "No"
+        }
+      ]
+    },
+    {
+      "name": "Autoimmune_Disease",
+      "short": "Autoimmune disease",
+      "label": "Do you have an autoimmune disease?",
+      "kind": "yesno",
+      "hint": "For example lupus or rheumatoid arthritis.",
+      "why": "Some autoimmune diseases can involve the kidneys.",
+      "step": "history",
+      "options": [
+        {
+          "value": "1",
+          "label": "Yes"
+        },
+        {
+          "value": "0",
+          "label": "No"
+        }
+      ]
+    },
+    {
+      "name": "Family_History_CKD",
+      "short": "Family history of kidney disease",
+      "label": "Does a close relative have chronic kidney disease?",
+      "kind": "yesno",
+      "hint": "A parent, brother or sister.",
+      "why": "Kidney disease can run in families.",
+      "step": "history",
+      "options": [
+        {
+          "value": "1",
+          "label": "Yes"
+        },
+        {
+          "value": "0",
+          "label": "No"
+        }
+      ]
+    },
+    {
+      "name": "ACE_Inhibitor",
+      "short": "ACE inhibitor",
+      "label": "Do you take an ACE inhibitor?",
+      "kind": "yesno",
+      "hint": "A blood pressure or heart medicine, for example lisinopril or enalapril.",
+      "why": "Some medicines for blood pressure and the heart change how the kidneys work.",
+      "step": "medicines",
+      "options": [
+        {
+          "value": "1",
+          "label": "Yes"
+        },
+        {
+          "value": "0",
+          "label": "No"
+        }
+      ]
+    },
+    {
+      "name": "ARB",
+      "short": "ARB",
+      "label": "Do you take an angiotensin receptor blocker (ARB)?",
+      "kind": "yesno",
+      "hint": "A blood pressure or heart medicine, for example losartan or valsartan.",
+      "why": "Some medicines for blood pressure and the heart change how the kidneys work.",
+      "step": "medicines",
+      "options": [
+        {
+          "value": "1",
+          "label": "Yes"
+        },
+        {
+          "value": "0",
+          "label": "No"
+        }
+      ]
+    },
+    {
+      "name": "Diabetes_Medication",
+      "short": "Diabetes medicine",
+      "label": "Do you take medicine for diabetes?",
+      "kind": "yesno",
+      "hint": "For example metformin or insulin.",
+      "why": "This shows how diabetes is being treated.",
+      "step": "medicines",
+      "options": [
+        {
+          "value": "1",
+          "label": "Yes"
+        },
+        {
+          "value": "0",
+          "label": "No"
+        }
+      ]
+    },
+    {
+      "name": "Diuretic",
+      "short": "Diuretic",
+      "label": "Do you take a diuretic (water pill)?",
+      "kind": "yesno",
+      "hint": "For example furosemide or hydrochlorothiazide.",
+      "why": "Diuretics change how much fluid the kidneys have to handle.",
+      "step": "medicines",
+      "options": [
+        {
+          "value": "1",
+          "label": "Yes"
+        },
+        {
+          "value": "0",
+          "label": "No"
+        }
+      ]
+    },
+    {
+      "name": "Statin",
+      "short": "Statin",
+      "label": "Do you take a statin?",
+      "kind": "yesno",
+      "hint": "A cholesterol medicine, for example atorvastatin or simvastatin.",
+      "why": "Statins are used for blood fats and heart protection.",
+      "step": "medicines",
+      "options": [
+        {
+          "value": "1",
+          "label": "Yes"
+        },
+        {
+          "value": "0",
+          "label": "No"
+        }
+      ]
+    },
+    {
+      "name": "NSAID_Usage",
+      "short": "NSAID pain relievers",
+      "label": "Do you use NSAID pain relievers?",
+      "kind": "yesno",
+      "hint": "Anti-inflammatory pain relievers such as ibuprofen or naproxen.",
+      "why": "Frequent use of some pain relievers can strain the kidneys.",
+      "step": "medicines",
+      "options": [
+        {
+          "value": "1",
+          "label": "Yes"
+        },
+        {
+          "value": "0",
+          "label": "No"
+        }
+      ]
+    },
+    {
+      "name": "Smoking_Status",
+      "short": "Smoking",
+      "step": "lifestyle",
+      "kind": "choice",
+      "display": "radio",
+      "label": "Do you smoke?",
+      "why": "Smoking harms blood vessels, including those of the kidneys.",
+      "options": [
+        {
+          "value": "Never",
+          "label": "Never"
+        },
+        {
+          "value": "Former",
+          "label": "Used to"
+        },
+        {
+          "value": "Current",
+          "label": "Yes, now"
+        }
+      ]
+    },
+    {
+      "name": "Alcohol_Consumption",
+      "short": "Alcohol",
+      "step": "lifestyle",
+      "kind": "choice",
+      "display": "radio",
+      "label": "How much alcohol do you drink?",
+      "hint": "Moderate is about one or two drinks a day at most. Heavy is more than that.",
+      "why": "Heavy drinking is linked to blood pressure and kidney harm.",
+      "options": [
+        {
+          "value": "None",
+          "label": "None"
+        },
+        {
+          "value": "Moderate",
+          "label": "Moderate"
+        },
+        {
+          "value": "Heavy",
+          "label": "Heavy"
+        }
+      ]
+    },
+    {
+      "name": "Exercise_Hours_Per_Week",
+      "short": "Exercise hours",
+      "step": "lifestyle",
+      "kind": "number",
+      "label": "Hours of exercise in a usual week",
+      "unit": "hours per week",
+      "integer": false,
+      "min": 0,
+      "max": 12,
+      "step_size": 0.5,
+      "why": "How much you exercise, in hours. Your activity level (sedentary, light, moderate or active) is worked out from it, so you are not asked twice.",
+      "range_note": "Enter hours per week (0 if none).",
+      "valid_min": 0,
+      "valid_max": 112
+    },
+    {
+      "name": "Physical_Activity_Level",
+      "short": "Physical activity",
+      "step": "lifestyle",
+      "kind": "choice",
+      "display": "radio",
+      "label": "How active are you?",
+      "why": "Regular activity helps blood pressure and blood sugar.",
+      "options": [
+        {
+          "value": "Sedentary",
+          "label": "Sedentary",
+          "hint": "Under 0.6 hours a week"
+        },
+        {
+          "value": "Light",
+          "label": "Light",
+          "hint": "0.6 to 2 hours a week"
+        },
+        {
+          "value": "Moderate",
+          "label": "Moderate",
+          "hint": "2.1 to 5 hours a week"
+        },
+        {
+          "value": "Active",
+          "label": "Active",
+          "hint": "5.1 hours or more a week"
+        }
+      ],
+      "derived_from": {
+        "field": "Exercise_Hours_Per_Week",
+        "rule": "hour_bands",
+        "bands": [
+          {
+            "below": 0.6,
+            "value": "Sedentary"
+          },
+          {
+            "below": 2.1,
+            "value": "Light"
+          },
+          {
+            "below": 5.1,
+            "value": "Moderate"
+          },
+          {
+            "below": null,
+            "value": "Active"
+          }
+        ],
+        "note": "Worked out from your exercise hours.",
+        "source": "Cut-offs read from the training data (CKD_400k.csv): they agree with the dataset's own activity level in 97.9% of its 400,000 rows."
+      }
+    },
+    {
+      "name": "Water_Intake_L",
+      "short": "Water intake",
+      "step": "lifestyle",
+      "kind": "number",
+      "label": "Water you drink in a day",
+      "unit": "litres per day",
+      "integer": false,
+      "min": 0.5,
+      "max": 4.0,
+      "step_size": 0.1,
+      "hint": "About 4 glasses is 1 litre.",
+      "why": "How much you drink each day.",
+      "range_note": "Enter litres per day.",
+      "valid_min": 0,
+      "valid_max": 10
+    },
+    {
+      "name": "Fast_Food_Frequency_Per_Week",
+      "short": "Fast food",
+      "step": "lifestyle",
+      "kind": "number",
+      "label": "Fast-food meals in a usual week",
+      "unit": "times per week",
+      "integer": true,
+      "min": 0,
+      "max": 11,
+      "step_size": 1,
+      "why": "Fast food is often high in salt.",
+      "range_note": "Enter how many times per week (0 if never).",
+      "valid_min": 0,
+      "valid_max": 42
+    },
+    {
+      "name": "SugaryDrinksAddedSugar",
+      "short": "Sugary drinks",
+      "step": "lifestyle",
+      "kind": "choice",
+      "display": "radio",
+      "label": "How much sugar-sweetened drink do you have?",
+      "hint": "Soda, sweetened juice drinks, sweetened tea or coffee, energy drinks - not the sugar you add yourself.",
+      "why": "Regularly sweetened drinks are linked with a higher rate of CKD in this dataset.",
+      "options": [
+        {
+          "value": "None",
+          "label": "None",
+          "hint": "Rarely or never"
+        },
+        {
+          "value": "Low",
+          "label": "Low"
+        },
+        {
+          "value": "Moderate",
+          "label": "Moderate"
+        },
+        {
+          "value": "High",
+          "label": "High"
+        },
+        {
+          "value": "Very High",
+          "label": "Very high"
+        }
+      ]
+    },
+    {
+      "name": "UltraProcessedFoodFrequency",
+      "short": "Ultra-processed food",
+      "step": "lifestyle",
+      "kind": "choice",
+      "display": "radio",
+      "label": "How often do you eat packaged or ultra-processed food?",
+      "hint": "Instant noodles, packaged snacks, sausages and other processed meat, ready-made meals.",
+      "why": "A higher frequency is linked with a higher rate of CKD in this dataset.",
+      "options": [
+        {
+          "value": "Never",
+          "label": "Never"
+        },
+        {
+          "value": "Rare",
+          "label": "Rare"
+        },
+        {
+          "value": "1-2 times/week",
+          "label": "1 to 2 times a week"
+        },
+        {
+          "value": "3-4 times/week",
+          "label": "3 to 4 times a week"
+        },
+        {
+          "value": "5-6 times/week",
+          "label": "5 to 6 times a week"
+        },
+        {
+          "value": "Daily",
+          "label": "Daily"
+        }
+      ]
+    },
+    {
+      "name": "SaturatedFatDairyIntake",
+      "short": "Saturated fat and dairy",
+      "step": "lifestyle",
+      "kind": "choice",
+      "display": "radio",
+      "label": "How much saturated fat and full-fat dairy do you eat?",
+      "hint": "Fatty meat, butter, cheese, full-cream milk and similar foods.",
+      "why": "A higher intake is linked with a higher rate of CKD in this dataset.",
+      "options": [
+        {
+          "value": "Low",
+          "label": "Low"
+        },
+        {
+          "value": "Moderate",
+          "label": "Moderate"
+        },
+        {
+          "value": "High",
+          "label": "High"
+        },
+        {
+          "value": "Very High",
+          "label": "Very high"
+        }
+      ]
+    },
+    {
+      "name": "Sleep_Duration_Hours",
+      "short": "Sleep",
+      "step": "lifestyle",
+      "kind": "number",
+      "label": "Hours of sleep on a usual night",
+      "unit": "hours",
+      "integer": false,
+      "min": 3,
+      "max": 11,
+      "step_size": 0.1,
+      "why": "Poor sleep is linked to blood pressure.",
+      "range_note": "Enter hours of sleep on a usual night.",
+      "valid_min": 0,
+      "valid_max": 24
+    }
+  ],
+  "range_policy": "min/max are the ranges the model was TRAINED on; valid_min/valid_max are the realistic limits an answer is accepted within. An answer outside the training range is accepted and flagged on the result. An option's model_value (e.g. Philippines -> Other) is what the model receives; the person's own answer is what is saved."
+}

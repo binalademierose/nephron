@@ -1,0 +1,44 @@
+{# Shown instead of the screening form when it cannot honestly be used. Nothing is analysed and nothing is saved. #}
+{% extends "layouts/app_base.html" %}
+{% from "partials/_macros.html" import icon, csrf_field %}
+{% set active_nav = 'assessment' %}
+{% block header_title %}Preliminary screening{% endblock %}
+{% block header_subtitle %}{{ 'Your next screening opens soon.' if kind == 'waiting' else 'Nothing has been saved.' }}{% endblock %}
+
+{% block content %}
+<section class="card card-lavender empty-state empty-state-centered reveal" aria-labelledby="unavailable-heading">
+  <span class="empty-visual" aria-hidden="true">{{ icon('clock') }}</span>
+  <h2 id="unavailable-heading">{{ title }}</h2>
+  {% if kind == 'waiting' %}
+  <p>To keep results comparable, there is a waiting period{% if period %} of {{ period.label }}{% endif %} between screenings. Your next one opens on <strong>{{ format_date(summary.next_screening.date) }}</strong> ({{ summary.next_screening.days_left }} day{{ '' if summary.next_screening.days_left == 1 else 's' }} left).</p>
+  {% if latest and latest.get('assessment_id') %}
+  <a class="button button-secondary" href="{{ url_for('screening.result', assessment_id=latest.assessment_id) }}">View your latest result</a>
+  {% endif %}
+  {% else %}
+  <p>We cannot start a screening right now, so we have not asked you anything and nothing has been saved. Please try again later. The team has been told through the server log.</p>
+  {% endif %}
+  {% if kind == 'waiting' %}<a class="button button-secondary" href="{{ url_for('history.index') }}">View your history</a>{% endif %}
+  <a class="button button-primary" href="{{ url_for('account.dashboard') }}">{{ icon('arrow-right') }}Back to overview</a>
+  {% if kind == 'waiting' %}
+  <div class="ask-admin" id="ask-admin">
+    <h3>Need to screen sooner?</h3>
+    <p class="text-small">A healthcare professional you share your results with can open an early screening for you. You can also ask the administrator.</p>
+    {% if admin_request and admin_request.status == 'pending' %}
+    <p class="ask-admin-status notice" role="status">{{ icon('clock') }}<span>Your request to the administrator is waiting for a decision. You will get a notification.</span></p>
+    {% else %}
+    {% if admin_request and admin_request.status == 'declined' %}<p class="ask-admin-status text-small text-muted">{{ icon('info') }}<span>Your last request was not approved. You can ask again.</span></p>{% endif %}
+    <form method="post" action="{{ url_for('screening.ask_admin') }}" novalidate>
+      {{ csrf_field() }}
+      <div class="form-group">
+        <label class="form-label" for="reason">Why do you need to screen again early? <span class="chip chip-optional">Optional</span></label>
+        <textarea class="form-control{{ ' is-invalid' if error }}" id="reason" name="reason" maxlength="{{ max_reason }}" aria-describedby="reason-help{{ ' reason-error' if error }}">{{ form_reason }}</textarea>
+        <p class="form-helper" id="reason-help">Up to {{ max_reason }} characters. The administrator reads this, so keep health details out of it.</p>
+        {% if error %}<p class="form-error" id="reason-error">{{ error }}</p>{% endif %}
+      </div>
+      <div class="form-actions"><button class="button button-secondary" type="submit">{{ icon('mail') }}Ask the administrator</button></div>
+    </form>
+    {% endif %}
+  </div>
+  {% endif %}
+</section>
+{% endblock %}

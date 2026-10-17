@@ -1,0 +1,246 @@
+/* layout.css - page structure: public pages, the signed-in shell (header + curved rail), the sign-in layout. */
+
+/* ---------- Shared containers ---------- */
+.container { width: 100%; max-width: var(--content-width); margin-inline: auto; padding-inline: var(--space-5); }
+.reading-width { max-width: var(--reading-width); }
+
+.page-fade { animation: page-in var(--duration-slow) var(--ease); }
+@keyframes page-in { from { opacity: 0; transform: translateY(6px); } to { opacity: 1; transform: none; } }
+
+/* ---------- Logo sizes: height stays automatic, so it is never stretched ---------- */
+.logo-mark { display: block; width: 5.25rem; max-width: 100%; height: auto; }
+a.brand, a.footer-logo, a.auth-logo, .logo-lockup { text-decoration: none; }
+.logo-lockup { display: inline-flex; align-items: center; gap: 0.6rem; }
+.logo-lockup .logo-mark { width: 3.6rem; }
+.brand-name { font-family: var(--font-heading); font-size: 1.3rem; font-weight: 700; letter-spacing: 0.14em; text-transform: uppercase; line-height: 1; color: var(--indigo); }
+
+/* ================= PUBLIC PAGES ================= */
+.site-header { position: sticky; top: 0; z-index: 30; background: var(--surface-glass-strong); -webkit-backdrop-filter: blur(var(--blur-glass)); backdrop-filter: blur(var(--blur-glass)); border-bottom: 1px solid var(--border); }
+@supports not ((backdrop-filter: blur(1px)) or (-webkit-backdrop-filter: blur(1px))) { .site-header { background: #fff; } }
+.site-header-inner { display: flex; flex-wrap: wrap; align-items: center; justify-content: space-between; gap: var(--space-1) var(--space-4); min-height: 4.25rem; }
+.brand { display: inline-flex; align-items: center; padding-block: var(--space-2); border-radius: var(--radius-sm); }
+.brand .logo-mark { width: 3.4rem; }
+
+.main-nav ul { display: flex; flex-wrap: wrap; gap: var(--space-1); margin: 0; padding: 0; list-style: none; }
+.main-nav li { margin: 0; }
+.nav-link {
+  display: inline-block; padding: var(--space-2) var(--space-4);
+  color: var(--navy); font-weight: 600; text-decoration: none; border-radius: var(--radius-pill);
+  transition: background-color var(--duration-base) var(--ease);
+}
+.nav-link:hover { background: var(--lavender-wash); color: var(--navy); }
+.nav-link[aria-current="page"] { background: var(--lavender); color: var(--indigo); }
+
+.main-nav ul { align-items: center; }
+.main-nav form { margin: 0; }
+.nav-button { font: inherit; font-weight: 600; background: none; border: 0; cursor: pointer; }
+.nav-cta { margin-left: var(--space-2); }
+.site-main { min-height: 60vh; }
+.section { padding-block: var(--space-8); }
+.section-tight { padding-block: var(--space-7); }
+.section-tint { background: var(--surface); border-block: 1px solid var(--border); }
+
+.site-footer { padding-block: 0 var(--space-6); }
+.site-footer .flow-divider { margin-bottom: var(--space-5); }
+.site-footer p { margin-bottom: var(--space-2); }
+.footer-brand { display: flex; flex-wrap: wrap; align-items: center; gap: var(--space-4) var(--space-6); }
+.footer-logo { flex: none; display: block; }
+.footer-logo .logo-mark { width: 3.2rem; }
+.footer-logo .brand-name { font-size: 1.15rem; }
+.footer-disclaimer { max-width: 46rem; }
+
+/* ================= APP SHELL: header on top, a curved rail on the left ================= */
+.app-body { background: linear-gradient(180deg, #F8F9FE 0%, #F3F4FC 100%); }
+
+/* Soft decoration behind everything: a lavender glow top left and a swoosh bottom right */
+.app-backdrop { position: fixed; inset: 0; z-index: -1; overflow: hidden; pointer-events: none; }
+.app-backdrop::before { content: ""; position: absolute; left: -14%; top: -30%; width: 62%; aspect-ratio: 1; border-radius: 50%; background: radial-gradient(closest-side, rgba(227, 226, 255, 0.75), rgba(227, 226, 255, 0)); }
+.app-backdrop::after { content: ""; position: absolute; right: -9vw; bottom: -26vh; width: 36vw; min-width: 16rem; aspect-ratio: 1; border-radius: 50%; background: linear-gradient(140deg, rgba(178, 170, 250, 0.22), rgba(214, 210, 254, 0.18)); box-shadow: -7vw -5vh 0 -3vw rgba(198, 192, 252, 0.16); }
+/* On the overview the swoosh shows through the translucent right panel, as in the design. Text never sits on it there. */
+.has-aside .app-backdrop::after { background: linear-gradient(140deg, rgba(178, 170, 250, 0.5), rgba(214, 210, 254, 0.4)); box-shadow: -7vw -5vh 0 -3vw rgba(198, 192, 252, 0.4); }
+
+.app-shell { position: relative; min-height: 100vh; }
+
+/* ---- Header: the logo badge, a greeting, and the tools on the right ---- */
+.app-header { position: sticky; top: 0; z-index: 40; display: flex; align-items: center; gap: var(--space-3); min-height: 6.5rem; padding: 0.75rem 1.5rem 0 0.5rem; background: var(--surface-glass-strong); -webkit-backdrop-filter: blur(var(--blur-glass)); backdrop-filter: blur(var(--blur-glass)); }
+@supports not ((backdrop-filter: blur(1px)) or (-webkit-backdrop-filter: blur(1px))) { .app-header { background: #fff; } }
+.app-badge { flex: none; display: block; width: 5.25rem; height: 5.25rem; border-radius: 50%; filter: drop-shadow(0 6px 14px rgba(48, 43, 145, 0.22)); }
+.app-badge img { display: block; width: 100%; height: 100%; }
+.app-heading { min-width: 0; flex: 1; }
+.app-title { margin: 0; font-size: 1.625rem; font-weight: var(--weight-heading); letter-spacing: -0.02em; line-height: 1.2; }
+.app-subtitle { margin: 0.125rem 0 0; font-size: 0.9375rem; color: var(--muted); }
+.app-tools { display: flex; align-items: center; gap: 0.75rem; }
+.tool-pill, .tool-circle {
+  display: inline-flex; align-items: center; justify-content: center; gap: var(--space-2);
+  height: 2.75rem; color: var(--navy); background: #fff; border: 1px solid var(--border);
+  box-shadow: var(--shadow-xs); text-decoration: none; cursor: pointer;
+  transition: background-color var(--duration-base) var(--ease), box-shadow var(--duration-base) var(--ease), transform var(--duration-base) var(--ease);
+}
+.tool-pill { padding: 0 1.1rem; font-weight: 600; border-radius: 0.95rem; }
+.tool-circle { width: 2.75rem; border-radius: 50%; color: var(--indigo); }
+.tool-pill:hover, .tool-circle:hover { color: var(--navy); background: var(--lavender-wash); box-shadow: var(--shadow-card); transform: translateY(-1px); }
+.tool-pill .icon { color: var(--indigo); }
+
+/* The account menu: an avatar and a chevron */
+.user-menu { position: relative; }
+.user-menu-button { display: inline-flex; align-items: center; gap: var(--space-2); padding: 0; color: var(--muted); background: none; border: 0; border-radius: var(--radius-pill); cursor: pointer; }
+.avatar { display: grid; place-items: center; flex: none; width: 2.9rem; height: 2.9rem; font-size: var(--text-small); font-weight: 700; color: var(--indigo); background: linear-gradient(145deg, #fff, var(--lavender)); border: 2px solid #fff; border-radius: 50%; box-shadow: var(--shadow-card); }
+.user-menu-button .icon { width: 1rem; height: 1rem; transition: transform var(--duration-base) var(--ease); }
+.user-menu-button[aria-expanded="true"] .icon { transform: rotate(180deg); }
+.user-menu-list { position: absolute; right: 0; top: calc(100% + 0.6rem); z-index: 60; min-width: 13rem; margin: 0; padding: var(--space-2); list-style: none; background: #fff; border: 1px solid var(--border); border-radius: var(--radius-md); box-shadow: var(--shadow-lift); }
+.user-menu-list li { margin: 0; }
+.user-menu-list a { display: flex; align-items: center; gap: var(--space-3); padding: var(--space-2) var(--space-3); color: var(--navy); font-weight: 600; text-decoration: none; border-radius: var(--radius-sm); }
+.user-menu-list a:hover { background: var(--lavender-wash); }
+.user-menu-list .icon { color: var(--indigo); }
+.user-menu-list form { margin: 0; }
+.user-menu-item {
+  display: flex; align-items: center; gap: var(--space-3); width: 100%; padding: var(--space-2) var(--space-3);
+  font: inherit; font-weight: 600; color: var(--navy); text-align: left; background: none; border: 0; border-radius: var(--radius-sm); cursor: pointer;
+}
+.user-menu-item:hover { background: var(--lavender-wash); }
+.user-menu-item .icon { color: var(--indigo); }
+.user-menu-who { padding: var(--space-2) var(--space-3) var(--space-3); margin-bottom: var(--space-1); border-bottom: 1px solid var(--border); }
+.user-menu-who strong { display: block; }
+.user-menu-who span { font-size: var(--text-small); color: var(--muted); }
+
+.menu-button { display: none; }
+
+/* ---- The curved rail: a white panel with an S-curve at each end, drawn from the design ---- */
+.rail {
+  position: fixed; left: 0; z-index: 50;
+  top: clamp(6.5rem, 22.4vh, 16rem); height: clamp(34rem, 55.7vh, 46rem);   /* the proportions of the approved design */
+  width: var(--rail-width);
+  display: flex; flex-direction: column;
+  filter: drop-shadow(3px 4px 7px rgba(125, 117, 238, 0.3));
+  --rail-item: clamp(2.25rem, 4vh, 2.75rem);
+}
+.rail-cap { display: block; flex: none; width: 100%; overflow: visible; }
+.rail-cap-top { height: 6rem; }
+.rail-cap-bottom { height: 7.375rem; }
+.rail-fill { fill: #fff; }
+.rail-glow { fill: none; stroke: var(--violet); stroke-width: 2; opacity: 0.32; filter: blur(0.6px); }
+.rail-glow-strong { stroke-width: 5; opacity: 0.6; filter: blur(2.5px); }
+.rail-body { flex: 1; margin-block: -1px; background: #fff; position: relative; }
+/* The violet outline is drawn by each curved cap's own SVG stroke, so the straight middle had none at all - the
+   edge simply stopped between the two curves. This carries it down the straight edge, growing from the top
+   cap's faint 2px line into the bottom cap's stronger glow so both ends meet it without a seam. */
+.rail-body::after {
+  /* The same soft glow as the two curved caps (stroke 5, opacity .6, blur 2.5), all the way down the straight edge,
+     so the outline reads as one continuous line instead of stopping and starting. */
+  content: ""; position: absolute; top: -2px; bottom: -2px; right: -2.5px; width: 5px;
+  background: var(--violet); opacity: 0.6; filter: blur(2.5px);
+}
+.rail-nav { position: absolute; inset: 4.75rem 0 5.25rem 0; }
+.rail-list { height: 100%; display: flex; flex-direction: column; justify-content: space-between; align-items: center; margin: 0; padding: 0; list-style: none; }
+.rail-list li { margin: 0; }
+.rail-link {
+  position: relative; display: grid; place-items: center; width: var(--rail-item); height: var(--rail-item);
+  color: #6B7199; text-decoration: none; border-radius: 0.95rem;
+  transition: color var(--duration-base) var(--ease), background-color var(--duration-base) var(--ease);
+}
+.rail-link .icon { width: 1.35rem; height: 1.35rem; stroke-width: 1.5; }
+.rail-link:hover { color: var(--indigo); background: var(--lavender-wash); }
+.rail-link[aria-current="page"] {
+  color: #fff; background: linear-gradient(135deg, #1B1C4A 0%, #3A3D8E 58%, #6C70CC 100%);
+  box-shadow: 0 8px 16px rgba(48, 43, 145, 0.35), inset 0 0 0 1px rgba(255, 255, 255, 0.28);
+}
+.rail-link[aria-current="page"] .icon { stroke-width: 1.7; }
+.rail-link.is-disabled { color: #7B82A8; cursor: not-allowed; }
+.rail-link.is-disabled:hover { color: #7B82A8; background: transparent; }
+.rail-label small { display: block; font-size: 0.6875rem; font-weight: 500; opacity: 0.8; }
+.rail-divider { width: 2.5rem; height: 0; border-top: 1px solid var(--navy); opacity: 0.85; }
+/* The name of each icon appears beside it on hover or keyboard focus */
+.rail-label {
+  position: absolute; left: calc(100% + 0.9rem); top: 50%; z-index: 5;
+  padding: 0.35rem 0.85rem; white-space: nowrap; font-size: var(--text-tiny); font-weight: 600;
+  color: #fff; background: var(--navy-button); border-radius: var(--radius-pill);
+  opacity: 0; pointer-events: none; transform: translate(-4px, -50%);
+  transition: opacity var(--duration-base) var(--ease), transform var(--duration-base) var(--ease);
+}
+.rail-link:hover .rail-label, .rail-link:focus-visible .rail-label { opacity: 1; transform: translate(0, -50%); }
+
+/* ---- Page area ---- */
+.app-main { padding: 0.25rem 1.5rem var(--space-7) calc(var(--rail-width) + 1.6rem); max-width: 116rem; }   /* was 100rem: left ~320px of a 1920px screen empty, unused */
+
+.drawer-backdrop { position: fixed; inset: 0; z-index: 90; background: rgba(12, 13, 53, 0.45); opacity: 0; pointer-events: none; transition: opacity var(--duration-slow) var(--ease); }
+.rail .drawer-close { display: none; }
+
+/* Phones and small tablets: the rail becomes a drawer that shows every name */
+@media (max-width: 63.99rem) {
+  .app-header { min-height: 4.75rem; gap: var(--space-2); padding: 0.5rem 1rem 0 0.75rem; }
+  .menu-button { display: inline-grid; place-items: center; flex: none; width: 2.75rem; height: 2.75rem; color: var(--indigo); background: #fff; border: 1px solid var(--border); border-radius: 50%; cursor: pointer; }
+  .app-badge { width: 3.25rem; height: 3.25rem; }
+  .app-title { font-size: 1.2rem; }
+  .app-subtitle { font-size: var(--text-small); }
+  .app-main { padding: 0.5rem 1rem var(--space-6); }
+  .rail {
+    top: 0; bottom: 0; height: auto; width: min(17rem, 86vw); padding: var(--space-6) var(--space-3) var(--space-5);
+    background: #fff; border-radius: 0 var(--radius-lg) var(--radius-lg) 0; filter: none;
+    transform: translateX(-100%); visibility: hidden; overflow-y: auto;
+    transition: transform var(--duration-slow) var(--ease), visibility 0s linear var(--duration-slow);
+  }
+  .app-shell.is-drawer-open .rail { transform: translateX(0); visibility: visible; box-shadow: var(--shadow-overlay); transition: transform var(--duration-slow) var(--ease), visibility 0s; }
+  .app-shell.is-drawer-open .drawer-backdrop { opacity: 1; pointer-events: auto; }
+  .rail-cap, .rail-body { display: none; }
+  .rail-nav { position: static; }
+  .rail-list { height: auto; align-items: stretch; gap: var(--space-1); }
+  .rail-link { width: 100%; height: 3rem; grid-template-columns: 2rem minmax(0, 1fr); justify-items: start; padding-left: var(--space-3); gap: var(--space-3); }
+  .rail-label { position: static; padding: 0; color: inherit; background: none; opacity: 1; transform: none; font-size: 0.9375rem; pointer-events: auto; }
+  .rail-divider { width: 100%; margin-block: var(--space-2); }
+  .rail .drawer-close { display: inline-grid; position: absolute; top: var(--space-3); right: var(--space-3); }
+}
+@media (max-width: 40rem) {
+  .app-tools .tool-circle { display: none; }
+  .notif-menu .tool-circle { display: inline-flex; }   /* unlike settings, the bell has no other way in on mobile */
+  .tool-pill span { display: none; }
+  .tool-pill { width: 2.75rem; padding: 0; border-radius: 50%; }
+  .app-subtitle { display: none; }
+}
+
+/* ================= SIGN-IN LAYOUT ================= */
+.auth-layout { display: grid; grid-template-columns: minmax(0, 1.05fr) minmax(0, 1fr); min-height: 100vh; }
+
+/* The brand side: the hero gradient, the logo, the kidney artwork */
+.auth-brand {
+  position: sticky; top: 0; align-self: start; height: 100vh; isolation: isolate; overflow: hidden;
+  display: flex; flex-direction: column; justify-content: space-between; gap: var(--space-5);
+  padding: clamp(1.5rem, 4.5vh, 3.25rem) clamp(2rem, 5vw, 4rem);   /* follows the window HEIGHT so it fits one screen */
+  background: linear-gradient(171deg, var(--hero-from), var(--hero-to));
+}
+.auth-logo { display: inline-flex; align-self: flex-start; padding: var(--space-3) var(--space-4); background: rgba(255, 255, 255, 0.72); border: 1px solid rgba(255, 255, 255, 0.8); border-radius: var(--radius-lg); box-shadow: var(--shadow-card); }
+.auth-logo .logo-mark { width: 3.6rem; }
+.auth-message { position: relative; z-index: 1; max-width: 30rem; }
+.auth-message h2 { font-size: clamp(1.5rem, 1.1rem + 1vw, 2.125rem); line-height: 1.15; letter-spacing: -0.025em; margin-bottom: var(--space-3); }
+.auth-message p { color: var(--body); }
+.auth-points { position: relative; z-index: 1; margin: var(--space-4) 0 0; padding: 0; list-style: none; display: grid; gap: var(--space-3); max-width: 27rem; }
+.auth-points li { display: grid; grid-template-columns: 2.75rem minmax(0, 1fr); gap: var(--space-3); align-items: center; margin: 0; padding: var(--space-2) var(--space-4); background: rgba(255, 255, 255, 0.78); border: 1px solid rgba(255, 255, 255, 0.85); border-radius: var(--radius-md); box-shadow: var(--shadow-xs); }
+.auth-points strong { display: block; }
+.auth-points div span { color: var(--muted); font-size: var(--text-small); }
+.auth-art { position: absolute; z-index: 0; right: -6%; bottom: -3%; width: min(62%, 30rem); height: auto; opacity: 0.95; pointer-events: none; }
+.auth-art-alt { right: -14%; left: auto; top: -4%; bottom: auto; transform: scaleX(-1) rotate(-6deg); width: min(46%, 22rem); opacity: 0.5; }
+@media (max-height: 52rem) { .auth-art { display: none; } .auth-message p { display: none; } }
+@media (max-height: 42rem) { .auth-points div span { display: none; } .auth-points li { padding-block: var(--space-1); } }
+
+.auth-panel { display: flex; flex-direction: column; justify-content: center; padding: clamp(1.25rem, 4.5vh, 4rem) clamp(1.5rem, 5vw, 4rem); background: var(--surface); }
+.auth-panel-inner { width: 100%; max-width: 26rem; margin-inline: auto; }
+.auth-panel-footer { margin-top: var(--space-5); }
+.auth-secondary { margin-top: var(--space-5); }
+
+@media (max-width: 56rem) {
+  .auth-layout { grid-template-columns: minmax(0, 1fr); }
+  .auth-brand { position: static; height: auto; padding: var(--space-5); gap: var(--space-4); }   /* stacked layout: nothing to keep in view while scrolling */
+  .auth-logo { padding: var(--space-2) var(--space-3); }
+  .auth-logo .logo-mark { width: 2.9rem; }
+  .auth-logo .brand-name { font-size: 1.1rem; }
+  .auth-brand .auth-points, .auth-art, .auth-message p { display: none; }
+  .auth-message h2 { font-size: 1.25rem; margin-bottom: 0; }
+}
+
+.container.flash-region { padding-top: var(--space-5); }
+@media (max-width: 40rem) {
+  .nav-link { padding: var(--space-2) var(--space-3); }
+  .nav-cta { margin-left: 0; }
+  .container { padding-inline: var(--space-4); }
+  .section { padding-block: var(--space-7); }
+  .brand .logo-mark { width: 3rem; }
+}

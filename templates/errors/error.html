@@ -1,0 +1,27 @@
+{% extends "base.html" %}
+{% from "partials/_macros.html" import icon %}
+{% block content %}
+<div class="container error-page">
+  <div>
+    <span class="badge badge-neutral error-code-badge">Error {{ status_code }}</span>
+    <h1 class="display-title">{{ error_title }}</h1>
+    <p class="text-lead">{{ error_message }}</p>
+    <ul class="error-steps">
+      {% for step in error_steps %}<li>{{ icon('chevron-right') }}<span>{{ step }}</span></li>{% endfor %}
+    </ul>
+    <div class="error-actions">
+      <a class="button button-primary" href="{{ url_for('main.home') }}">Go to the home page</a>
+      {% if status_code in (500, 503) %}<a class="button button-secondary" href="{{ request.path }}">Try again</a>{% endif %}
+    </div>
+  </div>
+  {# The logo's line, interrupted: a picture of "something did not connect". #}
+  <div class="card card-glass error-visual-card">
+  <svg class="error-visual" viewBox="0 0 400 220" fill="none" stroke-linecap="round" aria-hidden="true" focusable="false">
+    <path class="draw" pathLength="1" d="M28 150C74 150 92 86 150 96s52 42 66 34" stroke="url(#brand-line-gradient)" stroke-width="5"/>
+    <circle cx="28" cy="150" r="10" stroke="#302B91" stroke-width="4" fill="#fff"/>
+    <path d="M254 112C294 92 322 72 350 78" stroke="#8A90B2" stroke-width="5" stroke-dasharray="1 13"/>
+    <circle cx="368" cy="80" r="11" stroke="#8A90B2" stroke-width="4" stroke-dasharray="4 6"/>
+  </svg>
+  </div>
+</div>
+{% endblock %}

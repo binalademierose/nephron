@@ -1,0 +1,101 @@
+{# How Nephron works: a walkthrough that follows the reader. On wide screens a picture stays in view and changes as each
+   step scrolls past; on phones (and with no JavaScript) the same picture sits above its own step. The wording of every
+   step is the reviewed wording - the pictures are illustrations and say so. #}
+{% extends "base.html" %}
+{% from "partials/_macros.html" import icon, risk_badge, risk_meter %}
+{% from "main/_motion_visuals.html" import scene %}
+{% set steps = [
+  {'title': 'Provide your information', 'icon': 'clipboard-plus',
+   'text': 'You answer questions about your health. For enhanced screening you can also add laboratory values, typed in or read from an uploaded lab report. You review and correct every value before it is used.',
+   'note': 'You check every value before it is used'},
+  {'title': 'The model estimates your risk', 'icon': 'gauge',
+   'text': 'A trained XGBoost model returns a predicted risk probability. A threshold chosen during model validation turns that probability into a Low or High Preliminary Risk classification.',
+   'note': 'A screening estimate, never a diagnosis'},
+  {'title': 'See what affected your result', 'icon': 'bar-chart',
+   'text': 'Nephron shows which of your answers moved the model\'s estimate the most, and whether each one raised or lowered it. This explains how the model calculated your result. It does not explain the cause of any person\'s condition.',
+   'note': 'It explains the model, not the cause of a condition'},
+  {'title': 'Share for review, if you choose', 'icon': 'shield-check',
+   'text': 'You decide which healthcare professional sees an assessment, and you agree before anything is sent. Their review and any follow-up are kept separate from the model\'s result, and you can end access at any time.',
+   'note': 'Nothing is shared without your yes'},
+  {'title': 'Screen again later', 'icon': 'calendar',
+   'text': 'Each new assessment is saved as its own record, so you can compare results over time. Follow-up appointments a professional schedules, and your own checklist, are kept in one place.',
+   'note': 'Every assessment stays its own record'},
+] %}
+{% block content %}
+<div class="container section-tight">
+  <div class="reading-width about-intro">
+    <h1 class="display-title" data-animate>How Nephron works</h1>
+    <p class="text-lead" data-animate style="--d: 1">Nephron is a screening and decision-support tool. It estimates risk; it never diagnoses.</p>
+  </div>
+
+  <section class="walk" data-walk aria-labelledby="steps-heading">
+    <h2 id="steps-heading" class="walk-heading">From your information to a reviewed result</h2>
+    <div class="walk-stage-col" aria-hidden="true">
+      <div class="walk-stage">
+        <div class="walk-stage-meta"><span data-walk-counter>Step 1 of {{ steps|length }}</span><span class="walk-stage-title" data-walk-title>{{ steps[0].title }}</span></div>
+        {% for step in steps %}
+        <div class="walk-scene{{ ' is-active is-in' if loop.first }}" data-walk-scene>{{ scene(loop.index) }}</div>
+        {% endfor %}
+        <div class="walk-dots">{% for step in steps %}<span class="walk-dot{{ ' is-active' if loop.first }}" data-walk-dot></span>{% endfor %}</div>
+      </div>
+    </div>
+    <ol class="walk-steps">
+      {% for step in steps %}
+      <li class="walk-step{{ ' is-active' if loop.first }}" data-walk-step data-step-title="{{ step.title }}">
+        <div class="walk-inline" data-animate="fade-in" aria-hidden="true">{{ scene(loop.index) }}</div>
+        <div class="walk-card" data-animate>
+          <span class="walk-num" aria-hidden="true">{{ icon(step.icon) }}</span>
+          <p class="walk-kicker">Step {{ loop.index }} of {{ steps|length }}</p>
+          <h3>{{ step.title }}</h3>
+          <p>{{ step.text }}</p>
+          <p class="walk-note">{{ icon('check-circle') }}{{ step.note }}</p>
+        </div>
+      </li>
+      {% endfor %}
+    </ol>
+  </section>
+
+  <section class="about-read" aria-labelledby="terms-heading">
+    <div class="about-read-example" data-animate>
+      <h2 id="terms-heading">Reading a result</h2>
+      <div class="card card-soft">
+        <div class="example-head">
+          {{ risk_badge('low', large=True) }}
+          <span class="badge badge-neutral">Illustration</span>
+        </div>
+        {{ risk_meter(14, 32, 'low', illustration=True) }}
+        <p class="example-caption">The round marker is the predicted risk probability. The vertical line is the model's validated threshold. This picture is an illustration, not a real result.</p>
+      </div>
+    </div>
+    <dl class="term-list" data-stagger>
+      <div class="term-row" data-animate>
+        <dt>Predicted risk probability</dt>
+        <dd>The model's estimate, as a percentage, that an assessment belongs to the high-risk group.</dd>
+      </div>
+      <div class="term-row" data-animate>
+        <dt>Low or High Preliminary Risk</dt>
+        <dd>The group the probability falls into, using the model's validated threshold.</dd>
+      </div>
+      <div class="term-row" data-animate>
+        <dt>Explainable risk factors</dt>
+        <dd>The answers that moved your own estimate the most, up or down.</dd>
+      </div>
+    </dl>
+  </section>
+
+  <section class="section-tight" aria-labelledby="limits-heading">
+    <div class="notice" data-animate>
+      {{ icon('info') }}
+      <div>
+        <h2 id="limits-heading">What Nephron does not do</h2>
+        <p>{{ MEDICAL_DISCLAIMER }}</p>
+        <ul>
+          <li>It does not diagnose or confirm chronic kidney disease.</li>
+          <li>It does not replace a physician or make clinical decisions.</li>
+          <li>Values read from a laboratory document are extracted text. They are not medically verified.</li>
+        </ul>
+      </div>
+    </div>
+  </section>
+</div>
+{% endblock %}
