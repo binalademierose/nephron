@@ -6,10 +6,11 @@ person of the other role who opens it gets "Access not allowed".
 """
 from datetime import timedelta
 
-from flask import Blueprint, current_app, flash, g, redirect, render_template, request, url_for
+from flask import Blueprint, current_app, flash, g, redirect, render_template, request, session, url_for
 
 from routes.auth_hooks import start_session
 from routes.decorators import login_required, role_required
+from services.security import verify_password
 from services import activity, assessments, auth_service, checklist, ckd_facts, clock, community_stats, followups, professional_overview, reassessment, screening_contract, screening_drafts, security, visuals
 from services.assessment_store import get_assessment_store
 from services.checklist_store import get_checklist_store
@@ -153,3 +154,45 @@ def change_password():
         else:
             errors["current_password"] = "That is not your current password."
     return render_template("account/settings.html", page_title="Your account", errors=errors)
+
+
+@account_bp.route("/account/deactivate", methods=["POST"])
+@role_required("general", "professional")
+def deactivate_account():
+    """Switch off your own account. Your data is kept; you cannot sign in again until an administrator reactivates
+    it. The password is re-checked so a borrowed, signed-in device cannot deactivate the account."""
+    password = request.form.get("password") or ""
+    me = get_user_store().find_by_id(g.user["user_id"])
+    if not me or not verify_password(me["password_hash"], password):
+        return render_template("account/settings.html", page_title="Your account", errors={},
+                               danger_error="deactivate", danger_message="That is not your current password."), 200
+    get_user_store().set_active(g.user["user_id"], False)
+    activity.record("account_self_deactivated", g.user["user_id"], g.user["user_id"])
+    current_app.logger.info("Account self-deactivated (user_id=%s)", g.user["user_id"])
+    session.clear()
+    flash("Your account has been deactivated. Contact the administrator if you want it switched back on.", "success")
+    return redirect(url_for("auth.login"))
+
+
+@account_bp.route("/account/delete", methods=["POST"])
+@role_required("general", "professional")
+def delete_account():
+    """Permanently delete your own account and your own data. Requires the password and an explicit confirmation.
+    This cannot be undone."""
+    password = request.form.get("password") or ""
+    confirmed = (request.form.get("confirm_delete") or "").strip().lower() in ("on", "yes", "true", "1", "delete")
+    me = get_user_store().find_by_id(g.user["user_id"])
+    if not me or not verify_password(me["password_hash"], password):
+        return render_template("account/settings.html", page_title="Your account", errors={},
+                               danger_error="delete", danger_message="That is not your current password."), 200
+    if not confirmed:
+        return render_template("account/settings.html", page_title="Your account", errors={},
+                               danger_error="delete", danger_message="Tick the box to confirm you want to permanently delete your account."), 200
+    user_id = g.user["user_id"]
+    # Record the audit entry before the row is gone (the log keeps it, with the person's id set to NULL afterwards).
+    activity.record("account_self_deleted", user_id, user_id)
+    current_app.logger.info("Account self-deleted (user_id=%s)", user_id)
+    get_user_store().delete_user(user_id)
+    session.clear()
+    flash("Your account and your data have been permanently deleted.", "success")
+    return redirect(url_for("main.home"))
