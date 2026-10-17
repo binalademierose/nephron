@@ -11,6 +11,7 @@ LABELS = {
     "signed_in": "Signed in", "sign_in_failed": "Failed sign-in", "signed_out": "Signed out",
     "registered": "Created an account", "password_changed": "Changed their password",
     "account_deactivated": "Switched an account off", "account_reactivated": "Switched an account on",
+    "account_self_deactivated": "Deactivated their own account", "account_self_deleted": "Deleted their own account",
     "professional_verified": "Verified a professional", "professional_rejected": "Marked a professional not verified",
     "password_reset": "Reset a password",
     "location_updated": "Updated where they live", "research_export": "Downloaded de-identified screening data",
