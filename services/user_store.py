@@ -103,6 +103,12 @@ class MySQLUserStore:
     def set_active(self, user_id, is_active):
         db.execute("UPDATE users SET is_active = %s WHERE user_id = %s", (1 if is_active else 0, user_id))
 
+    def delete_user(self, user_id):
+        """Permanently remove this account. Every table that stores this person's own data has an ON DELETE CASCADE
+        foreign key to users, so a single DELETE removes it all; references made BY others (clinical reviews a
+        professional wrote, the activity log) are set to NULL and kept."""
+        db.execute("DELETE FROM users WHERE user_id = %s", (user_id,))
+
     def set_must_change(self, user_id, must_change):
         db.execute("UPDATE users SET must_change_password = %s WHERE user_id = %s", (1 if must_change else 0, user_id))
 
@@ -212,6 +218,9 @@ class MemoryUserStore:
 
     def set_active(self, user_id, is_active):
         self._users[user_id]["is_active"] = bool(is_active)
+
+    def delete_user(self, user_id):
+        self._users.pop(user_id, None)
 
     def set_must_change(self, user_id, must_change):
         self._users[user_id]["must_change_password"] = bool(must_change)
