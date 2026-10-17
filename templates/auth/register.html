@@ -17,7 +17,7 @@
 {% endblock %}
 
 {% block content %}
-{% set field_order = ['role', 'full_name', 'email', 'username', 'date_of_birth', 'country', 'password', 'confirm_password', 'avatar', 'profession_title', 'institution', 'license_number'] %}
+{% set field_order = ['role', 'full_name', 'email', 'username', 'date_of_birth', 'country', 'password', 'confirm_password', 'avatar', 'profession_title', 'institution', 'license_number', 'agree_terms'] %}
 {% set failing = field_order | select('in', errors) | list %}
 {% set first_error = failing[0] if failing else '' %}
 <h1>Create your account</h1>
@@ -159,8 +159,16 @@
   </div>
 
   <p class="form-helper data-use-note">{{ icon('shield-check') }}How your screening answers are used: to give you your result, and - with your name, contact details, gender and location removed - to help improve Nephron's model. Where you live is shown to local health officials only as totals per place, never with your name.</p>
+
+  <div class="form-group agree-group">
+    <label class="agree-check" for="agree_terms">
+      <input type="checkbox" id="agree_terms" name="agree_terms" value="agree" {{ 'checked' if form.get('agree_terms') }} required aria-describedby="agree_terms-error"{{ ' aria-invalid="true"'|safe if errors.get('agree_terms') }}>
+      <span>I have read and agree to the <a href="{{ url_for('main.terms') }}" target="_blank" rel="noopener">Terms &amp; Conditions</a> <span class="chip chip-required">Required</span></span>
+    </label>
+    {{ field_error(errors, 'agree_terms') }}
+  </div>
+
   <button class="button button-primary button-block" type="submit" data-loading-text="Creating account...">Create account</button>
-  <p class="form-helper text-small text-muted">By creating an account, you agree to our <a href="{{ url_for('main.terms') }}">Terms &amp; Conditions</a>.</p>
 </form>
 <p class="text-small auth-secondary">Already have an account? <a href="{{ url_for('auth.login') }}">Sign in</a></p>
 {% endblock %}
