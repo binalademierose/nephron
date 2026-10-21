@@ -4,9 +4,13 @@
    Note: use explanation["raises"], because explanation.items would be the dictionary's own method. #}
 {% from "partials/_macros.html" import icon %}
 {% from "partials/_visuals.html" import icon_chip, sample_tag %}
+{# explain_for_professional: set by the professional pages, so the headings speak about the patient, not to them. #}
+{% set for_professional = explain_for_professional|default(false) %}
+{% set whose = 'the' if for_professional else 'your' %}
+{% set answer_label = 'Answer' if for_professional else 'Your answer' %}
 <div class="explain-grid">
   {% if explanation %}
-  {% for kind, title, chip in (('raises', 'What raised your estimate', 'red'), ('lowers', 'What lowered your estimate', 'green')) %}
+  {% for kind, title, chip in (('raises', 'What raised ' ~ whose ~ ' estimate', 'red'), ('lowers', 'What lowered ' ~ whose ~ ' estimate', 'green')) %}
   {% set items = explanation[kind] %}
   <section class="card explain-card explain-{{ kind }} reveal" style="--i: {{ loop.index + 1 }};" aria-labelledby="explain-{{ kind }}-heading">
     <div class="card-header">
@@ -18,7 +22,7 @@
       {% for item in items %}
       <li class="factor factor-explained {{ 'factor-up' if kind == 'raises' else 'factor-down' }}">
         <span class="factor-rank" aria-hidden="true">{{ loop.index }}</span>
-        <span class="factor-name">{{ item.label }}<small class="factor-answer">Your answer: {{ item.answer }}</small></span>
+        <span class="factor-name">{{ item.label }}<small class="factor-answer">{{ answer_label }}: {{ item.answer }}</small></span>
         <span class="factor-bar" role="img" aria-label="Rank {{ loop.index }}. {{ 'Raised' if kind == 'raises' else 'Lowered' }} the estimate. Effect size {{ item.share }} percent of the biggest effect."><span class="factor-fill" style="--share: {{ item.share }}; --order: {{ loop.index0 }};"></span></span>
       </li>
       {% endfor %}
@@ -37,7 +41,7 @@
   {% else %}
   <section class="card explain-unavailable reveal" style="--i: 2;" aria-labelledby="explain-heading">
     <div class="card-header">
-      <h2 class="card-title" id="explain-heading">What affected your result</h2>
+      <h2 class="card-title" id="explain-heading">What affected {{ whose }} result</h2>
       {% if is_sample %}<span class="card-tags">{{ sample_tag() }}</span>{% endif %}
     </div>
     <div class="empty-state">
