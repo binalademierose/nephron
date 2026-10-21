@@ -273,6 +273,7 @@
 
     function setDrawer(open) {
       shell.classList.toggle("is-drawer-open", open);
+      document.documentElement.classList.toggle("has-drawer-open", open);
       toggles.forEach(function (button) { button.setAttribute("aria-expanded", String(open)); });
       if (open) {
         content.setAttribute("inert", "");
@@ -296,6 +297,7 @@
     desktop.addEventListener("change", function (event) {
       if (event.matches && shell.classList.contains("is-drawer-open")) {
         shell.classList.remove("is-drawer-open");
+        document.documentElement.classList.remove("has-drawer-open");
         content.removeAttribute("inert");
       }
     });
