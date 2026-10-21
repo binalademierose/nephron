@@ -174,13 +174,17 @@ a.brand, a.footer-logo, a.auth-logo, .logo-lockup { text-decoration: none; }
   .app-subtitle { font-size: var(--text-small); }
   .app-main { padding: 0.5rem 1rem var(--space-6); }
   .rail {
-    top: 0; bottom: 0; height: auto; width: min(17rem, 86vw); padding: var(--space-6) var(--space-3) var(--space-5);
+    /* Above the backdrop (z-index 90). At the desktop value (50) the backdrop covered the open drawer, so every
+       tap landed on the backdrop - which closes the drawer - and no menu link could ever be followed. */
+    z-index: 100;
+    top: 0; bottom: 0; height: auto; width: min(17rem, 86vw); padding: 4.25rem var(--space-3) var(--space-5);   /* room for the close button above the first link */
     background: #fff; border-radius: 0 var(--radius-lg) var(--radius-lg) 0; filter: none;
     transform: translateX(-100%); visibility: hidden; overflow-y: auto;
     transition: transform var(--duration-slow) var(--ease), visibility 0s linear var(--duration-slow);
   }
   .app-shell.is-drawer-open .rail { transform: translateX(0); visibility: visible; box-shadow: var(--shadow-overlay); transition: transform var(--duration-slow) var(--ease), visibility 0s; }
   .app-shell.is-drawer-open .drawer-backdrop { opacity: 1; pointer-events: auto; }
+  html.has-drawer-open, html.has-drawer-open body { overflow: hidden; }   /* the page behind stays put while the menu is open */
   .rail-cap, .rail-body { display: none; }
   .rail-nav { position: static; }
   .rail-list { height: auto; align-items: stretch; gap: var(--space-1); }
@@ -190,6 +194,13 @@ a.brand, a.footer-logo, a.auth-logo, .logo-lockup { text-decoration: none; }
   .rail .drawer-close { display: inline-grid; position: absolute; top: var(--space-3); right: var(--space-3); }
 }
 @media (max-width: 40rem) {
+  /* Phones: the page title gets its own row under the menu button, logo and tools - squeezed between them it
+     broke over four lines and ran under the help button. */
+  .app-header { flex-wrap: wrap; row-gap: 0.35rem; padding-bottom: 0.6rem; }
+  .app-badge { width: 2.75rem; height: 2.75rem; }
+  .app-tools { margin-left: auto; }
+  .app-heading { order: 3; flex: 1 1 100%; }
+  .app-title { font-size: 1.15rem; }
   .app-tools .tool-circle { display: none; }
   .notif-menu .tool-circle { display: inline-flex; }   /* unlike settings, the bell has no other way in on mobile */
   .tool-pill span { display: none; }
