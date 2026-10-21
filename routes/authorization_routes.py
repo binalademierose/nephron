@@ -11,6 +11,7 @@ side of accepting, declining, viewing, and ending it.
     GET  /patients                      pending requests to answer, and your authorized patients
     POST /patients/respond/<patient_id> accept or decline a pending request
     GET  /patients/<patient_id>         that patient's full assessment history (only if 'accepted' right now)
+    GET  /patients/<patient_id>/assessments/<assessment_id>  one shared result with its answers and factors
     POST /patients/revoke/<patient_id>  end an accepted authorization from this side
 
 Every route re-checks authorizations.is_authorized() itself before showing anything - never trusts a page having
@@ -21,7 +22,7 @@ from flask import Blueprint, abort, current_app, flash, g, redirect, render_temp
 from routes.decorators import role_required
 from datetime import date, datetime
 
-from services import assessments, authorizations, clinical_reviews, clock, consents, followup_appointments, followups, followup_calendar, notifications, professional_overview
+from services import assessments, authorizations, clinical_reviews, clock, consents, explanations, followup_appointments, followups, followup_calendar, notifications, professional_overview, result_details
 from services.assessment_store import get_assessment_store
 from services.authorization_store import get_authorization_store
 from services.clinical_review_store import get_clinical_review_store
@@ -189,6 +190,37 @@ def patient_history(patient_id):
     return render_template("authorizations/patient_history.html", selected_assessment_id=selected_assessment_id, page_title=f"{patient['full_name']}'s history",
                            patient=patient, records=records, reviews_by_assessment=reviews_by_assessment, open_follow_up=open_follow_up,
                            appointments=appointments)
+
+
+@authorization_bp.route("/patients/<int:patient_id>/assessments/<int:assessment_id>")
+@role_required("professional")
+def shared_result(patient_id, assessment_id):
+    """One shared result in full: the answers behind it and what raised or lowered the estimate - what the person
+    agreed to share ("the answers and lab values behind it", templates/authorizations/_consent_template.html).
+    The same detail a professional sees for a patient they recorded themselves (services/result_details.py)."""
+    if not authorizations.is_authorized(get_authorization_store(), patient_id, g.user["user_id"]):
+        abort(404)                                     # not authorized, or no such patient: the same answer
+    patient = get_user_store().find_by_id(patient_id)
+    if patient is None:
+        abort(404)
+    zone = current_app.config["APP_TIMEZONE"]
+    store = get_assessment_store()
+    row = store.get_assessment(patient_id, assessment_id)   # looked up within THIS patient only: another person's id is a 404
+    if row is None:
+        abort(404)
+    result = assessments.to_record(row, zone)
+    all_rows = assessments.load_records(store, patient_id, zone)
+    older = [r for r in all_rows if r["assessment_id"] != assessment_id and (r["date"], r["assessment_id"]) <= (result["date"], assessment_id)]
+    reviews = clinical_reviews.for_assessments(get_clinical_review_store(), [assessment_id]).get(assessment_id, [])
+    for review in reviews:
+        review["date"] = clock.to_local_date(review["created_at"], zone)
+    details = result_details.describe(row, current_app.extensions["catalog"], current_app.extensions["model_service"],
+                                      current_app.extensions["model_service_stage2"])
+    return render_template("authorizations/shared_result.html", page_title=f"{patient['full_name']}'s result",
+                           patient=patient, result=result, level=result["level"], threshold=result["threshold"],
+                           previous=older[0] if older else None, reviews=reviews,
+                           answers=details["answers"], explanation=details["explanation"], outside=details["outside"],
+                           explanation_unavailable=explanations.UNAVAILABLE, explain_for_professional=True)
 
 
 def _parse_local_datetime(form, zone):
