@@ -73,7 +73,7 @@
             {% if row.patient.source == 'record' %}
             <a class="button button-secondary button-sm" href="{{ url_for('patient_records.risk_analysis', patient_code=row.patient.patient_code, assessment_id=row.assessment_id) }}">View</a>
             {% else %}
-            <a class="button button-secondary button-sm" href="{{ url_for('authorization.patient_history', patient_id=row.patient.user_id) }}">View</a>
+            <a class="button button-secondary button-sm" href="{{ url_for('authorization.shared_result', patient_id=row.patient.user_id, assessment_id=row.assessment_id) }}">View</a>
             {% endif %}
           </td>
         </tr>

@@ -2,4 +2,5 @@
 {% extends "layouts/app_base.html" %}
 {% set active_nav = 'overview' %}
 {% block body_class %}app-body has-aside{% endblock %}
+{% block scripts %}<script src="{{ url_for('static', filename='js/checklist.js') }}" defer></script>{% endblock %}
 {% block content %}{% include "dashboard/_overview.html" %}{% endblock %}

@@ -1,10 +1,10 @@
 {# The Professional Dashboard - built on the exact same visual language as the General User dashboard
    (templates/dashboard/_overview.html): a hero card with the same kidney artwork, the same .stat-card /
-   .dash-row / .dash-aside structure, and the same profile/quick-actions/recent-activity panel on the right.
+   .dash-row / .dash-aside structure, and the same kidney-facts + recent-activity column on the right.
    Every number is worked out fresh by services/professional_overview.py - never invented. #}
 {% extends "layouts/app_base.html" %}
-{% from "partials/_macros.html" import icon, csrf_field, risk_badge, avatar_face %}
-{% from "partials/_visuals.html" import icon_chip, donut, fact_ring_card, fact_mini_rings, fact_sex_differences, community_risk_card, gender_count_plot, community_cards %}
+{% from "partials/_macros.html" import icon, csrf_field, risk_badge %}
+{% from "partials/_visuals.html" import icon_chip, donut, fact_ring_card, fact_mini_rings, fact_sex_differences, community_risk_card, gender_count_plot, community_cards, ckd_facts_panel %}
 {% set active_nav = 'overview' %}
 {% block header_title %}Home{% endblock %}
 {% block header_subtitle %}Welcome back, {{ current_user.first_name }}.{% endblock %}
@@ -160,40 +160,18 @@
     {% endif %}
   </div>
 
-  {# ---- Patient insights: your own patients' risk, sex, and age - never a population statistic. Same ring
-     macros ckd_facts uses on the patient dashboard, with "source" naming your own records instead of a citation. ---- #}
-
-
-  {# One right-hand column: profile, quick actions and recent activity, then the facts beneath them -
-     so the page has two columns that end level, not three that each stop at a different height. #}
+  {# One right-hand column: the sourced kidney-health facts for the Philippines (services/ckd_facts.py), then recent
+     activity, so the two columns end level. #}
   <div class="dash-side">
-  {# ---- The right-hand panel: same structure as the patient dashboard's profile / quick actions / activity ---- #}
-  <aside class="dash-aside reveal" style="--i: 2;" aria-label="Profile and quick actions">
-    <div class="aside-top">
-      <a class="profile-row" href="{{ url_for('account.settings') }}">
-        <span class="profile-avatar{{ ' has-image' if current_user.get('avatar') }}" aria-hidden="true">{{ avatar_face(current_user) }}</span>
-        <span class="profile-text"><span class="profile-name">{{ current_user.full_name }}</span><span class="profile-role">{{ current_user.role_label }}</span></span>
-        {{ icon('chevron-right') }}
-      </a>
-      <figure class="quote-card">{{ icon('kidneys') }}<blockquote><p>&ldquo;Early screening turns a diagnosis into a conversation.&rdquo;</p></blockquote></figure>
-    </div>
+  {% if ckd_facts %}{{ ckd_facts_panel(ckd_facts, note="General figures for the Philippines, not about any one patient.") }}{% endif %}
 
-    <section class="aside-section" aria-labelledby="quick-heading">
-      <h2 id="quick-heading">Quick Actions</h2>
-      <ul class="quick-list">
-        <li><a class="quick-action is-primary" href="{{ url_for('patient_records.new_assessment') }}">{{ icon_chip('clipboard-check', 'lavender', 'icon-chip-sm') }}New Assessment{{ icon('arrow-right') }}</a></li>
-        <li><a class="quick-action" href="{{ url_for('patient_records.index') }}">{{ icon_chip('users', 'lavender', 'icon-chip-sm') }}View Patients{{ icon('arrow-right') }}</a></li>
-        <li><a class="quick-action" href="{{ url_for('patient_records.reports') }}">{{ icon_chip('file-lines', 'lavender', 'icon-chip-sm') }}View Reports{{ icon('arrow-right') }}</a></li>
-        <li><a class="quick-action" href="{{ url_for('account.professional_search') }}">{{ icon_chip('search', 'lavender', 'icon-chip-sm') }}Search{{ icon('arrow-right') }}</a></li>
-      </ul>
-    </section>
-
-    <section class="aside-section" aria-labelledby="side-activity-heading">
+  <aside class="dash-aside reveal" style="--i: 3;" aria-labelledby="side-activity-heading">
+    <section class="aside-section aside-section-first">
       <h2 id="side-activity-heading">Recent Activity</h2>
       {% if overview.recent_assessments %}
       <ul class="activity-list">
         {% for row in overview.recent_assessments[:4] %}
-        {% set url = url_for('patient_records.risk_analysis', patient_code=row.patient.patient_code, assessment_id=row.assessment_id) if row.patient.source == 'record' else url_for('authorization.patient_history', patient_id=row.patient.user_id) %}
+        {% set url = url_for('patient_records.risk_analysis', patient_code=row.patient.patient_code, assessment_id=row.assessment_id) if row.patient.source == 'record' else url_for('authorization.shared_result', patient_id=row.patient.user_id, assessment_id=row.assessment_id) %}
         <li class="activity-item activity-{{ row.level }}">
           {{ icon_chip('clipboard-check', 'green' if row.level == 'low' else 'red') }}
           <span><a class="activity-title activity-link" href="{{ url }}">{{ row.patient.display_name }}</a><span class="activity-meta">{{ level_label(row.level, row.assessment_type) }} &middot; {{ format_date(row.date) }}</span></span>
