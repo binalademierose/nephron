@@ -4,7 +4,9 @@
 {% extends "layouts/app_base.html" %}
 {% from "followup/_calendar.html" import month_calendar with context %}
 {% from "partials/_macros.html" import icon, csrf_field %}
+{% from "partials/_checklist.html" import kidney_checklist %}
 {% set active_nav = 'follow-up' %}
+{% block scripts %}<script src="{{ url_for('static', filename='js/checklist.js') }}" defer></script>{% endblock %}
 {% block header_title %}Follow-up{% endblock %}
 {% block header_subtitle %}Appointments a professional has scheduled for you, and your personal kidney-health checklist.{% endblock %}
 
@@ -42,36 +44,12 @@
   {% endif %}
 </section>
 
-<section class="card reveal" style="--i: 3;" aria-labelledby="checklist-heading">
-  <div class="card-header">
-    <h2 class="card-title" id="checklist-heading">{{ icon('heart') }}Your kidney-health checklist</h2>
-    {% if checklist_total %}<span class="card-tags">{{ checklist_done }} of {{ checklist_total }} done</span>{% endif %}
-  </div>
-  {% if not has_assessment %}
+{% if checklist_groups %}
+{{ kidney_checklist(checklist_groups, checklist_done, checklist_total, url_for('followup.index')) }}
+{% else %}
+<section class="card reveal" style="--i: 3;" id="checklist" aria-labelledby="checklist-heading">
+  <div class="card-header"><h2 class="card-title" id="checklist-heading">{{ icon('heart') }}Your kidney-health checklist</h2></div>
   <p class="empty-inline">{{ icon('info') }}Complete a screening to get your own personalized checklist.</p>
-  {% elif checklist_groups %}
-  {% if checklist_total %}
-  <div class="progress-bar checklist-progress" role="progressbar" aria-valuemin="0" aria-valuemax="{{ checklist_total }}" aria-valuenow="{{ checklist_done }}"><span class="progress-bar-fill" style="--progress: {{ (checklist_done / checklist_total * 100)|round|int }}%"></span></div>
-  {% endif %}
-  {% for group in checklist_groups %}
-  <div class="checklist-group">
-    <h3 class="checklist-category">{{ group.category_label }} <span class="text-muted">({{ group.done_count }}/{{ group.total_count }})</span></h3>
-    <ul class="checklist-list">
-      {% for tip in group.tips %}
-      <li class="checklist-item{{ ' is-done' if tip.is_complete }}">
-        <form method="post" action="{{ url_for('followup.toggle_checklist_item', tip_id=tip.id) }}">
-          {{ csrf_field() }}
-          <input type="hidden" name="is_complete" value="{{ '0' if tip.is_complete else '1' }}">
-          <button type="submit" class="checklist-check" aria-pressed="{{ 'true' if tip.is_complete else 'false' }}" aria-label="{{ 'Mark not done' if tip.is_complete else 'Mark done' }}">
-            {{ icon('check') if tip.is_complete else '' }}
-          </button>
-        </form>
-        <span class="checklist-text">{{ tip.text }}</span>
-      </li>
-      {% endfor %}
-    </ul>
-  </div>
-  {% endfor %}
-  {% endif %}
 </section>
+{% endif %}
 {% endblock %}
