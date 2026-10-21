@@ -165,7 +165,7 @@ class RiskAnalysisTests(AppTestCase):
     def test_the_owning_professional_sees_the_real_result(self):
         page = self.text(self.professional.get(self.result_url))
         self.assertIn("Risk Classification", page)
-        self.assertIn("What raised your estimate", page)
+        self.assertIn("What raised the estimate", page)          # worded for the professional, not "your estimate"
 
     def test_a_different_professional_gets_404(self):
         self.assertEqual(self.other.get(self.result_url).status_code, 404)

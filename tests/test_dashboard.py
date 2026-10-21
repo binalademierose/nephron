@@ -61,7 +61,7 @@ class EmptyDashboardTests(AppTestCase):
         # "Kidney health, by the numbers" always draws its own rings - real, sourced population statistics
         # (services/ckd_facts.py), never a claim about this person's data - so it is excluded here, not exempted
         # from the real check (test_ckd_facts.py checks every one of its figures carries a source).
-        without_ckd_facts = re.sub(r'<aside class="dash-ckd[^>]*aria-labelledby="ckd-facts-heading".*?</aside>', "", self.page, flags=re.S)
+        without_ckd_facts = re.sub(r'<section class="ckd-side[^>]*aria-labelledby="ckd-facts-heading".*?</section>', "", self.page, flags=re.S)
         self.assertIn("ckd-facts-heading", self.page)
         self.assertNotIn("ckd-facts-heading", without_ckd_facts)
         for drawn in ('class="chart-line"', 'class="ring-value"', "donut-segment", "timeline-item timeline-",
@@ -78,7 +78,7 @@ class EmptyDashboardTests(AppTestCase):
         # "Kidney health, by the numbers" is real, sourced, population-level statistics (services/ckd_facts.py) -
         # not a claim about this person's own data, so it is excluded here, not exempted from the real check
         # elsewhere (test_ckd_facts.py checks every one of its figures carries a source).
-        without_ckd_facts = re.sub(r'<aside class="dash-ckd[^>]*aria-labelledby="ckd-facts-heading".*?</aside>', "", without_axis, flags=re.S)
+        without_ckd_facts = re.sub(r'<section class="ckd-side[^>]*aria-labelledby="ckd-facts-heading".*?</section>', "", without_axis, flags=re.S)
         self.assertIn("ckd-facts-heading", without_axis)              # sanity: the section is really there to strip
         self.assertNotIn("ckd-facts-heading", without_ckd_facts)      # sanity: the strip actually worked
         self.assertNotRegex(without_ckd_facts, r"\b\d+(\.\d+)?\s*%")                # no OTHER percentage appears without a result
@@ -108,8 +108,9 @@ class EmptyDashboardTests(AppTestCase):
                 self.assertEqual(self.member.get(href).status_code, 200, f"{href} is not a real page")
         self.assertNotIn("data-preview-link", self.page)                    # that belongs to the design previews only
         # Only what really cannot work yet stays disabled here (screening itself, while the model is not ready);
-        # "Tips for healthy kidneys" now links to the real kidney-health checklist, so it is no longer one of them.
-        self.assertGreaterEqual(len(links.disabled), 3)
+        # "Tips for healthy kidneys" now links to the real kidney-health checklist, so it is no longer one of them,
+        # and the quick-actions panel (which repeated the start button) has been replaced by the kidney facts.
+        self.assertGreaterEqual(len(links.disabled), 2)
         for tag, has_href in links.disabled:
             self.assertFalse(has_href, "an unavailable control must not carry an address")
 
@@ -237,7 +238,8 @@ class DatabaseDownTests(unittest.TestCase):
         client.post("/register", data={"csrf_token": token, "role": "general", "full_name": "Ana Reyes",
                                        "email": "ana@example.com", "password": "a-long-enough-phrase",
                                        "confirm_password": "a-long-enough-phrase", "username": "ana_r_debug",
-                                       "date_of_birth": "1990-05-14", "avatar": "avatar-1", "country": "Other"})
+                                       "date_of_birth": "1990-05-14", "avatar": "avatar-1", "country": "Other",
+                                       "agree_terms": "agree"})
         response = client.get("/dashboard")
         page = response.get_data(as_text=True)
         self.assertEqual(response.status_code, 503)

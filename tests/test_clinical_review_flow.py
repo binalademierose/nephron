@@ -109,7 +109,9 @@ class FollowUpEligibilityTests(ReviewAndFollowUpTestCase):
     model = "explainable"
 
     def test_an_open_follow_up_lets_the_patient_screen_again_during_the_normal_waiting_period(self):
-        self.app.config["REASSESSMENT_DAYS"] = 30
+        # The sample result is dated 18 Sep 2026 (helpers.add_assessment). A 30-day wait made this test expire on
+        # 18 Oct 2026; a waiting period of ten years keeps "still inside the waiting period" true whatever today is.
+        self.app.config["REASSESSMENT_DAYS"] = 3650
         page = self.text(self.patient.get("/screening"))
         self.assertIn("not open yet", page)                          # normally blocked
         self.post(f"/patients/{self.patient_id}/follow-up", {"message": ""}, client=self.professional, token_from=f"/patients/{self.patient_id}")

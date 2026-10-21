@@ -14,7 +14,7 @@ from services import validation  # noqa: E402
 def good_form(**changes):
     form = {"role": "general", "full_name": "Ana Reyes", "email": "ana@example.com", "password": "a-long-enough-phrase",
            "confirm_password": "a-long-enough-phrase", "username": "ana_r", "date_of_birth": "1990-05-14", "country": "Philippines", "province_code": "1300000000",
-           "address": "", "avatar": "avatar-1"}
+           "address": "", "avatar": "avatar-1", "agree_terms": "agree"}
     form.update(changes)
     return form
 
@@ -96,7 +96,7 @@ class RegistrationTests(unittest.TestCase):
 
     def test_every_field_is_checked_and_errors_are_named_by_field(self):
         _, errors = validation.validate_registration({"role": "", "full_name": "", "email": "nope", "password": "x"})
-        self.assertEqual(set(errors), {"role", "full_name", "email", "password", "confirm_password", "username", "date_of_birth", "avatar"})
+        self.assertEqual(set(errors), {"role", "full_name", "email", "password", "confirm_password", "username", "date_of_birth", "avatar", "agree_terms"})
 
     def test_role_can_only_be_one_of_two_values(self):
         for forged in ("admin", "administrator", "GENERAL", "", "general,professional"):

@@ -385,7 +385,7 @@ class DataHonestyTests(unittest.TestCase):
             self.assertIn(words, html)
         # "Kidney health, by the numbers" always draws its own rings - population statistics, not this person's
         # data (see the equivalent note in tests/test_dashboard.py) - so it is excluded here.
-        without_ckd_facts = re.sub(r'<aside class="dash-ckd[^>]*aria-labelledby="ckd-facts-heading".*?</aside>', "", html, flags=re.S)
+        without_ckd_facts = re.sub(r'<section class="ckd-side[^>]*aria-labelledby="ckd-facts-heading".*?</section>', "", html, flags=re.S)
         self.assertIn("ckd-facts-heading", html)
         self.assertNotIn("ckd-facts-heading", without_ckd_facts)
         for drawn in ('class="chart-line"', 'class="ring-value"', "donut-segment", "timeline-item timeline-", "activity-item",

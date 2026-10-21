@@ -57,7 +57,7 @@ class AppTestCase(unittest.TestCase):
     def register(self, client=None, **changes):
         form = {"role": "general", "full_name": "Ana Reyes", "email": "ana@example.com", "password": PASSWORD,
                "confirm_password": PASSWORD, "username": f"user_{uuid.uuid4().hex[:12]}", "date_of_birth": "1978-05-14",
-               "address": "", "avatar": "avatar-1", "country": "Other"}
+               "address": "", "avatar": "avatar-1", "country": "Other", "agree_terms": "agree"}
         # 1978 and "Other" match the default screening answers (Age 48, Country Other), which are now fixed by the
         # account's own birthday and country (services/fixed_answers.py).
         form.update(changes)
