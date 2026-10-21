@@ -46,7 +46,7 @@ def dashboard():
     latest = summary["latest"]
     trend = visuals.trend_geometry(summary["oldest_first"], latest["threshold"]) if summary["has_trend"] else None
     # The kidney-health checklist resets every day: show how yesterday went and how today is going.
-    checklist_days = None
+    checklist_days, checklist_groups = None, []
     if records:
         store = get_assessment_store()
         newest = store.get_assessment(g.user["user_id"], records[0]["assessment_id"])
@@ -55,8 +55,12 @@ def dashboard():
             args = (get_checklist_store(), newest["inputs"], newest["classification"], g.user["user_id"])
             checklist_days = {"yesterday": checklist.day_summary(*args, today - timedelta(days=1)),
                               "today": checklist.day_summary(*args, today)}
+            # Today's list itself, shown right under that summary card (templates/partials/_checklist.html).
+            checklist_groups = checklist.for_user(*args, today)
+    checklist_done, checklist_total = checklist.progress(checklist_groups)
     return render_template(
         "account/dashboard.html", checklist_days=checklist_days,
+        checklist_groups=checklist_groups, checklist_done=checklist_done, checklist_total=checklist_total,
         page_title="Overview",
         is_sample=False,
         summary=summary,
@@ -92,7 +96,7 @@ def professional_home():
     )
     community = community_stats.philippines(get_assessment_store().latest_profiles(), screening_contract.load_catalog())
     return render_template("account/professional_home.html", page_title="Home", overview=overview, insights=insights,
-                           community=community)
+                           community=community, ckd_facts=ckd_facts.all_facts())
 
 
 @account_bp.route("/search")
