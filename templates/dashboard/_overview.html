@@ -1,5 +1,6 @@
 {# The signed-in overview: hero with the kidney artwork and the path, three stat cards, trend + latest result,
-   classification summary, history, resources, and the right-hand panel. Used by the design preview AND by the real
+   classification summary, the daily checklist, resources, and the right-hand column (kidney facts, recent activity).
+   Used by the design preview AND by the real
    dashboard, so there is one markup and one look.
 
    It needs (all worked out by services/visuals.py from real assessment records):
@@ -10,20 +11,13 @@
      'preview'       - only in the design preview: a link that explains it is a preview
      None            - the feature is not built yet: shown as unavailable ("Coming soon"), never as a dead link
    With no assessments every card shows an honest empty state. Nothing is invented. #}
-{% from "partials/_macros.html" import icon, csrf_field, avatar_face %}
-{% from "partials/_visuals.html" import icon_chip, ring, donut, trend_chart, trend_empty, sparkline, path_steps, risk_pill, info_tip, sample_tag, fact_ring_card, fact_mini_rings, fact_sex_differences, fact_stat_card, community_cards %}
+{% from "partials/_macros.html" import icon, csrf_field %}
+{% from "partials/_visuals.html" import icon_chip, ring, donut, trend_chart, trend_empty, sparkline, path_steps, risk_pill, info_tip, sample_tag, community_cards, ckd_facts_panel %}
+{% from "partials/_checklist.html" import kidney_checklist %}
 
 {% macro link_action(target, label, extra_class='') -%}
 {% if target == 'preview' %}<a class="link-action {{ extra_class }}" href="#" data-preview-link>{{ label }} {{ icon('arrow-right') }}</a>
 {% elif target %}<a class="link-action {{ extra_class }}" href="{{ target }}">{{ label }} {{ icon('arrow-right') }}</a>{% endif %}
-{%- endmacro %}
-
-{% macro quick_action(target, icon_name, label) -%}
-{% if target is none %}
-<span class="quick-action is-disabled" aria-disabled="true">{{ icon_chip(icon_name, 'lavender', 'icon-chip-sm') }}<span>{{ label }}<small>Coming soon</small></span></span>
-{% else %}
-<a class="quick-action" href="{{ '#' if target == 'preview' else target }}"{{ ' data-preview-link'|safe if target == 'preview' }}>{{ icon_chip(icon_name, 'lavender', 'icon-chip-sm') }}{{ label }}{{ icon('arrow-right') }}</a>
-{% endif %}
 {%- endmacro %}
 
 {% macro resource(target, icon_name, title, sub) -%}
@@ -32,10 +26,6 @@
 {% else %}
 <a class="resource" href="{{ '#' if target == 'preview' else target }}"{{ ' data-preview-link'|safe if target == 'preview' }}><span class="icon-tile" aria-hidden="true">{{ icon(icon_name) }}</span><span><span class="resource-title">{{ title }}</span><span class="resource-sub">{{ sub }}</span></span>{{ icon('chevron-right') }}</a>
 {% endif %}
-{%- endmacro %}
-
-{% macro profile_link(target) -%}
-<a class="profile-row" href="{{ '#' if target == 'preview' else target }}"{{ ' data-preview-link'|safe if target == 'preview' }}>{{ caller() }}</a>
 {%- endmacro %}
 
 {% set latest = summary.latest %}
@@ -226,27 +216,6 @@
 
     {# ---- Helpful resources ---- #}
     <div class="dash-row dash-row-single">
-      {% if checklist_days is defined and checklist_days %}
-      {% set y_done, y_total = checklist_days.yesterday %}{% set t_done, t_total = checklist_days.today %}
-      <section class="card reveal checklist-days" style="--i: 6;" aria-labelledby="checklist-days-heading">
-        <div class="card-header"><h2 class="card-title" id="checklist-days-heading">{{ icon_chip('heart', 'lavender') }}Daily kidney-health checklist</h2>
-          <a class="link-action" href="{{ links.tips }}">Open today's list {{ icon('arrow-right') }}</a></div>
-        <div class="checklist-days-grid">
-          <div class="checklist-day">
-            <span class="checklist-day-label">Yesterday</span>
-            <span class="checklist-day-value">{{ y_done }} / {{ y_total }}</span>
-            <span class="checklist-day-note">{{ 'You finished every task - well done.' if y_total and y_done == y_total else ('tasks finished' if y_done else 'No tasks were ticked.') }}</span>
-          </div>
-          <div class="checklist-day is-today">
-            <span class="checklist-day-label">Today</span>
-            <span class="checklist-day-value">{{ t_done }} / {{ t_total }}</span>
-            <div class="progress-bar" role="progressbar" aria-valuemin="0" aria-valuemax="{{ t_total }}" aria-valuenow="{{ t_done }}" aria-label="Today's checklist progress"><span class="progress-bar-fill" style="--progress: {{ (100 * t_done / t_total)|round|int if t_total else 0 }}%"></span></div>
-            <span class="checklist-day-note">A fresh list starts every day.</span>
-          </div>
-        </div>
-      </section>
-      {% endif %}
-
       <section class="card reveal" style="--i: 6;" aria-labelledby="resources-heading">
         <div class="card-header"><h2 class="card-title" id="resources-heading">{{ icon_chip('book-open', 'lavender') }}Helpful Resources</h2></div>
         <ul class="resource-list">
@@ -258,45 +227,13 @@
     </div>
   </div>
 
-  {# ---- Kidney health, by the numbers: its own column, between the main content and the profile panel.
-     Population-level facts, never a personal risk claim - see services/ckd_facts.py for every source. ---- #}
-  {% if ckd_facts is defined %}
-
-  {% endif %}
-
-  {# One right-hand column: profile, quick actions and recent activity, then the facts beneath them -
-     so the page has two columns that end level, not three that each stop at a different height. #}
+  {# One right-hand column: the kidney-health facts (population figures, never a personal risk claim - see
+     services/ckd_facts.py for every source), then recent activity, so the two columns end level. #}
   <div class="dash-side">
-  {# ---- The right-hand panel ---- #}
-  <aside class="dash-aside reveal" style="--i: 2;" aria-label="Profile and quick actions">
-    <div class="aside-top">
-      {% call profile_link(links.profile) %}
-        <span class="profile-avatar{{ ' has-image' if profile.get('avatar') }}" aria-hidden="true">{{ avatar_face(profile) }}</span>
-        <span class="profile-text"><span class="profile-name">{{ profile.full_name }}</span><span class="profile-role">{{ profile.role_label }}</span></span>
-        {{ icon('chevron-right') }}
-      {% endcall %}
-      <figure class="quote-card">{{ icon('kidneys') }}<blockquote><p>&ldquo;Healthy kidneys support a healthier you.&rdquo;</p></blockquote></figure>
-    </div>
+  {% if ckd_facts is defined %}{{ ckd_facts_panel(ckd_facts) }}{% endif %}
 
-    <section class="aside-section" aria-labelledby="quick-heading">
-      <h2 id="quick-heading">Quick Actions</h2>
-      <ul class="quick-list">
-        <li>
-          {% if start_state == 'ready' %}
-          <a class="quick-action is-primary" href="{{ links.start }}">{{ icon_chip('clipboard-check', 'lavender', 'icon-chip-sm') }}Start Assessment{{ icon('arrow-right') }}</a>
-          {% elif start_state == 'waiting' %}
-          <span class="quick-action is-primary is-disabled" aria-disabled="true">{{ icon_chip('clipboard-check', 'lavender', 'icon-chip-sm') }}<span>Start Assessment<small>Opens {{ format_date(next.date) }}</small></span></span>
-          {% else %}
-          <span class="quick-action is-primary is-disabled" aria-disabled="true">{{ icon_chip('clipboard-check', 'lavender', 'icon-chip-sm') }}<span>Start Assessment<small>Coming soon</small></span></span>
-          {% endif %}
-        </li>
-        <li>{{ quick_action(links.upload, 'file-up', 'Upload Lab Results') }}</li>
-        <li>{{ quick_action(links.reports, 'file-lines', 'View Reports') }}</li>
-        <li>{{ quick_action(links.share, 'share', 'Share Assessment') }}</li>
-      </ul>
-    </section>
-
-    <section class="aside-section" aria-labelledby="activity-heading">
+  <aside class="dash-aside reveal" style="--i: 3;" aria-labelledby="activity-heading">
+    <section class="aside-section aside-section-first">
       <h2 id="activity-heading">Recent Activity</h2>
       {% if activity %}
       <ul class="activity-list">
@@ -322,18 +259,44 @@
 
   </div>
 
-  {# The facts span the full width under both columns, their cards side by side: first sourced figures about
-     kidney health in the Philippines (services/ckd_facts.py), then Nephron's own anonymous counts of people living
-     in the Philippines (services/community_stats.py) - each labelled for what it is. #}
-  <aside class="dash-ckd reveal" style="--i: 1.5;" aria-labelledby="ckd-facts-heading">
-    <div class="card-header"><h2 class="card-title" id="ckd-facts-heading">{{ icon_chip('bar-chart', 'lavender') }}Kidney health in the Philippines</h2></div>
-    <p class="text-muted ckd-facts-intro">General figures, not about you. Tap <span class="source-note-inline">i</span> for the source.</p>
-    {{ fact_stat_card(ckd_facts.prevalence) }}
-    {{ fact_ring_card(ckd_facts.awareness) }}
-    {{ fact_stat_card(ckd_facts.kidney_failure) }}
-    {{ fact_stat_card(ckd_facts.cause_of_death) }}
-    {{ fact_sex_differences(ckd_facts.sex_differences) }}
-    {{ fact_stat_card(ckd_facts.age_decline) }}
-    {% if community is defined and community %}{{ community_cards(community) }}{% endif %}
+  {# The daily kidney-health checklist, full width under both columns: yesterday/today at a glance, then today's
+     list itself right below it (templates/partials/_checklist.html). #}
+  {% if (checklist_days is defined and checklist_days) or (checklist_groups is defined and checklist_groups) %}
+  <div class="dash-checklist">
+    {% if checklist_days is defined and checklist_days %}
+    {% set y_done, y_total = checklist_days.yesterday %}{% set t_done, t_total = checklist_days.today %}
+    <section class="card reveal checklist-days" style="--i: 6;" aria-labelledby="checklist-days-heading">
+      <div class="card-header"><h2 class="card-title" id="checklist-days-heading">{{ icon_chip('heart', 'lavender') }}Daily kidney-health checklist</h2>
+        {% if checklist_groups is defined and checklist_groups %}<a class="link-action" href="#checklist">Go to today's list {{ icon('arrow-right') }}</a>{% endif %}</div>
+      <div class="checklist-days-grid">
+        <div class="checklist-day">
+          <span class="checklist-day-label">Yesterday</span>
+          <span class="checklist-day-value">{{ y_done }} / {{ y_total }}</span>
+          <span class="checklist-day-note">{{ 'You finished every task - well done.' if y_total and y_done == y_total else ('tasks finished' if y_done else 'No tasks were ticked.') }}</span>
+        </div>
+        <div class="checklist-day is-today">
+          <span class="checklist-day-label">Today</span>
+          <span class="checklist-day-value"><span data-today-done>{{ t_done }}</span> / <span data-today-total>{{ t_total }}</span></span>
+          <div class="progress-bar" role="progressbar" aria-valuemin="0" aria-valuemax="{{ t_total }}" aria-valuenow="{{ t_done }}" aria-label="Today's checklist progress" data-today-progress><span class="progress-bar-fill" style="--progress: {{ (100 * t_done / t_total)|round|int if t_total else 0 }}%"></span></div>
+          <span class="checklist-day-note">A fresh list starts every day.</span>
+        </div>
+      </div>
+    </section>
+    {% endif %}
+
+    {% if checklist_groups is defined and checklist_groups %}
+    {{ kidney_checklist(checklist_groups, checklist_done, checklist_total, url_for('account.dashboard')) }}
+    {% endif %}
+  </div>
+  {% endif %}
+
+  {# Nephron's own anonymous counts of people living in the Philippines (services/community_stats.py), full width
+     under both columns - labelled for what it is, separate from the sourced facts in the right-hand column. #}
+  {% if community is defined and community %}
+  <aside class="dash-ckd reveal" style="--i: 1.5;" aria-labelledby="community-heading">
+    <div class="card-header"><h2 class="card-title" id="community-heading">{{ icon_chip('map-pin', 'lavender') }}Kidney risk in the Philippines, on Nephron</h2></div>
+    <p class="text-muted ckd-facts-intro">Everyone on Nephron who lives in the Philippines. Anonymous counts, no names.</p>
+    {{ community_cards(community) }}
   </aside>
+  {% endif %}
 </div>
