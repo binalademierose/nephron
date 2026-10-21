@@ -677,21 +677,87 @@ a.profile-row:hover > .icon { transform: translateX(3px); color: var(--indigo); 
 .agenda-body { flex: 1; min-width: 0; }
 .agenda-notes { margin: 0.2rem 0 0; font-size: var(--text-small); color: var(--muted-color); }
 
-.checklist-progress { margin-bottom: var(--space-4); }
-.checklist-group { margin-bottom: var(--space-4); }
-.checklist-group:last-child { margin-bottom: 0; }
-.checklist-category { margin: 0 0 var(--space-2); font-size: 0.78rem; font-weight: 700; letter-spacing: 0.02em; text-transform: uppercase; color: var(--indigo); }
-.checklist-list { list-style: none; margin: 0; padding: 0; display: flex; flex-direction: column; gap: var(--space-2); }
-.checklist-item { display: flex; align-items: flex-start; gap: var(--space-3); }
-.checklist-item form { flex: none; margin: 0; }
-.checklist-check {
-  width: 1.35rem; height: 1.35rem; border-radius: 0.35rem; border: 2px solid var(--border-strong);
-  background: var(--surface); display: grid; place-items: center; cursor: pointer; color: #fff; padding: 0;
+/* ---- The daily kidney-health checklist (templates/partials/_checklist.html) ----
+   A progress ring, then one card per category in its own colour; each task is one big tappable row. */
+.checklist-card { padding: 1.5rem; }
+.checklist-hero {
+  display: flex; align-items: center; gap: var(--space-5); margin-bottom: var(--space-5); padding: var(--space-4) var(--space-5);
+  background: linear-gradient(120deg, var(--lavender-wash) 0%, #fff 70%); border: 1px solid var(--border); border-radius: var(--radius-lg);
 }
-.checklist-check .icon { width: 0.9rem; height: 0.9rem; }
-.checklist-item.is-done .checklist-check { background: var(--indigo); border-color: var(--indigo); }
-.checklist-text { font-size: var(--text-small); line-height: 1.45; color: var(--navy); padding-top: 0.05rem; }
-.checklist-item.is-done .checklist-text { color: var(--muted-color); text-decoration: line-through; }
+.checklist-ring {
+  --ring-colour: var(--violet);
+  position: relative; flex: none; display: grid; place-items: center; width: 5.75rem; height: 5.75rem; border-radius: 50%;
+  background: conic-gradient(var(--ring-colour) calc(var(--pct) * 1%), var(--lavender) 0);
+  transition: background var(--duration-slow) var(--ease);
+}
+.checklist-ring::before { content: ""; position: absolute; inset: 0.55rem; border-radius: 50%; background: #fff; box-shadow: inset 0 1px 3px rgba(48, 43, 145, 0.08); }
+.checklist-ring-value { position: relative; font-size: 1.45rem; font-weight: 800; color: var(--navy); line-height: 1; }
+.checklist-ring-value small { font-size: 0.8rem; font-weight: 700; color: var(--muted-color); margin-left: 1px; }
+.checklist-card.is-complete .checklist-ring { --ring-colour: var(--green); }
+.checklist-hero-copy { min-width: 0; }
+.checklist-hero-copy .card-title { margin: 0.15rem 0 0.35rem; font-size: 1.2rem; }
+.checklist-eyebrow { display: inline-flex; align-items: center; gap: 0.35rem; margin: 0; font-size: 0.72rem; font-weight: 700; letter-spacing: 0.05em; text-transform: uppercase; color: var(--violet-text); }
+.checklist-eyebrow .icon { width: 0.95rem; height: 0.95rem; }
+.checklist-status { margin: 0; font-weight: 600; color: var(--navy); }
+.checklist-card.is-complete .checklist-status { color: var(--green-text); }
+.checklist-count { margin: 0.2rem 0 0; font-size: var(--text-small); color: var(--muted-color); }
+.checklist-count strong { color: var(--navy); }
+
+/* Cards of different lengths flow into balanced columns (no ragged gaps), as many columns as fit. */
+.checklist-groups { column-width: 19rem; column-gap: var(--space-4); margin-bottom: calc(-1 * var(--space-4)); }
+.checklist-group {
+  --tone: var(--violet); --tone-soft: var(--lavender-wash); --tone-text: var(--violet-text);
+  break-inside: avoid; margin: 0 0 var(--space-4);
+  display: flex; flex-direction: column; gap: var(--space-2); padding: var(--space-4); background: #fff;
+  border: 1px solid var(--border); border-top: 4px solid var(--tone); border-radius: var(--radius-lg);
+}
+.checklist-group.tone-green { --tone: var(--green); --tone-soft: var(--green-soft); --tone-text: var(--green-text); }
+.checklist-group.tone-sky { --tone: #0284C7; --tone-soft: #E3F3FC; --tone-text: #075985; }
+.checklist-group.tone-amber { --tone: var(--amber); --tone-soft: var(--amber-soft); --tone-text: var(--amber-text); }
+.checklist-group.tone-rose { --tone: var(--red); --tone-soft: var(--red-soft); --tone-text: var(--red-text); }
+.checklist-group.tone-indigo { --tone: var(--indigo); --tone-soft: var(--lavender); --tone-text: var(--indigo); }
+.checklist-group-head { display: flex; align-items: center; gap: var(--space-3); }
+.checklist-group-icon { display: inline-grid; place-items: center; flex: none; width: 2.25rem; height: 2.25rem; border-radius: 0.8rem; color: var(--tone-text); background: var(--tone-soft); }
+.checklist-group-icon .icon { width: 1.15rem; height: 1.15rem; }
+.checklist-group-title { flex: 1; margin: 0; font-size: 1rem; }
+.checklist-group-count { flex: none; padding: 0.15rem 0.6rem; font-size: 0.78rem; font-weight: 700; color: var(--tone-text); background: var(--tone-soft); border-radius: var(--radius-pill); }
+.checklist-group-bar { display: block; height: 0.3rem; border-radius: var(--radius-pill); background: var(--tone-soft); overflow: hidden; }
+.checklist-group-bar > span { display: block; height: 100%; width: var(--progress, 0%); background: var(--tone); border-radius: inherit; transition: width var(--duration-slow) var(--ease); }
+
+.checklist-list { list-style: none; margin: 0; padding: 0; display: flex; flex-direction: column; gap: 0.15rem; }
+.checklist-list li { margin: 0; }
+.checklist-form { margin: 0; }
+.checklist-item {
+  display: flex; align-items: flex-start; gap: var(--space-3); width: 100%; min-height: 2.75rem; margin: 0;
+  padding: 0.6rem 0.65rem; text-align: left; font: inherit; color: var(--navy); cursor: pointer;
+  background: transparent; border: 1px solid transparent; border-radius: var(--radius-md);
+  transition: background-color var(--duration-base) var(--ease), border-color var(--duration-base) var(--ease);
+}
+.checklist-item:hover { background: var(--tone-soft); }
+.checklist-item:focus-visible { outline: 2px solid var(--tone); outline-offset: 1px; }
+.checklist-item[aria-busy="true"] { opacity: 0.6; cursor: progress; }
+.checklist-check {
+  flex: none; display: grid; place-items: center; width: 1.5rem; height: 1.5rem; margin-top: 0.05rem; color: #fff;
+  border: 2px solid var(--border-strong); border-radius: 50%; background: #fff;
+  transition: background-color var(--duration-base) var(--ease), border-color var(--duration-base) var(--ease), transform var(--duration-base) var(--ease);
+}
+.checklist-check .icon { width: 0.85rem; height: 0.85rem; stroke-width: 3; opacity: 0; transform: scale(0.4); transition: opacity var(--duration-base) var(--ease), transform var(--duration-base) var(--ease); }
+.checklist-item:hover .checklist-check { border-color: var(--tone); }
+.checklist-item.is-done .checklist-check { background: var(--tone); border-color: var(--tone); }
+.checklist-item.is-done .checklist-check .icon { opacity: 1; transform: scale(1); }
+.checklist-text { font-size: var(--text-small); line-height: 1.5; padding-top: 0.1rem; }
+.checklist-item.is-done .checklist-text { color: var(--muted-color); text-decoration: line-through; text-decoration-color: rgba(107, 113, 153, 0.45); text-decoration-thickness: 1px; }
+.checklist-group.is-complete .checklist-group-count::after { content: " \2713"; }
+
+@media (max-width: 40rem) {
+  .checklist-card { padding: 1rem; }
+  .checklist-hero { flex-direction: column; align-items: flex-start; gap: var(--space-3); padding: var(--space-4); }
+  .checklist-ring { width: 4.75rem; height: 4.75rem; }
+  .checklist-group { padding: var(--space-3); }
+}
+@media (prefers-reduced-motion: reduce) {
+  .checklist-ring, .checklist-group-bar > span, .checklist-check, .checklist-check .icon, .checklist-item { transition: none; }
+}
 
 /* ================= FEEDBACK: toasts and the confirmation dialog (Phase 9 refinement) =================
    Good news is a toast (slides in, leaves by itself, holds still under the pointer). Anything that must be read
@@ -802,6 +868,15 @@ body:not(.app-body) .toast-region { top: var(--space-4); }
 .answers-toggle[open] summary { margin-bottom: var(--space-2); }
 .answers-group-title { margin: var(--space-4) 0 var(--space-2); font-size: var(--text-small); font-weight: 700; text-transform: uppercase; letter-spacing: 0.02em; color: var(--indigo); }
 .answers-group-title:first-child { margin-top: 0; }
+
+/* A shared result's answers, shown in full for the professional (authorizations/shared_result.html): one small card
+   per group of questions, side by side where there is room. */
+.answers-grid { display: grid; grid-template-columns: repeat(auto-fit, minmax(min(100%, 19rem), 1fr)); gap: var(--space-4); align-items: start; }
+.answers-group { padding: var(--space-4); background: var(--surface-soft); border: 1px solid var(--border); border-radius: var(--radius-lg); min-width: 0; }
+.answers-group .term-list { margin: 0; }
+.answers-group dd { overflow-wrap: anywhere; }
+.shared-answers .card-header { flex-wrap: wrap; }
+.history-card-actions { display: flex; flex-wrap: wrap; align-items: center; gap: var(--space-2) var(--space-5); margin-top: var(--space-3); }
 
 /* ================= PROFESSIONAL DASHBOARD: six stat cards instead of three (Phase 9 refinement) =================
    .stat-row.stat-row-six (not just .stat-row-six) on purpose: pages.css's own unconditional .stat-row rule loads
