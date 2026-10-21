@@ -13,9 +13,8 @@ from datetime import timedelta
 from flask import Blueprint, abort, current_app, flash, g, redirect, render_template, request, url_for
 
 from routes.decorators import role_required
-from services import assessments, clock, explanations, fixed_answers, lab_contract, lab_documents, lab_ocr, lab_verification, screening_drafts, patient_records, professional_overview, screening_contract
+from services import assessments, clock, explanations, fixed_answers, lab_contract, lab_documents, lab_ocr, lab_verification, screening_drafts, patient_records, professional_overview, result_details, screening_contract
 from services.egfr import estimate_gfr
-from services.model_service_stage2 import stage2_describer
 from services.assessment_store import get_assessment_store
 from services.authorization_store import get_authorization_store
 from services.clinical_review_store import get_clinical_review_store
@@ -275,19 +274,11 @@ def risk_analysis(patient_code, assessment_id):
     all_rows = assessments.load_records(store, record["user_id"], config["APP_TIMEZONE"])
     older = [r for r in all_rows if r["assessment_id"] != assessment_id and (r["date"], r["assessment_id"]) <= (result_record["date"], assessment_id)]
     previous = older[0] if older else None
-    catalog = _catalog()
-    if row["assessment_type"] == "enhanced":
-        lab_catalog = lab_contract.load_lab_catalog()
-        model, describer = current_app.extensions["model_service_stage2"], stage2_describer(lab_catalog)
-        answers = (screening_contract.describe_inputs(catalog, row["inputs"]) + lab_contract.describe_lab_values(lab_catalog, row["inputs"])) if row["inputs"] else []
-    else:
-        model, describer = _model(), catalog
-        answers = screening_contract.describe_inputs(catalog, row["inputs"]) if row["inputs"] else []
-    explanation = explanations.explain_saved_result(model, describer, row)
-    outside = screening_contract.outside_training(catalog, row["inputs"]) if row["inputs"] else []
-    return render_template("patients/risk_analysis.html", page_title="Risk analysis", record=record, result=result_record, outside=outside,
-                           previous=previous, explanation=explanation, explanation_unavailable=explanations.UNAVAILABLE,
-                           answers=answers, level=result_record["level"], threshold=result_record["threshold"])
+    details = result_details.describe(row, _catalog(), _model(), current_app.extensions["model_service_stage2"])
+    return render_template("patients/risk_analysis.html", page_title="Risk analysis", record=record, result=result_record, outside=details["outside"],
+                           previous=previous, explanation=details["explanation"], explanation_unavailable=explanations.UNAVAILABLE,
+                           answers=details["answers"], level=result_record["level"], threshold=result_record["threshold"],
+                           explain_for_professional=True)
 
 
 @patient_records_bp.route("/patient-reports")
