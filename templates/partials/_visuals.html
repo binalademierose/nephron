@@ -233,6 +233,23 @@
 </div>
 {% endmacro %}
 
+{# The sourced population facts (services/ckd_facts.py) as one panel for the right-hand column of BOTH dashboards,
+   where the profile card and quick actions used to be. note: the line under the heading (who the figures are not about). #}
+{% macro ckd_facts_panel(ckd_facts, note="General figures, not about you.") %}
+<section class="ckd-side reveal" style="--i: 2;" aria-labelledby="ckd-facts-heading">
+  <div class="card-header"><h2 class="card-title" id="ckd-facts-heading">{{ icon_chip('kidneys', 'lavender') }}Kidney health in the Philippines</h2></div>
+  <p class="text-muted ckd-facts-intro">{{ note }} Tap <span class="source-note-inline">i</span> for the source.</p>
+  <div class="ckd-side-grid">
+    {{ fact_ring_card(ckd_facts.awareness) }}
+    {{ fact_stat_card(ckd_facts.prevalence) }}
+    {{ fact_stat_card(ckd_facts.kidney_failure) }}
+    {{ fact_stat_card(ckd_facts.cause_of_death) }}
+    {{ fact_stat_card(ckd_facts.age_decline) }}
+    {{ fact_sex_differences(ckd_facts.sex_differences) }}
+  </div>
+</section>
+{% endmacro %}
+
 {# Nephron's own count: X of Y people in the Philippines are at higher risk by their latest result - a ring, with
    an honest empty state until there are enough people (services/community_stats.py). #}
 {% macro community_risk_card(summary, eyebrow, caption, source, empty_note) %}
