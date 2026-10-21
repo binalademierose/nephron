@@ -6,10 +6,10 @@ checklist's own checked/unchecked state - scheduling itself is the professional'
 """
 from datetime import date
 
-from flask import Blueprint, current_app, g, redirect, render_template, request, url_for
+from flask import Blueprint, current_app, g, jsonify, redirect, render_template, request, url_for
 
 from routes.decorators import role_required
-from services import checklist, clock, followup_appointments, followup_calendar
+from services import checklist, clock, followup_appointments, followup_calendar, security
 from services.assessment_store import get_assessment_store
 from services.checklist_store import get_checklist_store
 from services.followup_appointment_store import get_followup_appointment_store
@@ -51,7 +51,16 @@ def index():
 @followup_bp.route("/follow-up/checklist/<tip_id>", methods=["POST"])
 @role_required("general")
 def toggle_checklist_item(tip_id):
+    """Tick or untick one task on today's list. The checklist appears on both the dashboard and the Follow-up page:
+    a plain form post goes back to the page it came from ("next", checked to stay on this site); the page's own
+    script (static/js/checklist.js) asks for JSON instead and gets today's real totals back to show."""
     is_complete = request.form.get("is_complete") == "1"
-    checklist.toggle(get_checklist_store(), g.user["user_id"], tip_id, is_complete, clock.now_utc(),
-                     clock.local_today(current_app.config["APP_TIMEZONE"]))         # today's own list
-    return redirect(url_for("followup.index"))
+    today = clock.local_today(current_app.config["APP_TIMEZONE"])
+    checklist.toggle(get_checklist_store(), g.user["user_id"], tip_id, is_complete, clock.now_utc(), today)   # today's own list
+    if request.headers.get("X-Requested-With") == "fetch":
+        inputs, level = _latest_inputs_and_classification(g.user["user_id"])
+        grouped = checklist.for_user(get_checklist_store(), inputs, level, g.user["user_id"], today) if inputs is not None else []
+        done, total = checklist.progress(grouped)
+        return jsonify(ok=True, tip_id=tip_id, is_complete=is_complete, done=done, total=total)
+    back = security.safe_next_url(request.form.get("next", ""), url_for("followup.index"))
+    return redirect(back.split("#", 1)[0] + "#checklist")
