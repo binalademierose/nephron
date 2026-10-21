@@ -1,6 +1,7 @@
 {# An authorized patient's history, one card per assessment, each with its own clinical review notes (oldest
-   first, a running conversation) and a small form to add another one. Deliberately does NOT link into the
-   detailed result pages (screening.result): those are scoped to the signed-in patient themselves - see README.md. #}
+   first, a running conversation) and a small form to add another one. Each card opens that result's answers and
+   factors on the professional's own page (authorization.shared_result), never the patient's own result page
+   (screening.result), which stays scoped to the signed-in patient themselves - see README.md. #}
 {% extends "layouts/app_base.html" %}
 {% from "partials/_macros.html" import icon, csrf_field, risk_badge %}
 {% set active_nav = 'shared' %}
@@ -185,7 +186,10 @@
     </ul>
     {% endif %}
 
-    <a class="link-action" href="{{ url_for('authorization.patient_history', patient_id=patient.user_id, assessment=record.assessment_id) }}#write-review">{{ icon('message') }}Write a review for this result</a>
+    <div class="history-card-actions">
+      <a class="button button-primary button-sm" href="{{ url_for('authorization.shared_result', patient_id=patient.user_id, assessment_id=record.assessment_id) }}">{{ icon('clipboard-list') }}View answers &amp; factors</a>
+      <a class="link-action" href="{{ url_for('authorization.patient_history', patient_id=patient.user_id, assessment=record.assessment_id) }}#write-review">{{ icon('message') }}Write a review for this result</a>
+    </div>
   </section>
   {% endfor %}
   {% endif %}

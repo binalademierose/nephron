@@ -134,7 +134,7 @@
             {% if row.review_status == 'reviewed' %}<span class="badge risk-badge-low">Reviewed</span>
             {% else %}<span class="badge risk-badge-high">Awaiting review</span>{% endif %}
           </td>
-          <td class="table-actions"><a class="button button-secondary button-sm" href="{{ url_for('authorization.patient_history', patient_id=row.patient_user_id) }}">View</a></td>
+          <td class="table-actions"><a class="button button-secondary button-sm" href="{{ url_for('authorization.shared_result', patient_id=row.patient_user_id, assessment_id=row.assessment_id) }}">View</a></td>
         </tr>
         {% endfor %}
       </tbody>

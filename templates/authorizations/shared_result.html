@@ -1,0 +1,96 @@
+{# One shared result, for a professional the person shared their history with: the risk, what raised and lowered it,
+   and the person's own answers behind it - what they agreed to share (authorizations/_consent_template.html).
+   Reuses the SAME explanation partial as the patient's own result page and the professional's own risk-analysis
+   page, so a factor means exactly the same thing everywhere. #}
+{% extends "layouts/app_base.html" %}
+{% from "partials/_macros.html" import icon, risk_badge %}
+{% from "partials/_visuals.html" import icon_chip, ring %}
+{% set active_nav = 'shared' %}
+{% block header_title %}{{ patient.full_name }}'s result{% endblock %}
+{% block header_subtitle %}{{ result.type }}, {{ format_date(result.date) }} &middot; shared with you{% endblock %}
+
+{% block content %}
+<div class="page-actions reveal">
+  <a class="button button-secondary button-sm" href="{{ url_for('authorization.patient_history', patient_id=patient.user_id) }}#assessment-{{ result.assessment_id }}">{{ icon('chevron-left') }}Back to {{ patient.full_name }}'s history</a>
+  <a class="button button-primary button-sm" href="{{ url_for('authorization.patient_history', patient_id=patient.user_id, assessment=result.assessment_id) }}#write-review">{{ icon('message') }}Write a review</a>
+</div>
+
+<section class="card card-hero result-card reveal" style="--i: 1;" aria-labelledby="category-heading">
+  <div class="result-main">
+    {{ ring(result.probability, threshold=threshold, large=True) }}
+    <div class="result-copy">
+      <span class="result-meaning-label">Risk Classification</span>
+      <div class="result-classification">
+        {{ icon_chip('alert-triangle' if level == 'high' else 'check-circle', 'red' if level == 'high' else 'green', 'icon-chip-lg') }}
+        <h2 id="category-heading" class="level-{{ level }}">{{ level_label(level, result.assessment_type) }}</h2>
+      </div>
+      <div class="result-meaning">
+        <span class="result-meaning-label">What this means</span>
+        {% if level == 'high' %}
+          <p>Higher-risk group. This is screening information, not a diagnosis.</p>
+        {% else %}
+          <p>Lower-risk group. It does not mean {{ patient.full_name }} is free of kidney disease.</p>
+        {% endif %}
+      </div>
+      {% if threshold is not none %}<span class="chip">{{ icon('gauge') }}Validated threshold: {{ percent_text(threshold) }}%</span>{% endif %}
+    </div>
+  </div>
+</section>
+
+{% include "screening/_outside_training.html" %}
+{% include "screening/_explanation.html" %}
+
+<section class="card reveal shared-answers" style="--i: 4;" aria-labelledby="answers-heading">
+  <div class="card-header">
+    <h2 class="card-title" id="answers-heading">{{ icon_chip('clipboard-list', 'lavender') }}{{ patient.full_name }}'s answers</h2>
+    <span class="card-tags text-small text-muted">What they entered for this screening</span>
+  </div>
+  {% if answers %}
+  <div class="answers-grid">
+    {% for title, rows in answers %}
+    <div class="answers-group">
+      <h3 class="answers-group-title">{{ title }}</h3>
+      <dl class="term-list">
+        {% for label, value in rows %}<div class="term-row"><dt>{{ label }}</dt><dd>{{ value }}</dd></div>{% endfor %}
+      </dl>
+    </div>
+    {% endfor %}
+  </div>
+  {% else %}
+  <p class="empty-inline">{{ icon('info') }}No answers were saved with this result.</p>
+  {% endif %}
+</section>
+
+{% if reviews %}
+<section class="card reveal" style="--i: 5;" aria-labelledby="notes-heading">
+  <div class="card-header"><h2 class="card-title" id="notes-heading">{{ icon_chip('message', 'lavender') }}Clinical notes on this result</h2></div>
+  <ul class="review-list" role="list">
+    {% for review in reviews %}
+    <li class="review-item">
+      <div class="review-meta"><strong>{{ review.professional_name }}</strong>{% if review.profession_title %} &middot; {{ review.profession_title }}{% endif %} &middot; {{ format_date(review.date) }}</div>
+      <p>{{ review.note }}</p>
+    </li>
+    {% endfor %}
+  </ul>
+</section>
+{% endif %}
+
+<div class="section-tight-inline">
+  <h2 class="section-heading">Assessment information</h2>
+  <div class="card">
+    <dl class="term-list">
+      <div class="term-row"><dt>Assessment ID</dt><dd>#{{ result.assessment_id }}</dd></div>
+      <div class="term-row"><dt>Shared by</dt><dd>{{ patient.full_name }}</dd></div>
+      <div class="term-row"><dt>Assessment date</dt><dd>{{ format_date(result.date) }}</dd></div>
+      <div class="term-row"><dt>Assessment mode</dt><dd>{{ result.type }}</dd></div>
+      <div class="term-row"><dt>Result</dt><dd>{{ risk_badge(level, assessment_type=result.assessment_type) }}</dd></div>
+      {% if previous %}<div class="term-row"><dt>Previous result</dt><dd><a href="{{ url_for('authorization.shared_result', patient_id=patient.user_id, assessment_id=previous.assessment_id) }}">{{ format_date(previous.date) }}</a></dd></div>{% endif %}
+    </dl>
+  </div>
+</div>
+
+<div class="notice reveal" role="note">{{ icon('info') }}
+  <div><h3>About this access</h3>
+    <p>{{ patient.full_name }} chose to share their history with you and can end that at any time. This is screening information, not a diagnosis.</p></div>
+</div>
+{% endblock %}
