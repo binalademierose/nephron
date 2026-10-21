@@ -48,6 +48,10 @@ EMPTY = {
     "lowers": "None of your answers lowered the estimate by a meaningful amount.",
 }
 
+# The same words for a professional reading someone else's result (services/result_details.py): about "the" answers.
+CAVEAT_PROFESSIONAL = CAVEAT.replace("calculated your result", "calculated this result").replace("caused your health", "caused this person's health")
+EMPTY_PROFESSIONAL = {kind: text.replace("None of your answers", "None of the answers") for kind, text in EMPTY.items()}
+
 UNAVAILABLE = ("A step-by-step explanation is not available for this result. It can only be shown for a result made by the model that "
                "is running now, from the answers saved with it.")
 
@@ -88,12 +92,12 @@ def build(catalog_or_describe, effects, inputs, limit=MAX_FACTORS):
             "summary": {kind: _sentences(kind, lists[kind]) for kind in KINDS}, "empty": EMPTY, "caveat": CAVEAT}
 
 
-def _sentences(kind, items):
+def _sentences(kind, items, whose="your"):
     if not items:
         return []
     verb = "raised" if kind == "raises" else "lowered"
     top = items[0]
-    sentences = [f"{top['label']} {verb} the estimate the most: your answer was {top['answer_brief']}."]
+    sentences = [f"{top['label']} {verb} the estimate the most: {whose} answer was {top['answer_brief']}."]
     others = items[1:3]
     if others:
         sentences.append("Next came " + " and ".join(f"{item['label']} ({item['answer_brief']})" for item in others) + ".")
@@ -122,3 +126,13 @@ def explain_saved_result(model, catalog_or_describe, row, tolerance=1e-4):
     if abs(result["probability"] - row["probability"]) > tolerance:
         return None
     return build(catalog_or_describe, result["effects"], row["inputs"])
+
+
+def for_professional(explanation):
+    """The same explanation, worded for a professional reading someone else's result ("the answer was ..." instead
+    of "your answer was ..."). The factors and numbers are unchanged. None stays None."""
+    if not explanation:
+        return explanation
+    return {**explanation,
+            "summary": {kind: _sentences(kind, explanation[kind], whose="the") for kind in KINDS},
+            "empty": EMPTY_PROFESSIONAL, "caveat": CAVEAT_PROFESSIONAL}
