@@ -577,6 +577,31 @@
     }, true);
   }
 
+  // ----- 13b. Sections that belong to one choice: <div data-shown-when="mode=note_follow_up"> is shown only while the
+  //       radio named "mode" with that value is chosen, and its fields are disabled while hidden (so they are not sent).
+  //       A button with data-mode-label + data-label-<value>="..." changes its words to match the choice. Without
+  //       JavaScript the section starts open or closed from the server, and the server checks everything either way. -----
+  document.querySelectorAll("[data-shown-when]").forEach(function (section) {
+    const parts = section.dataset.shownWhen.split("=");
+    const form = section.closest("form");
+    if (!form || parts.length !== 2) { return; }
+    const name = parts[0], wanted = parts[1];
+    const radios = form.querySelectorAll('input[type="radio"][name="' + name + '"]');
+    const label = form.querySelector("[data-mode-label]");
+    function sync() {
+      const chosen = form.querySelector('input[type="radio"][name="' + name + '"]:checked');
+      const value = chosen ? chosen.value : "";
+      const show = value === wanted;
+      section.hidden = !show;
+      section.querySelectorAll("input, select, textarea").forEach(function (field) { field.disabled = !show; });
+      const words = label && label.getAttribute("data-label-" + value);
+      const text = label && label.querySelector("span");
+      if (words && text) { text.textContent = words; }
+    }
+    radios.forEach(function (radio) { radio.addEventListener("change", sync); });
+    sync();
+  });
+
   // ----- 14. Copy buttons: <button data-copy-target="ID"> copies that element's text -----
   document.addEventListener("click", function (event) {
     const button = event.target.closest("[data-copy-target]");
