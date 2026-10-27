@@ -463,6 +463,18 @@ a.profile-row:hover > .icon { transform: translateX(3px); color: var(--indigo); 
 .form-control.is-suggested { border-color: var(--indigo); background: var(--lavender-wash); }
 .form-helper-suggested { display: flex; align-items: center; gap: 0.3rem; color: var(--indigo); font-weight: 600; }
 .form-helper-suggested .icon { width: 0.9rem; height: 0.9rem; }
+/* A lab value far outside the usual range: accepted, but marked so it is checked once (templates/lab/confirm.html). */
+.form-control.is-unusual { border-color: var(--amber); background: var(--amber-soft); }
+.form-helper-unusual { display: flex; align-items: flex-start; gap: 0.3rem; color: var(--amber-text); font-weight: 600; }
+.form-helper-unusual .icon { flex: none; width: 0.9rem; height: 0.9rem; margin-top: 0.15rem; }
+.unusual-card { margin-top: var(--gap); padding: var(--space-4) var(--space-5); background: var(--amber-soft); border: 1px solid var(--amber-line); border-left: 4px solid var(--amber); }
+.unusual-title { display: flex; align-items: center; gap: var(--space-2); margin: 0 0 var(--space-2); font-size: 1.05rem; color: var(--amber-text); }
+.unusual-title .icon { width: 1.15rem; height: 1.15rem; }
+.unusual-card > p { margin: 0 0 var(--space-3); color: var(--navy); }
+.unusual-card.is-invalid { box-shadow: inset 0 0 0 2px var(--red-text); }
+.unusual-list { margin: 0 0 var(--space-4); padding-left: 1.2rem; }
+.unusual-list li { margin-bottom: 0.2rem; }
+.unusual-list a { color: var(--navy); }
 
 /* ================= PROFESSIONAL SHARING: search results, request/authorization rows (Phase 7) ================= */
 .empty-inline { display: flex; align-items: center; gap: var(--space-2); color: var(--muted-color); margin-top: var(--space-4); }
@@ -876,6 +888,11 @@ body:not(.app-body) .toast-region { top: var(--space-4); }
 .answers-group .term-list { margin: 0; }
 .answers-group dd { overflow-wrap: anywhere; }
 .shared-answers .card-header { flex-wrap: wrap; }
+/* A shared result's "Add a clinical note" / "Add note + follow-up" buttons (top of the page and after the answers). */
+.respond-actions { display: flex; flex-wrap: wrap; gap: var(--space-2); }
+.respond-card { display: flex; flex-wrap: wrap; align-items: center; justify-content: space-between; gap: var(--space-3) var(--space-5); }
+.respond-card .card-title { margin: 0 0 var(--space-1); }
+.respond-card p { margin: 0; }
 .history-card-actions { display: flex; flex-wrap: wrap; align-items: center; gap: var(--space-2) var(--space-5); margin-top: var(--space-3); }
 
 /* ================= PROFESSIONAL DASHBOARD: six stat cards instead of three (Phase 9 refinement) =================
@@ -1014,6 +1031,21 @@ body:not(.app-body) .toast-region { top: var(--space-4); }
 .risk-overview-foot .summary-note { margin: 0; font-size: var(--text-small); color: var(--muted-color); }
 .write-review { margin-bottom: var(--gap); }
 .write-review-form textarea { resize: vertical; }
+/* "Clinical note only" / "Clinical note + follow-up": two equal tiles, and the follow-up fields in their own panel. */
+.review-mode-choices { display: grid; grid-template-columns: repeat(2, minmax(0, 1fr)); }
+.review-mode-choices .choice { min-width: 0; }
+.review-mode-choices .choice-tile { width: 100%; height: 100%; align-items: center; text-align: left; }
+.review-mode-choices .choice-tile strong { display: inline-flex; align-items: center; gap: var(--space-2); }
+.review-mode-text { display: flex; flex-direction: column; gap: 0.15rem; min-width: 0; }
+.review-mode-text .choice-hint { margin-top: 0; }
+.review-mode-choices .choice-tile strong .icon { width: 1.05rem; height: 1.05rem; }
+.review-follow-up { margin: 0 0 var(--space-4); padding: var(--space-4); background: var(--lavender-wash); border: 1px solid var(--border); border-left: 4px solid var(--violet); border-radius: var(--radius-md); }
+.review-follow-up[hidden] { display: none; }
+.review-follow-up-title { display: flex; align-items: center; gap: var(--space-2); margin: 0 0 var(--space-3); font-size: 1rem; }
+.review-follow-up-title .icon { width: 1.05rem; height: 1.05rem; color: var(--violet-text); }
+.review-rescreen { align-items: flex-start; margin-bottom: 0; }
+.review-rescreen input { margin-top: 0.2rem; flex: none; }
+@media (max-width: 40rem) { .review-mode-choices { grid-template-columns: minmax(0, 1fr); } }
 .continue-card { display: flex; flex-direction: column; gap: var(--space-3); margin-bottom: var(--gap); }
 .continue-card .card-header { flex-wrap: wrap; }
 .continue-card .button { align-self: flex-start; }
@@ -1394,3 +1426,5 @@ a.badge { text-decoration: none; }
 .ask-admin .form-actions { display: flex; justify-content: flex-start; margin-top: var(--space-3); }
 .ask-admin-status { display: flex; gap: var(--space-2); align-items: flex-start; text-align: left; }
 .ask-admin p, .ask-admin .notice { max-width: none; margin-inline: 0; }
+.review-status { display: flex; align-items: flex-start; gap: var(--space-2); margin: 0 0 var(--space-4); padding: var(--space-3) var(--space-4); color: var(--green-text); background: var(--green-soft); border-radius: var(--radius-md); font-weight: 600; }
+.review-status .icon { flex: none; width: 1.05rem; height: 1.05rem; margin-top: 0.15rem; }
