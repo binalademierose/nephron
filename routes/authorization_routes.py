@@ -162,6 +162,12 @@ def revoke_patient(patient_id):
 @authorization_bp.route("/patients/<int:patient_id>")
 @role_required("professional")
 def patient_history(patient_id):
+    return _history_page(patient_id)
+
+
+def _history_page(patient_id, review_form=None, review_errors=None):
+    """The shared patient's history. review_form/review_errors: a clinical-review submission that needs fixing, shown
+    back with everything that was typed (a long clinical note is never lost to a mistyped appointment date)."""
     auth_store, user_store = get_authorization_store(), get_user_store()
     if not authorizations.is_authorized(auth_store, patient_id, g.user["user_id"]):
         abort(404)                                     # not authorized, or no such patient: the same answer
@@ -179,17 +185,22 @@ def patient_history(patient_id):
     if open_follow_up:
         open_follow_up["date"] = clock.to_local_date(open_follow_up["requested_at"], zone)
     appointments = followup_appointments.for_professional_patient(get_followup_appointment_store(), g.user["user_id"], patient_id, zone)
-        # Which result the single review form starts on: the one asked for (?assessment=), else the newest result
-    # still awaiting a note, else the newest result.
+    # Which result the review form starts on: the one being fixed, else the one asked for (?assessment=), else the
+    # newest result still awaiting a note, else the newest result.
+    review_form = review_form or {}
     try:
-        asked = int(request.args.get("assessment", ""))
+        asked = int(review_form.get("assessment_id") or request.args.get("assessment", ""))
     except ValueError:
         asked = None
     ids = [r["assessment_id"] for r in records]
     selected_assessment_id = asked if asked in ids else next((r["assessment_id"] for r in records if not reviews_by_assessment.get(r["assessment_id"])), ids[0] if ids else None)
+    # "Clinical note only" or "Clinical note + follow-up": what was chosen, else what the link asked for (?with=follow-up,
+    # from a shared result's "Add note + follow-up" button), else a note only.
+    review_mode = review_form.get("mode") or (REVIEW_WITH_FOLLOW_UP if request.args.get("with") == "follow-up" else REVIEW_NOTE_ONLY)
     return render_template("authorizations/patient_history.html", selected_assessment_id=selected_assessment_id, page_title=f"{patient['full_name']}'s history",
                            patient=patient, records=records, reviews_by_assessment=reviews_by_assessment, open_follow_up=open_follow_up,
-                           appointments=appointments)
+                           appointments=appointments, review_form=review_form, review_errors=review_errors or {}, review_mode=review_mode,
+                           min_date=clock.local_today(zone).isoformat())
 
 
 @authorization_bp.route("/patients/<int:patient_id>/assessments/<int:assessment_id>")
@@ -311,27 +322,76 @@ def delete_appointment(patient_id, appointment_id):
     return redirect(url_for("authorization.patient_history", patient_id=patient_id))
 
 
+REVIEW_NOTE_ONLY = "note"
+REVIEW_WITH_FOLLOW_UP = "note_follow_up"
+
+
 @authorization_bp.route("/patients/<int:patient_id>/review", methods=["POST"])
 @role_required("professional")
 def add_review(patient_id):
-    auth_store = get_authorization_store()
+    """
+    The one place a professional reviews a shared result: a clinical note on its own, or a clinical note together with
+    a follow-up appointment (and, if they tick it, permission for the patient to screen again right away).
+    Everything is checked first and nothing is saved unless all of it is valid, so a note is never saved without the
+    follow-up that was meant to go with it. A problem shows the form again with everything that was typed.
+    """
+    if not authorizations.is_authorized(get_authorization_store(), patient_id, g.user["user_id"]):
+        abort(404)
+    form = request.form
     try:
-        assessment_id = int(request.form.get("assessment_id", ""))
+        assessment_id = int(form.get("assessment_id", ""))
     except ValueError:
         abort(400)
-    try:
-        clinical_reviews.add_review(get_clinical_review_store(), auth_store, g.user, assessment_id, patient_id,
-                                    request.form.get("note", ""), clock.now_utc())
-    except clinical_reviews.NotAuthorizedError:
+    # The result must be THIS patient's: a note is never attached to anyone else's result by changing the number.
+    if get_assessment_store().get_assessment(patient_id, assessment_id) is None:
         abort(404)
-    except ValueError as error:
-        flash(str(error), "error")
-        return redirect(url_for("authorization.patient_history", patient_id=patient_id))
-    flash("Your note was added.", "success")
-    notifications.notify_clinical_review_added(get_notification_store(), patient_id, g.user["full_name"], assessment_id, clock.now_utc())
-    current_app.logger.info("Clinical review added (patient_user_id=%s, professional_user_id=%s, assessment_id=%s)",
-                            patient_id, g.user["user_id"], assessment_id)
-    return redirect(url_for("authorization.patient_history", patient_id=patient_id))
+    mode = form.get("mode") or REVIEW_NOTE_ONLY
+    if mode not in (REVIEW_NOTE_ONLY, REVIEW_WITH_FOLLOW_UP):
+        abort(400)
+
+    zone, now = current_app.config["APP_TIMEZONE"], clock.now_utc()
+    errors = {}
+    note = (form.get("note") or "").strip()
+    if not note:
+        errors["note"] = "Write your clinical note."
+    elif len(note) > clinical_reviews.MAX_NOTE_LENGTH:
+        errors["note"] = f"The note is longer than {clinical_reviews.MAX_NOTE_LENGTH} characters."
+    scheduled_at, purpose, notes = None, (form.get("purpose") or "").strip(), (form.get("notes") or "").strip()
+    if mode == REVIEW_WITH_FOLLOW_UP:
+        try:
+            scheduled_at = _parse_local_datetime(form, zone)
+            if scheduled_at < now:
+                errors["date"] = "Choose a date and time in the future."
+        except ValueError as error:
+            errors["date"] = str(error)
+        if not purpose:
+            errors["purpose"] = "Enter what the follow-up is for."
+        elif len(purpose) > followup_appointments.MAX_PURPOSE_LENGTH:
+            errors["purpose"] = f"The purpose is longer than {followup_appointments.MAX_PURPOSE_LENGTH} characters."
+        if len(notes) > followup_appointments.MAX_NOTES_LENGTH:
+            errors["notes"] = f"The notes are longer than {followup_appointments.MAX_NOTES_LENGTH} characters."
+    if errors:
+        return _history_page(patient_id, review_form=form, review_errors=errors)
+
+    try:
+        clinical_reviews.add_review(get_clinical_review_store(), get_authorization_store(), g.user, assessment_id, patient_id, note, now)
+        notifications.notify_clinical_review_added(get_notification_store(), patient_id, g.user["full_name"], assessment_id, now)
+        message = "Your note was added."
+        if mode == REVIEW_WITH_FOLLOW_UP:
+            followup_appointments.schedule(get_followup_appointment_store(), get_authorization_store(), g.user, patient_id,
+                                           scheduled_at, purpose, notes, now)
+            notifications.notify_follow_up_requested(get_notification_store(), patient_id, g.user["full_name"],
+                                                     f"Appointment scheduled: {purpose}", now)
+            message = "Your note was added and the follow-up appointment was scheduled."
+            if form.get("rescreen") == "1" and not followups.open_request(get_followup_store(), patient_id):
+                followups.request_followup(get_followup_store(), get_authorization_store(), g.user, patient_id, purpose, now)
+                message = "Your note was added, the follow-up appointment was scheduled, and they can screen again now."
+    except (clinical_reviews.NotAuthorizedError, followup_appointments.NotAuthorizedError, followups.NotAuthorizedError):
+        abort(404)                                     # the patient ended the sharing a moment ago
+    flash(message, "success")
+    current_app.logger.info("Clinical review added (patient_user_id=%s, professional_user_id=%s, assessment_id=%s, with_follow_up=%s)",
+                            patient_id, g.user["user_id"], assessment_id, mode == REVIEW_WITH_FOLLOW_UP)
+    return redirect(url_for("authorization.patient_history", patient_id=patient_id) + f"#assessment-{assessment_id}")
 
 
 @authorization_bp.route("/patients/<int:patient_id>/follow-up", methods=["POST"])

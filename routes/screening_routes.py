@@ -207,6 +207,8 @@ def result(assessment_id):
     reviews = [dict(r, date=clock.to_local_date(r["created_at"], config["APP_TIMEZONE"])) for r in clinical_reviews.for_assessment(get_clinical_review_store(), assessment_id)]
     tips = kidney_tips.personalized_tips(row["inputs"], record["level"])
     outside = screening_contract.outside_training(_catalog(), row["inputs"]) if row["inputs"] else []
+    if row["assessment_type"] == "enhanced" and row["inputs"]:
+        outside += lab_contract.outside_usual_range(lab_contract.load_lab_catalog(), row["inputs"])
     return render_template("screening/result.html", page_title="Screening result", record=record, previous=previous, change=change, outside=outside,
                            explanation=explanation, explanation_unavailable=explanations.UNAVAILABLE, answers=answers, level=record["level"],
                            threshold=record["threshold"], source_id=row.get("source_assessment_id"), reviews=reviews, tips=tips)

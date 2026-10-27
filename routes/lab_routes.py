@@ -120,7 +120,8 @@ def confirm(lab_document_id):
     if document["status"] == "discarded":
         return redirect(url_for("lab.start"))
     if request.method == "GET":
-        return _confirm_form(document["ocr_values"] or {}, {}, document=document)
+        found = document["ocr_values"] or {}
+        return _confirm_form(found, {}, document=document, unusual=lab_contract.unusual_values(_catalog(), found))
     return _submit(document["ocr_values"], request.form, document=document)
 
 
@@ -131,9 +132,10 @@ def confirm_manual():
     return blocked if blocked else _submit(None, request.form, document=None)
 
 
-def _confirm_form(values, errors, document=None):
+def _confirm_form(values, errors, document=None, unusual=()):
     return render_template("lab/confirm.html", page_title="Confirm your lab values", catalog=_catalog(),
-                           values=values, errors=errors, document=document)
+                           values=values, errors=errors, document=document, unusual=list(unusual),
+                           unusual_signature=lab_contract.unusual_signature(unusual))
 
 
 def _submit(ocr_values, form, document):
@@ -142,6 +144,12 @@ def _submit(ocr_values, form, document):
         errors["attest"] = "Please confirm that this report is yours and that the values match it."
     if errors:
         return _confirm_form({**(ocr_values or {}), **{k: v for k, v in form.items() if v}}, errors, document=document)
+    # Any real value is accepted, but one far outside the usual range is shown back once to be checked (a unit or a
+    # decimal point is easy to get wrong). Ticking "these are correct" for exactly these values lets it through.
+    unusual = lab_contract.unusual_values(_catalog(), values)
+    if unusual and form.get("confirm_unusual") != lab_contract.unusual_signature(unusual):
+        return _confirm_form({**(ocr_values or {}), **{k: v for k, v in form.items() if v}}, lab_contract.unusual_errors(unusual, form),
+                             document=document, unusual=unusual)
 
     source = _latest_preliminary()                  # re-read: it must still be there, even though _blocked() just checked
     row = dict(source["inputs"])

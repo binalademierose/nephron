@@ -331,9 +331,10 @@ def _patient_document(record, lab_document_id):
     return document if document and document["status"] not in ("confirmed", "discarded") else None   # same rule as lab_routes.confirm
 
 
-def _enhanced_form(record, values, errors, document=None):
+def _enhanced_form(record, values, errors, document=None, unusual=()):
     return render_template("lab/confirm.html", page_title="Enhanced assessment", catalog=current_app.extensions["lab_catalog"],
                            values=values, errors=errors, document=document, nav_key="patients",
+                           unusual=list(unusual), unusual_signature=lab_contract.unusual_signature(unusual),
                            upload_action=url_for("patient_records.enhanced_upload", patient_code=record["patient_code"]),
                            heading="Enhanced / Laboratory assessment",
                            subheading=f"For {record['full_name']} ({record['patient_code']}) - enter the lab values you have; leave the rest blank.",
@@ -358,13 +359,18 @@ def enhanced(patient_code):
                                title="Enhanced assessment is temporarily unavailable"), 503
     document = _patient_document(record, request.values.get("document"))
     if request.method == "GET":
-        return _enhanced_form(record, (document or {}).get("ocr_values") or {}, {}, document)
+        found = (document or {}).get("ocr_values") or {}
+        return _enhanced_form(record, found, {}, document, lab_contract.unusual_values(current_app.extensions["lab_catalog"], found))
 
     values, errors = lab_contract.validate_lab_values(current_app.extensions["lab_catalog"], request.form)
     if document is not None and request.form.get("attest") != "1":    # an uploaded report: the professional vouches for it
         errors["attest"] = "Please confirm that this report is the patient's and that the values match it."
     if errors:
         return _enhanced_form(record, {k: v for k, v in request.form.items() if v}, errors, document)
+    unusual = lab_contract.unusual_values(current_app.extensions["lab_catalog"], values)   # checked once, never refused
+    if unusual and request.form.get("confirm_unusual") != lab_contract.unusual_signature(unusual):
+        return _enhanced_form(record, {k: v for k, v in request.form.items() if v}, lab_contract.unusual_errors(unusual, request.form),
+                              document, unusual)
     row = dict(source["inputs"])
     row.update(values)
     try:
