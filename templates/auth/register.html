@@ -26,7 +26,7 @@
 <form method="post" action="{{ url_for('auth.register') }}" novalidate>
   {{ csrf_field() }}
   <fieldset class="role-grid" aria-describedby="role-error">
-    <legend class="visually-hidden">I am a</legend>
+    <legend class="form-label">I am a <span class="chip chip-required">Required</span></legend>
     <label class="role-card">
       <input type="radio" name="role" value="general" {{ 'checked' if form.get('role') != 'professional' }}>
       <span class="role-tile">{{ icon_chip('user', 'blue') }}<strong>General user</strong><span class="role-note">Screen yourself</span></span>
