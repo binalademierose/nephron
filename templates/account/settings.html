@@ -20,7 +20,7 @@
     <form method="post" action="{{ url_for('account.change_password') }}" novalidate data-confirm="default" data-confirm-title="Change your password?" data-confirm-message="Every other device signed in to your account will be signed out. You will use the new password from now on." data-confirm-accept="Change password" data-confirm-dismiss="Not now">
       {{ csrf_field() }}
       <div class="form-group">
-        <label class="form-label" for="current_password">Current password</label>
+        <label class="form-label" for="current_password">Current password <span class="chip chip-required">Required</span></label>
         <div class="input-wrap has-icon has-action">
           {{ icon('lock', 'input-icon') }}
           <input class="form-control{{ ' is-invalid' if errors.get('current_password') }}" id="current_password" name="current_password" type="password" autocomplete="current-password" required aria-describedby="current_password-error"{{ ' aria-invalid="true" autofocus'|safe if errors.get('current_password') }}>
@@ -29,7 +29,7 @@
         {{ field_error(errors, 'current_password') }}
       </div>
       <div class="form-group">
-        <label class="form-label" for="new_password">New password</label>
+        <label class="form-label" for="new_password">New password <span class="chip chip-required">Required</span></label>
         <div class="input-wrap has-icon has-action">
           {{ icon('lock', 'input-icon') }}
           <input class="form-control{{ ' is-invalid' if errors.get('new_password') }}" id="new_password" name="new_password" type="password" autocomplete="new-password" maxlength="128" required aria-describedby="new_password-hint new_password-error"{{ ' aria-invalid="true"'|safe if errors.get('new_password') }}{{ ' autofocus'|safe if errors.get('new_password') and not errors.get('current_password') }}>
@@ -78,7 +78,7 @@
       <form method="post" action="{{ url_for('account.deactivate_account') }}" novalidate data-confirm="default" data-confirm-title="Deactivate your account?" data-confirm-message="You will be signed out and will not be able to sign in again until an administrator reactivates your account." data-confirm-accept="Deactivate" data-confirm-dismiss="Cancel">
         {{ csrf_field() }}
         <div class="form-group">
-          <label class="form-label" for="deactivate_password">Confirm your password</label>
+          <label class="form-label" for="deactivate_password">Confirm your password <span class="chip chip-required">Required</span></label>
           <div class="input-wrap has-icon">
             {{ icon('lock', 'input-icon') }}
             <input class="form-control{{ ' is-invalid' if danger_error == 'deactivate' }}" id="deactivate_password" name="password" type="password" autocomplete="current-password" required{{ ' aria-invalid="true" autofocus'|safe if danger_error == 'deactivate' }}>
@@ -95,7 +95,7 @@
       <form method="post" action="{{ url_for('account.delete_account') }}" novalidate data-confirm="default" data-confirm-title="Permanently delete your account?" data-confirm-message="This removes your account and all of your data. It cannot be undone." data-confirm-accept="Delete forever" data-confirm-dismiss="Cancel">
         {{ csrf_field() }}
         <div class="form-group">
-          <label class="form-label" for="delete_password">Confirm your password</label>
+          <label class="form-label" for="delete_password">Confirm your password <span class="chip chip-required">Required</span></label>
           <div class="input-wrap has-icon">
             {{ icon('lock', 'input-icon') }}
             <input class="form-control{{ ' is-invalid' if danger_error == 'delete' }}" id="delete_password" name="password" type="password" autocomplete="current-password" required{{ ' aria-invalid="true" autofocus'|safe if danger_error == 'delete' }}>
@@ -103,7 +103,7 @@
         </div>
         <label class="agree-check" for="confirm_delete">
           <input type="checkbox" id="confirm_delete" name="confirm_delete" value="delete" required>
-          <span>I understand this permanently deletes my account and all of my data.</span>
+          <span>I understand this permanently deletes my account and all of my data. <span class="chip chip-required">Required</span></span>
         </label>
         {% if danger_error == 'delete' %}<p class="form-error" role="alert">{{ icon('alert-circle') }}<span>{{ danger_message }}</span></p>{% endif %}
         <button class="button button-danger" type="submit" style="margin-top: var(--space-3);">{{ icon('alert-triangle') }}Delete my account</button>
