@@ -5,6 +5,8 @@ or results of a named person - only accounts (who can sign in) and totals (how m
 """
 from datetime import timedelta
 
+from services import clock
+
 ROLES = ("general", "professional", "admin")
 STATUSES = ("active", "inactive")
 VERIFICATION = ("pending", "verified", "rejected")
@@ -58,10 +60,13 @@ def professionals(accounts, status=None):
 AGE_GROUPS = (("Under 18", 0, 17), ("18-44", 18, 44), ("45-64", 45, 64), ("65+", 65, 200))
 
 
-def user_kpis(accounts, now, days=30):
-    """How many people use Nephron: everyone with an account, those who signed in recently, and this month's new ones."""
+def user_kpis(accounts, now, days=30, timezone_name="UTC"):
+    """How many people use Nephron: everyone with an account, those who signed in recently, and this month's new ones.
+    now and the stored times are UTC; "this month" is the month where Nephron is used (timezone_name), so it starts at
+    midnight on the 1st in the Philippines - not at 8 in the morning, which is midnight UTC."""
     since = now - timedelta(days=days)
-    month_start = now.replace(day=1, hour=0, minute=0, second=0, microsecond=0)
+    local_now = clock.to_local_datetime(now, timezone_name)
+    month_start = clock.from_local_datetime(local_now.replace(day=1, hour=0, minute=0, second=0, microsecond=0, tzinfo=None), timezone_name)
     people = [a for a in accounts if not a.get("is_admin")]
     return {
         "users": len(people),
