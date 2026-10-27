@@ -2,7 +2,11 @@
    a lab report usually is. Only Serum_Creatinine is required. The SERVER checks every value again on submit
    (services/lab_contract.py), so nothing here needs to be trusted on its own. #}
 {% extends "layouts/app_base.html" %}
-{% from "partials/_macros.html" import icon, alert_box, csrf_field, field_error %}
+{% from "partials/_macros.html" import icon, alert_box, csrf_field, field_error, need %}
+{# Values far outside the usual range (services/lab_contract.unusual_values): accepted, but shown back once to be
+   checked - an abnormal result is real, a wrong unit or decimal point is a typo. #}
+{% set unusual = unusual|default([]) %}
+{% set unusual_by_name = {} %}{% for item in unusual %}{% set _ = unusual_by_name.update({item.name: item}) %}{% endfor %}
 {% set active_nav = nav_key or 'laboratory' %}
 {% block header_title %}{{ heading or 'Confirm your lab values' }}{% endblock %}
 {% block header_subtitle %}
@@ -15,6 +19,9 @@
 {{ alert_box('info', "We found " ~ document.ocr_values|length ~ " value" ~ ('' if document.ocr_values|length == 1 else 's') ~ " in the upload. Check each one against " ~ whose ~ " report before continuing.", dismissible=False, title='Suggested from the upload') }}
 {% elif document %}
 {{ alert_box('warning', "We could not read any values from that file. Please type them in below.", dismissible=False, title='Nothing was found automatically') }}
+{% endif %}
+{% if unusual %}
+{{ alert_box('warning', (unusual|length) ~ (' value is' if unusual|length == 1 else ' values are') ~ " far outside the usual range. They are accepted - please check them at the end of the form, tick the box there, and press Analyse.", dismissible=False, title='Some values need a second look') }}
 {% endif %}
 {% if document and document.verification %}
 {% set v = document.verification %}
@@ -60,7 +67,7 @@
   <p class="text-muted">Upload a photo or {% if ocr_pdf_available %}PDF {% endif %}of the patient's lab report. The values found pre-fill the form below - check each one before analysing.</p>
   <form method="post" action="{{ upload_action }}" enctype="multipart/form-data" class="upload-form">
     {{ csrf_field() }}
-    <label class="form-label" for="document">Lab report</label>
+    <label class="form-label" for="document">Lab report {{ need(true) }}</label>
     <input class="form-control" type="file" id="document" name="document" accept="{% if ocr_pdf_available %}image/jpeg,image/png,application/pdf{% else %}image/jpeg,image/png{% endif %}" required>
     <button class="button button-primary" type="submit" data-loading-text="Reading the report...">{{ icon('upload') }}Upload and read</button>
   </form>
@@ -78,15 +85,16 @@
       {% set value = values.get(name, '') %}
       {% set was_suggested = document and document.ocr_values and name in document.ocr_values %}
       <div class="form-group">
-        <label class="form-label" for="f-{{ name }}">{{ f.label }}{% if f.required %} <span class="required-mark" aria-hidden="true">*</span>{% endif %}{% if f.get('explain') %} <button type="button" class="field-help-button" data-field-help="{{ f.explain }}" aria-label="What is {{ f.short }}?">?</button>{% endif %}</label>
+        <label class="form-label" for="f-{{ name }}">{{ f.label }} {{ need(f.required) }}{% if f.get('explain') %} <button type="button" class="field-help-button" data-field-help="{{ f.explain }}" aria-label="What is {{ f.short }}?">?</button>{% endif %}</label>
         <div class="input-wrap has-suffix">
-          <input class="form-control{{ ' is-invalid' if errors.get(name) }}{{ ' is-suggested' if was_suggested }}" id="f-{{ name }}" name="{{ name }}"
+          <input class="form-control{{ ' is-invalid' if errors.get(name) }}{{ ' is-suggested' if was_suggested }}{{ ' is-unusual' if name in unusual_by_name }}" id="f-{{ name }}" name="{{ name }}"
                 type="text" inputmode="decimal" autocomplete="off" value="{{ value }}"
                 aria-describedby="{{ name }}-hint {{ name }}-error"{{ ' aria-invalid=\"true\"'|safe if errors.get(name) }}
                 {{ 'required' if f.required }}>
           <span class="input-suffix" aria-hidden="true">{{ f.unit }}</span>
         </div>
-        {% if was_suggested and not errors.get(name) %}<p class="form-helper form-helper-suggested" id="{{ name }}-hint">{{ icon('search') }}Found in the upload - check it</p>
+        {% if name in unusual_by_name and not errors.get(name) %}<p class="form-helper form-helper-unusual" id="{{ name }}-hint">{{ icon('alert-triangle') }}Outside the usual range ({{ unusual_by_name[name].usual }}) - accepted; please check the value and unit</p>
+        {% elif was_suggested and not errors.get(name) %}<p class="form-helper form-helper-suggested" id="{{ name }}-hint">{{ icon('search') }}Found in the upload - check it</p>
         {% elif f.get('hint') %}<p class="form-helper" id="{{ name }}-hint">{{ f.hint }}</p>{% endif %}
         {{ field_error(errors, name) }}
       </div>
@@ -99,9 +107,24 @@
   <div class="card attest-card{{ ' is-invalid' if errors.get('attest') }}">
     <label class="attest-label">
       <input type="checkbox" name="attest" value="1"{{ ' checked' if values.get('attest') == '1' }}{{ ' aria-invalid="true"'|safe if errors.get('attest') }} aria-describedby="attest-error">
-      <span>{% if upload_action %}I confirm this report belongs to this patient and that the values above match it.{% else %}I confirm this report is mine and that the values above match it.{% endif %}</span>
+      <span>{% if upload_action %}I confirm this report belongs to this patient and that the values above match it.{% else %}I confirm this report is mine and that the values above match it.{% endif %} {{ need(true) }}</span>
     </label>
     {{ field_error(errors, 'attest') }}
+  </div>
+  {% endif %}
+  {% if unusual %}
+  <div class="card unusual-card{{ ' is-invalid' if errors.get('confirm_unusual') }}" id="unusual-check" role="alert" aria-labelledby="unusual-heading">
+    <input type="hidden" name="unusual_shown" value="{{ unusual_signature }}">
+    <h2 class="unusual-title" id="unusual-heading">{{ icon('alert-triangle') }}Please check {{ 'this value' if unusual|length == 1 else 'these ' ~ unusual|length ~ ' values' }}</h2>
+    <p>{{ 'It is' if unusual|length == 1 else 'They are' }} far outside the range Nephron usually sees. That is expected when kidneys are not working well, so {{ 'it is' if unusual|length == 1 else 'they are' }} accepted &mdash; but a wrong unit (for example creatinine in &micro;mol/L instead of mg/dL) or a misplaced decimal point looks the same, so please compare with the report.</p>
+    <ul class="unusual-list">
+      {% for item in unusual %}<li><a href="#f-{{ item.name }}"><strong>{{ item.short }}: {{ item.value }}</strong></a> <span class="text-muted">&middot; usually {{ item.usual }}</span></li>{% endfor %}
+    </ul>
+    <label class="attest-label" for="confirm_unusual">
+      <input type="checkbox" id="confirm_unusual" name="confirm_unusual" value="{{ unusual_signature }}" aria-describedby="confirm_unusual-error"{{ ' aria-invalid="true"'|safe if errors.get('confirm_unusual') }}{{ ' autofocus'|safe if request.method == 'POST' }}>
+      <span>I have checked {{ 'this value and its unit' if unusual|length == 1 else 'these values and their units' }} against the report &mdash; {{ 'it is' if unusual|length == 1 else 'they are' }} correct. {{ need(true) }}</span>
+    </label>
+    {{ field_error(errors, 'confirm_unusual') }}
   </div>
   {% endif %}
   <div class="section-tight-inline">

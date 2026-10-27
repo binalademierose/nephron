@@ -16,7 +16,7 @@
       check and correct before anything is analysed - nothing from the file is used without your confirmation.</p>
     <form method="post" action="{{ url_for('lab.upload') }}" enctype="multipart/form-data" class="upload-form">
       {{ csrf_field() }}
-      <label class="form-label" for="document">Lab report</label>
+      <label class="form-label" for="document">Lab report <span class="chip chip-required">Required</span></label>
       <input class="form-control" type="file" id="document" name="document" accept="{% if ocr_pdf_available %}image/jpeg,image/png,application/pdf{% else %}image/jpeg,image/png{% endif %}" required>
       <button class="button button-primary" type="submit">{{ icon('upload') }}Upload and read</button>
     </form>
