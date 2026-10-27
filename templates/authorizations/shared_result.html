@@ -9,10 +9,17 @@
 {% block header_title %}{{ patient.full_name }}'s result{% endblock %}
 {% block header_subtitle %}{{ result.type }}, {{ format_date(result.date) }} &middot; shared with you{% endblock %}
 
+{# The two ways to respond to THIS result - each opens the one review form on the history page with this result
+   already chosen: a clinical note only, or a clinical note + follow-up appointment. #}
+{% macro respond_buttons() %}
+<a class="button button-secondary button-sm" href="{{ url_for('authorization.patient_history', patient_id=patient.user_id, assessment=result.assessment_id) ~ '#write-review' }}">{{ icon('message') }}Add a clinical note</a>
+<a class="button button-primary button-sm" href="{{ url_for('authorization.patient_history', patient_id=patient.user_id, assessment=result.assessment_id, with='follow-up') ~ '#write-review' }}">{{ icon('calendar') }}Add note + follow-up</a>
+{% endmacro %}
+
 {% block content %}
 <div class="page-actions reveal">
   <a class="button button-secondary button-sm" href="{{ url_for('authorization.patient_history', patient_id=patient.user_id) }}#assessment-{{ result.assessment_id }}">{{ icon('chevron-left') }}Back to {{ patient.full_name }}'s history</a>
-  <a class="button button-primary button-sm" href="{{ url_for('authorization.patient_history', patient_id=patient.user_id, assessment=result.assessment_id) }}#write-review">{{ icon('message') }}Write a review</a>
+  <div class="respond-actions">{{ respond_buttons() }}</div>
 </div>
 
 <section class="card card-hero result-card reveal" style="--i: 1;" aria-labelledby="category-heading">
@@ -59,6 +66,14 @@
   {% else %}
   <p class="empty-inline">{{ icon('info') }}No answers were saved with this result.</p>
   {% endif %}
+</section>
+
+<section class="card card-soft respond-card reveal" style="--i: 4.5;" aria-labelledby="respond-heading">
+  <div>
+    <h2 class="card-title" id="respond-heading">{{ icon('stethoscope') }}Respond to this result</h2>
+    <p class="text-muted">Write a clinical note {{ patient.full_name }} will read on this result &mdash; on its own, or with a follow-up appointment.</p>
+  </div>
+  <div class="respond-actions">{{ respond_buttons() }}</div>
 </section>
 
 {% if reviews %}

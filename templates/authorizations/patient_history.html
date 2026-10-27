@@ -3,7 +3,7 @@
    factors on the professional's own page (authorization.shared_result), never the patient's own result page
    (screening.result), which stays scoped to the signed-in patient themselves - see README.md. #}
 {% extends "layouts/app_base.html" %}
-{% from "partials/_macros.html" import icon, csrf_field, risk_badge %}
+{% from "partials/_macros.html" import icon, csrf_field, risk_badge, need, field_error, alert_box %}
 {% set active_nav = 'shared' %}
 {% block header_title %}{{ patient.full_name }}'s history{% endblock %}
 {% block header_subtitle %}{{ patient.email }}{% endblock %}
@@ -14,49 +14,91 @@
   <a class="button button-secondary" href="{{ url_for('authorization.manage_connection', patient_id=patient.user_id) }}">{{ icon('share') }}Manage connection</a>
 </div>
 
-<section class="card card-hero reveal" style="--i: 1;" aria-labelledby="follow-up-heading">
-  <div class="card-header"><h2 class="card-title" id="follow-up-heading">{{ icon('clock') }}Follow-up</h2></div>
+{% if records %}
+{# ONE place to review a result: a clinical note only, or a clinical note + a follow-up appointment (and, optionally,
+   letting the patient screen again now). Replaces the separate follow-up request, appointment and review forms. #}
+{% set f = review_form %}
+{% set e = review_errors %}
+{% set with_follow_up = review_mode == 'note_follow_up' %}
+<section class="card reveal write-review" id="write-review" style="--i: 1;" aria-labelledby="write-review-heading">
+  <div class="card-header">
+    <h2 class="card-title" id="write-review-heading">{{ icon('message') }}Review a result</h2>
+    <span class="card-tags text-small text-muted">A clinical note, with or without a follow-up</span>
+  </div>
   {% if open_follow_up %}
-  <p>{{ icon('check-circle') }}A follow-up screening was requested on {{ format_date(open_follow_up.date) }}
-    {% if open_follow_up.message %}: "{{ open_follow_up.message }}"{% endif %}. {{ patient.full_name }} can screen again right away.</p>
-  {% else %}
-  <form method="post" action="{{ url_for('authorization.request_followup', patient_id=patient.user_id) }}" class="upload-form">
-    {{ csrf_field() }}
-    <div class="form-group" style="flex: 1; margin-bottom: 0;">
-      <label class="form-label" for="followup-message">Ask {{ patient.full_name }} to screen again <span class="chip chip-optional">Optional message</span></label>
-      <input class="form-control" type="text" id="followup-message" name="message" maxlength="500" placeholder="e.g. Please redo this after your medication change">
-    </div>
-    <button class="button button-primary" type="submit">{{ icon('mail') }}Request follow-up</button>
-  </form>
-  <p class="form-helper">This lets {{ patient.full_name }} take one screening right away, even during their usual waiting period. After that screening, the waiting period applies again.</p>
+  <p class="review-status">{{ icon('check-circle') }}<span>A follow-up screening was requested on {{ format_date(open_follow_up.date) }}{% if open_follow_up.message %}: "{{ open_follow_up.message }}"{% endif %}. {{ patient.full_name }} can screen again right away.</span></p>
   {% endif %}
+  {% if e %}{{ alert_box('error', 'Nothing was saved yet. Please fix the highlighted fields below.', dismissible=False) }}{% endif %}
+  <form method="post" action="{{ url_for('authorization.add_review', patient_id=patient.user_id) }}" class="write-review-form" novalidate
+        data-confirm="default" data-confirm-title="Save this review?" data-confirm-message="{{ patient.full_name }} will see the note on that result, and any follow-up appointment on their Follow-up page. A saved note cannot be edited." data-confirm-accept="Save" data-confirm-dismiss="Keep editing">
+    {{ csrf_field() }}
+    <div class="form-group">
+      <label class="form-label" for="review-assessment">Result to review {{ need(true) }}</label>
+      <select class="form-control" id="review-assessment" name="assessment_id">
+        {% for record in records %}
+        {% set n = reviews_by_assessment.get(record.assessment_id, [])|length %}
+        <option value="{{ record.assessment_id }}" {{ 'selected' if record.assessment_id == selected_assessment_id }}>
+          {{ format_date(record.date) }} - {{ record.type }} - {{ level_label(record.level, record.assessment_type) }} - {{ 'awaiting review' if not n else (n ~ ' note' ~ ('s' if n != 1 else '')) }}
+        </option>
+        {% endfor %}
+      </select>
+    </div>
+
+    <fieldset class="form-group review-mode" aria-describedby="review-mode-hint">
+      <legend class="form-label">What would you like to give? {{ need(true) }}</legend>
+      <div class="choice-group review-mode-choices">
+        <label class="choice"><input type="radio" name="mode" value="note" {{ 'checked' if not with_follow_up }}>
+          <span class="choice-tile"><span class="review-mode-text"><strong>{{ icon('message') }}Clinical note only</strong><small class="choice-hint">Your note on this result</small></span></span></label>
+        <label class="choice"><input type="radio" name="mode" value="note_follow_up" {{ 'checked' if with_follow_up }}>
+          <span class="choice-tile"><span class="review-mode-text"><strong>{{ icon('calendar') }}Clinical note + follow-up</strong><small class="choice-hint">Your note, and a follow-up appointment</small></span></span></label>
+      </div>
+      <p class="form-helper" id="review-mode-hint">Either way {{ patient.full_name }} reads your note on that result.</p>
+    </fieldset>
+
+    <div class="form-group">
+      <label class="form-label" for="review-note">Clinical note {{ need(true) }}</label>
+      <textarea class="form-control{{ ' is-invalid' if e.get('note') }}" id="review-note" name="note" rows="4" maxlength="2000" placeholder="Your clinical note on this result..." aria-describedby="note-error"{{ ' aria-invalid="true" autofocus'|safe if e.get('note') }}>{{ f.get('note', '') }}</textarea>
+      {{ field_error(e, 'note') }}
+    </div>
+
+    <div class="review-follow-up" data-shown-when="mode=note_follow_up"{{ ' hidden' if not with_follow_up }}>
+      <h3 class="review-follow-up-title">{{ icon('calendar') }}Follow-up appointment</h3>
+      <div class="form-row">
+        <div class="form-group">
+          <label class="form-label" for="appt-date">Date {{ need(true) }}</label>
+          <input class="form-control{{ ' is-invalid' if e.get('date') }}" type="date" id="appt-date" name="date" min="{{ min_date }}" value="{{ f.get('date', '') }}" aria-describedby="date-error"{{ ' aria-invalid="true"'|safe if e.get('date') }}>
+          {{ field_error(e, 'date') }}
+        </div>
+        <div class="form-group">
+          <label class="form-label" for="appt-time">Time {{ need(true) }}</label>
+          <input class="form-control{{ ' is-invalid' if e.get('date') }}" type="time" id="appt-time" name="time" value="{{ f.get('time', '') }}">
+        </div>
+      </div>
+      <div class="form-group">
+        <label class="form-label" for="appt-purpose">Purpose {{ need(true) }}</label>
+        <input class="form-control{{ ' is-invalid' if e.get('purpose') }}" type="text" id="appt-purpose" name="purpose" maxlength="200" value="{{ f.get('purpose', '') }}" placeholder="e.g. Recheck kidney function labs" aria-describedby="purpose-error"{{ ' aria-invalid="true"'|safe if e.get('purpose') }}>
+        {{ field_error(e, 'purpose') }}
+      </div>
+      <div class="form-group">
+        <label class="form-label" for="appt-notes">Notes for the patient {{ need(false) }}</label>
+        <textarea class="form-control{{ ' is-invalid' if e.get('notes') }}" id="appt-notes" name="notes" maxlength="1000" rows="2" placeholder="Anything they should bring or know beforehand" aria-describedby="notes-error">{{ f.get('notes', '') }}</textarea>
+        {{ field_error(e, 'notes') }}
+      </div>
+      {% if not open_follow_up %}
+      <label class="form-check review-rescreen" for="review-rescreen">
+        <input class="pick" type="checkbox" id="review-rescreen" name="rescreen" value="1" {{ 'checked' if f.get('rescreen') == '1' }}>
+        <span>Also let {{ patient.full_name }} screen again now, before their usual waiting period ends {{ need(false) }}</span>
+      </label>
+      {% endif %}
+    </div>
+
+    <button class="button button-primary" type="submit" data-label-note="Save note" data-label-note_follow_up="Save note and schedule follow-up" data-mode-label>{{ icon('message') }}<span>{{ 'Save note and schedule follow-up' if with_follow_up else 'Save note' }}</span></button>
+  </form>
 </section>
+{% endif %}
 
 <section class="card reveal" style="--i: 1.5;" aria-labelledby="appointments-heading">
-  <div class="card-header"><h2 class="card-title" id="appointments-heading">{{ icon('calendar') }}Schedule a follow-up appointment</h2></div>
-  <form method="post" action="{{ url_for('authorization.schedule_appointment', patient_id=patient.user_id) }}" class="appointment-form">
-    {{ csrf_field() }}
-    <div class="form-row">
-      <div class="form-group">
-        <label class="form-label" for="appt-date">Date <span class="chip chip-required">Required</span></label>
-        <input class="form-control" type="date" id="appt-date" name="date" required>
-      </div>
-      <div class="form-group">
-        <label class="form-label" for="appt-time">Time <span class="chip chip-required">Required</span></label>
-        <input class="form-control" type="time" id="appt-time" name="time" required>
-      </div>
-    </div>
-    <div class="form-group">
-      <label class="form-label" for="appt-purpose">Purpose <span class="chip chip-required">Required</span></label>
-      <input class="form-control" type="text" id="appt-purpose" name="purpose" maxlength="200" placeholder="e.g. Recheck kidney function labs" required>
-    </div>
-    <div class="form-group">
-      <label class="form-label" for="appt-notes">Notes <span class="chip chip-optional">Optional</span></label>
-      <textarea class="form-control" id="appt-notes" name="notes" maxlength="1000" rows="2" placeholder="Anything the patient should bring or know beforehand"></textarea>
-    </div>
-    <button class="button button-primary" type="submit">{{ icon('calendar') }}Schedule appointment</button>
-  </form>
-
+  <div class="card-header"><h2 class="card-title" id="appointments-heading">{{ icon('calendar') }}Follow-up appointments</h2></div>
   {% if appointments %}
   <ul class="appointment-list" role="list">
     {% for appt in appointments %}
@@ -106,20 +148,20 @@
           {{ csrf_field() }}
           <div class="form-row">
             <div class="form-group">
-              <label class="form-label" for="edit-date-{{ appt.appointment_id }}">Date</label>
+              <label class="form-label" for="edit-date-{{ appt.appointment_id }}">Date {{ need(true) }}</label>
               <input class="form-control" type="date" id="edit-date-{{ appt.appointment_id }}" name="date" value="{{ appt.scheduled_local.strftime('%Y-%m-%d') }}" required>
             </div>
             <div class="form-group">
-              <label class="form-label" for="edit-time-{{ appt.appointment_id }}">Time</label>
+              <label class="form-label" for="edit-time-{{ appt.appointment_id }}">Time {{ need(true) }}</label>
               <input class="form-control" type="time" id="edit-time-{{ appt.appointment_id }}" name="time" value="{{ appt.scheduled_local.strftime('%H:%M') }}" required>
             </div>
           </div>
           <div class="form-group">
-            <label class="form-label" for="edit-purpose-{{ appt.appointment_id }}">Purpose</label>
+            <label class="form-label" for="edit-purpose-{{ appt.appointment_id }}">Purpose {{ need(true) }}</label>
             <input class="form-control" type="text" id="edit-purpose-{{ appt.appointment_id }}" name="purpose" maxlength="200" value="{{ appt.purpose }}" required>
           </div>
           <div class="form-group">
-            <label class="form-label" for="edit-notes-{{ appt.appointment_id }}">Notes</label>
+            <label class="form-label" for="edit-notes-{{ appt.appointment_id }}">Notes for the patient {{ need(false) }}</label>
             <textarea class="form-control" id="edit-notes-{{ appt.appointment_id }}" name="notes" maxlength="1000" rows="2">{{ appt.notes or '' }}</textarea>
           </div>
           <button class="button button-secondary" type="submit">{{ icon('check') }}Save changes</button>
@@ -130,36 +172,9 @@
     {% endfor %}
   </ul>
   {% else %}
-  <p class="empty-inline">{{ icon('info') }}No appointments scheduled yet.</p>
+  <p class="empty-inline">{{ icon('info') }}No appointments scheduled yet. Choose <strong>Clinical note + follow-up</strong> above to schedule one.</p>
   {% endif %}
 </section>
-
-{% if records %}
-{# One place to write a clinical note: choose the result, write, save. The cards below only show the notes. #}
-<section class="card reveal write-review" id="write-review" aria-labelledby="write-review-heading">
-  <div class="card-header"><h2 class="card-title" id="write-review-heading">{{ icon('message') }}Write a clinical review</h2></div>
-  <form method="post" action="{{ url_for('authorization.add_review', patient_id=patient.user_id) }}" class="write-review-form" novalidate
-        data-confirm="default" data-confirm-title="Save this review?" data-confirm-message="The note is added to the chosen result and the patient will see it. A saved note cannot be edited." data-confirm-accept="Save review" data-confirm-dismiss="Keep editing">
-    {{ csrf_field() }}
-    <div class="form-group">
-      <label class="form-label" for="review-assessment">Result to review</label>
-      <select class="form-control" id="review-assessment" name="assessment_id">
-        {% for record in records %}
-        {% set n = reviews_by_assessment.get(record.assessment_id, [])|length %}
-        <option value="{{ record.assessment_id }}" {{ 'selected' if record.assessment_id == selected_assessment_id }}>
-          {{ format_date(record.date) }} - {{ record.type }} - {{ level_label(record.level, record.assessment_type) }} - {{ 'awaiting review' if not n else (n ~ ' note' ~ ('s' if n != 1 else '')) }}
-        </option>
-        {% endfor %}
-      </select>
-    </div>
-    <div class="form-group">
-      <label class="form-label" for="review-note">Clinical note</label>
-      <textarea class="form-control" id="review-note" name="note" rows="4" maxlength="2000" required placeholder="Your clinical note on this result..."></textarea>
-    </div>
-    <button class="button button-primary" type="submit">{{ icon('message') }}Save review</button>
-  </form>
-</section>
-{% endif %}
 
 <div class="section-tight-inline">
   <h2 class="section-heading">Assessment history</h2>
@@ -188,7 +203,8 @@
 
     <div class="history-card-actions">
       <a class="button button-primary button-sm" href="{{ url_for('authorization.shared_result', patient_id=patient.user_id, assessment_id=record.assessment_id) }}">{{ icon('clipboard-list') }}View answers &amp; factors</a>
-      <a class="link-action" href="{{ url_for('authorization.patient_history', patient_id=patient.user_id, assessment=record.assessment_id) }}#write-review">{{ icon('message') }}Write a review for this result</a>
+      <a class="link-action" href="{{ url_for('authorization.patient_history', patient_id=patient.user_id, assessment=record.assessment_id) }}#write-review">{{ icon('message') }}Add a clinical note</a>
+      <a class="link-action" href="{{ url_for('authorization.patient_history', patient_id=patient.user_id, assessment=record.assessment_id, with='follow-up') }}#write-review">{{ icon('calendar') }}Note + follow-up</a>
     </div>
   </section>
   {% endfor %}
@@ -202,21 +218,21 @@
     <form method="post" action="{{ url_for('reports.download_patient_report_for_professional', patient_id=patient.user_id) }}">
       {{ csrf_field() }}
       <fieldset class="form-group">
-        <legend class="form-label">What should the report cover?</legend>
+        <legend class="form-label">What should the report cover? <span class="chip chip-required">Required</span></legend>
         <div class="choice-group">
           <label class="choice"><input type="radio" name="report_type" value="single" checked><span class="choice-tile">One result</span></label>
           <label class="choice"><input type="radio" name="report_type" value="history"><span class="choice-tile">{{ patient.full_name }}'s whole history ({{ records|length }})</span></label>
         </div>
       </fieldset>
       <div class="form-group">
-        <label class="form-label" for="ph-assessment_id">Which result? <span class="text-muted">(only used if "One result" is chosen above)</span></label>
+        <label class="form-label" for="ph-assessment_id">Which result? <span class="chip chip-required">Required for one result</span></label>
         <select class="form-control" id="ph-assessment_id" name="assessment_id">
           {% for record in records %}
           <option value="{{ record.assessment_id }}">{{ format_date(record.date) }} &middot; {{ record.type }} &middot; {{ percent_text(record.probability) }}%</option>
           {% endfor %}
         </select>
       </div>
-      <label class="form-check"><input class="pick" type="checkbox" name="include_reviews" checked><span>Include clinical review notes, if any</span></label>
+      <label class="form-check"><input class="pick" type="checkbox" name="include_reviews" checked><span>Include clinical review notes, if any <span class="chip chip-optional">Optional</span></span></label>
       <button class="button button-primary" type="submit" style="margin-top: var(--space-4);">{{ icon('download') }}Download PDF</button>
     </form>
   </section>
