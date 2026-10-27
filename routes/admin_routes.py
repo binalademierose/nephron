@@ -37,7 +37,7 @@ def dashboard():
     model, stage2 = current_app.extensions.get("model_service"), current_app.extensions.get("model_service_stage2")
     now = clock.now_utc()
     return render_template("admin/dashboard.html", page_title="Administrator",
-                           kpis=admin_overview.user_kpis(accounts, now),
+                           kpis=admin_overview.user_kpis(accounts, now, timezone_name=current_app.config["APP_TIMEZONE"]),
                            risk=admin_overview.risk_by_age(get_assessment_store().latest_per_person()),
                            philippines=community_stats.philippines(get_assessment_store().latest_profiles(),
                                                                    screening_contract.load_catalog(), min_people=1),
