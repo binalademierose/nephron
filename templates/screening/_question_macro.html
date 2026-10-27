@@ -4,7 +4,9 @@
    itself extends a layout can trigger evaluation of THAT template's own block content as a side effect, which
    breaks a totally unrelated render (Jinja resolves it against ITS OWN context, not the importer's). A plain,
    extends-free partial like this one has no such side effect. #}
-{% from "partials/_macros.html" import icon, field_error %}
+{% from "partials/_macros.html" import icon, field_error, need %}
+{# Every question here is required (services/screening_contract.validate_answers refuses a blank one), and each
+   one says so with need(true). Answers fixed from the account are shown locked, not asked, so they carry none. #}
 {% from "partials/_visuals.html" import icon_chip %}
 
 {# Sex is asked THROUGH Gender (ml/feature_catalog.json, "asked_through"): the person's own gender answer is saved
@@ -30,7 +32,7 @@
 {% else %}
 <div class="question-group" data-question data-kind="choice" data-name="{{ field }}" data-gender-question>
   <fieldset class="form-fieldset" aria-describedby="{{ field }}-hint {{ field }}-error">
-    <legend>{{ spec.label }}</legend>
+    <legend>{{ spec.label }} {{ need(true) }}</legend>
     <div class="choice-group choice-group-gender">
       {% for o in spec.options if not sex_fixed or not o.get('sex') or o.sex == sex_fixed.value|string %}
       <label class="choice"><input type="radio" name="{{ field }}" value="{{ o.value }}" data-sex="{{ o.get('sex', '') }}" data-review-label="{{ spec.short }}" data-review-text="{{ o.label }}" {{ 'checked' if gender == o.value }}{{ ' aria-invalid="true"'|safe if errors.get(field) }}><span class="choice-tile">{{ o.label }}</span></label>
@@ -55,7 +57,7 @@
 {% set sex = answers.get(q.name, '') %}
 <div class="question-group question-follow-up" data-question data-kind="choice" data-name="{{ q.name }}" data-sex-follow-up{{ ' hidden' if not gender_option or gender_option.get('sex') }}>
   <fieldset class="form-fieldset" aria-describedby="{{ q.name }}-hint {{ q.name }}-error">
-    <legend>{{ q.label }}</legend>
+    <legend>{{ q.label }} {{ need(true) }}</legend>
     <div class="choice-group">
       {% for o in q.options %}
       <label class="choice"><input type="radio" name="{{ q.name }}" value="{{ o.value }}" data-review-label="{{ q.short }}" data-review-text="{{ o.label }}" {{ 'checked' if sex == o.value }}{{ ' aria-invalid="true"'|safe if errors.get(q.name) }}><span class="choice-tile">{{ o.label }}</span></label>
@@ -105,7 +107,7 @@
      {% if q.kind == 'number' %}data-min="{{ q.valid_min if q.valid_min is defined else q.min }}" data-max="{{ q.valid_max if q.valid_max is defined else q.max }}" data-integer="{{ 'true' if q.integer else 'false' }}"{% endif %}>
   {% if q.kind in ('choice', 'yesno') and q.get('display') != 'select' %}
   <fieldset class="form-fieldset" aria-describedby="{{ name }}-hint {{ name }}-error">
-    <legend>{{ q.label }}</legend>
+    <legend>{{ q.label }} {{ need(true) }}</legend>
     <div class="choice-group">
       {% for o in q.options %}
       <label class="choice"><input type="radio" name="{{ name }}" value="{{ o.value }}" data-review-label="{{ q.short }}" data-review-text="{{ o.label }}" {{ 'checked' if value == o.value }}{{ ' aria-invalid="true"'|safe if errors.get(name) }}><span class="choice-tile">{{ o.label }}{% if o.get('hint') %}<small class="choice-hint">{{ o.hint }}</small>{% endif %}</span></label>
@@ -116,7 +118,7 @@
   </fieldset>
   {% elif q.kind == 'choice' %}
   <div class="form-group">
-    <label class="form-label" for="f-{{ name }}">{{ q.label }}</label>
+    <label class="form-label" for="f-{{ name }}">{{ q.label }} {{ need(true) }}</label>
     <select class="form-control{{ ' is-invalid' if errors.get(name) }}" id="f-{{ name }}" name="{{ name }}" data-review-label="{{ q.short }}" aria-describedby="{{ name }}-hint {{ name }}-error"{{ ' aria-invalid="true"'|safe if errors.get(name) }}>
       <option value="">Choose one</option>
       {% for o in q.options %}<option value="{{ o.value }}" {{ 'selected' if value == o.value }}>{{ o.label }}</option>{% endfor %}
@@ -126,7 +128,7 @@
   </div>
   {% elif q.kind == 'number' %}
   <div class="form-group">
-    <label class="form-label" for="f-{{ name }}">{{ q.label }}</label>
+    <label class="form-label" for="f-{{ name }}">{{ q.label }} {{ need(true) }}</label>
     <div class="input-wrap has-suffix">
       <input class="form-control{{ ' is-invalid' if errors.get(name) }}" id="f-{{ name }}" name="{{ name }}" type="text" inputmode="{{ 'numeric' if q.integer else 'decimal' }}" autocomplete="off" value="{{ value }}" data-review-label="{{ q.short }}" data-review-suffix="{{ q.unit }}" aria-describedby="{{ name }}-hint {{ name }}-error"{{ ' aria-invalid="true"'|safe if errors.get(name) }}>
       <span class="input-suffix" aria-hidden="true">{{ q.unit }}</span>
@@ -140,7 +142,7 @@
     <div class="bmi-fields" role="group" aria-labelledby="{{ name }}-label">
       {% for part in (q.height, q.weight) %}
       <div>
-        <label class="form-label form-label-light" for="f-{{ part.field }}">{{ part.label }}</label>
+        <label class="form-label form-label-light" for="f-{{ part.field }}">{{ part.label }} {{ need(true) }}</label>
         <div class="input-wrap has-suffix">
           <input class="form-control{{ ' is-invalid' if errors.get(part.field) }}" id="f-{{ part.field }}" name="{{ part.field }}" type="text" inputmode="decimal" autocomplete="off" value="{{ answers.get(part.field, '') }}" data-bmi-input="{{ part.field }}" data-min="{{ part.valid_min if part.valid_min is defined else part.min }}" data-max="{{ part.valid_max if part.valid_max is defined else part.max }}" data-unit="{{ part.unit }}" aria-describedby="{{ part.field }}-error"{{ ' aria-invalid="true"'|safe if errors.get(part.field) }}>
           <span class="input-suffix" aria-hidden="true">{{ part.unit }}</span>

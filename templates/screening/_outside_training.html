@@ -1,10 +1,11 @@
 {# Answers the model never saw in training: shown, never hidden, so an estimate built partly on an extrapolation is
-   never presented as if it were not one (services/screening_contract.py outside_training). #}
+   never presented as if it were not one (services/screening_contract.py outside_training), and lab values far outside
+   the range Nephron usually expects (services/lab_contract.py outside_usual_range). #}
 {% if outside %}
 <div class="notice notice-info outside-training reveal" role="note">
   {{ icon('info') }}
   <div>
-    <h2>Some answers are outside what the model learned from</h2>
+    <h2>Some answers are outside the usual range</h2>
     <p>The estimate still uses them, but the model has less experience with answers like these, so treat it with extra care.</p>
     <ul>
       {% for label, value, learned in outside %}<li><strong>{{ label }}: {{ value }}</strong> - {{ learned }}</li>{% endfor %}
