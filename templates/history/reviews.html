@@ -22,7 +22,7 @@
       <li class="review-note">
         <div class="review-note-head">
           <strong>{{ note.professional_name }}</strong>{% if note.profession_title %}<span class="text-muted"> &middot; {{ note.profession_title }}</span>{% endif %}
-          <span class="review-note-date">{{ format_date(note.created_at.date()) }}</span>
+          <span class="review-note-date">{{ format_date(local_date(note.created_at)) }}</span>
         </div>
         <p>{{ note.note }}</p>
       </li>
