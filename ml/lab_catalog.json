@@ -1,6 +1,6 @@
 {
   "schema_version": 1,
-  "note": "Stage 2 (Enhanced Screening) lab values. This is an EXTENSION of a person's most recent Preliminary screening: the 27 non-laboratory answers are pulled from that assessment, not re-asked here. Only Serum_Creatinine is required (eGFR cannot be computed without it, via the CKD-EPI 2021 formula in services/egfr.py); every other field is optional, matching the model's own trained tolerance for missing labs (see model/model_card_stage2.json:missing_input_robustness - performance barely moves even with every optional field missing). A value that IS given is still range-checked; nothing typed is ever silently discarded.",
+  "note": "Stage 2 (Enhanced Screening) lab values. This is an EXTENSION of a person's most recent Preliminary screening: the 27 non-laboratory answers are pulled from that assessment, not re-asked here. Only Serum_Creatinine is required (eGFR cannot be computed without it, via the CKD-EPI 2021 formula in services/egfr.py); every other field is optional, matching the model's own trained tolerance for missing labs (see model/model_card_stage2.json:missing_input_robustness - performance barely moves even with every optional field missing). Any real lab value is accepted, however abnormal (a failing kidney gives abnormal numbers): each field's min/max is only the range Nephron normally expects for that test. A value outside it is accepted after the person confirms it and its unit, and the result says it was outside that range (services/lab_contract.py). Nothing typed is ever silently discarded.",
   "groups": [
     {
       "key": "vitals",
@@ -60,6 +60,7 @@
       "min": 0.1,
       "max": 20.0,
       "required": true,
+      "must_be_positive": true,
       "label": "Serum creatinine",
       "hint": "Needed to work out your eGFR. This is the one lab value Enhanced Screening cannot run without.",
       "explain": "A waste product your muscles make all the time. Healthy kidneys filter it out of your blood - when it builds up, it usually means the kidneys are not filtering as well as they should."
