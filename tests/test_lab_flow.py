@@ -91,7 +91,9 @@ class ManualEntryTests(EnhancedScreeningTestCase):
         self.assertEqual(self.confirm_form(page), {f["name"] for f in self.lab_catalog["fields"]})
         for group in self.lab_catalog["groups"]:
             self.assertIn(group["title"], page)
-        self.assertEqual(page.count('<span class="required-mark"'), 1)
+        # every field says whether it must be filled in: creatinine Required, every other lab Optional
+        self.assertEqual(page.count('<span class="chip chip-required">Required</span>'), 1)
+        self.assertEqual(page.count('<span class="chip chip-optional">Optional</span>'), len(self.lab_catalog["fields"]) - 1)
 
     def test_only_creatinine_is_enough_to_get_a_result(self):
         response = self.post("/enhanced-screening/confirm", {"Serum_Creatinine": "1.1"}, client=self.member, token_from="/enhanced-screening/manual")
@@ -118,11 +120,54 @@ class ManualEntryTests(EnhancedScreeningTestCase):
         after = len(self.app.extensions["assessment_store"].list_assessments(self.store.find_by_email("ana@example.com")["user_id"]))
         self.assertEqual(before, after)
 
-    def test_a_value_outside_the_plausible_range_is_refused_and_the_form_is_redisplayed(self):
+    def _count(self):
+        return len(self.app.extensions["assessment_store"].list_assessments(self.store.find_by_email("ana@example.com")["user_id"]))
+
+    def test_an_abnormal_value_is_accepted_after_one_check_never_refused(self):
+        # A nephrologist's patient can have a urine ACR far above the usual range: that is a real result, not an error.
+        before = self._count()
+        form = {"Serum_Creatinine": "1.1", "Urine_ACR": "12,000"}
+        page = self.text(self.post("/enhanced-screening/confirm", form, client=self.member, token_from="/enhanced-screening/manual"))
+        self.assertIn("Please check this value", page)            # shown back once, with the value kept as typed
+        self.assertIn('value="12,000"', page)
+        self.assertIn("Urine ACR: 12,000 mg/g", page)
+        self.assertNotIn("must be between", page)
+        self.assertEqual(self._count(), before)                   # nothing analysed or saved yet
+        signature = re.search(r'name="confirm_unusual" value="([^"]+)"', page).group(1)
+        response = self.post("/enhanced-screening/confirm", {**form, "confirm_unusual": signature}, client=self.member,
+                             token_from="/enhanced-screening/manual")
+        self.assertEqual(response.status_code, 302)               # accepted and saved
+        self.assertEqual(self._count(), before + 1)
+        result = self.text(self.member.get(response.headers["Location"]))
+        self.assertIn("Some answers are outside the usual range", result)
+        self.assertIn("Urine ACR: 12,000 mg/g", result)
+
+    def test_a_confirmation_never_carries_over_to_a_value_that_was_not_on_the_screen(self):
+        before = self._count()
         page = self.text(self.post("/enhanced-screening/confirm", {"Serum_Creatinine": "1.1", "Sodium": "9999"},
                                    client=self.member, token_from="/enhanced-screening/manual"))
-        self.assertIn("must be between", page)
-        self.assertIn('value="1.1"', page)                        # the good value the person typed is not lost
+        signature = re.search(r'name="confirm_unusual" value="([^"]+)"', page).group(1)
+        page = self.text(self.post("/enhanced-screening/confirm", {"Serum_Creatinine": "1.1", "Sodium": "8888", "confirm_unusual": signature},
+                                   client=self.member, token_from="/enhanced-screening/manual"))
+        self.assertIn("Please check this value", page)            # a different number is checked again
+        self.assertEqual(self._count(), before)
+
+    def test_pressing_analyse_again_without_ticking_says_why_the_form_came_back(self):
+        form = {"Serum_Creatinine": "1.1", "Triglycerides": "1,280"}
+        page = self.text(self.post("/enhanced-screening/confirm", form, client=self.member, token_from="/enhanced-screening/manual"))
+        self.assertIn("Some values need a second look", page)            # a notice at the top, not only at the end
+        self.assertNotIn("Tick this box", page)                           # no error the first time it is shown
+        shown = re.search(r'name="unusual_shown" value="([^"]+)"', page).group(1)
+        page = self.text(self.post("/enhanced-screening/confirm", {**form, "unusual_shown": shown}, client=self.member,
+                                   token_from="/enhanced-screening/manual"))
+        self.assertIn("Tick this box to confirm the values are correct", page)
+
+    def test_something_that_is_not_a_lab_value_is_still_refused(self):
+        for bad, message in (("abc", "must be a number"), ("-4", "cannot be a negative number"), ("nan", "must be a number")):
+            page = self.text(self.post("/enhanced-screening/confirm", {"Serum_Creatinine": "1.1", "Sodium": bad},
+                                       client=self.member, token_from="/enhanced-screening/manual"))
+            self.assertIn(message, page, bad)
+            self.assertIn('value="1.1"', page)                    # the good value the person typed is not lost
 
     def test_more_lab_values_can_be_given_and_are_all_used(self):
         response = self.post("/enhanced-screening/confirm", {"Serum_Creatinine": "1.1", "Sodium": "140", "HbA1c": "5.4"},

@@ -140,12 +140,13 @@ class PredictTests(ServiceCase):
             with self.assertRaises(ModelInputError, msg=name):
                 service.predict(row)
 
-    def test_an_out_of_range_lab_value_is_refused_not_clamped(self):
+    def test_an_abnormal_lab_value_is_used_and_something_that_is_not_a_lab_value_is_refused(self):
         service = self.service(self.good.directory)
-        with self.assertRaisesRegex(ModelInputError, "Sodium"):
-            service.predict(self.full_row(Sodium=9999))
-        with self.assertRaisesRegex(ModelInputError, "Serum_Creatinine"):
-            service.predict(self.full_row(Serum_Creatinine=-1))
+        answer = service.predict(self.full_row(Sodium=9999, Urine_ACR=12000))     # abnormal, but a real lab value
+        self.assertTrue(0 <= answer["probability"] <= 1)
+        for name, bad in (("Serum_Creatinine", -1), ("Sodium", float("nan")), ("Sodium", float("inf")), ("Sodium", "140")):
+            with self.assertRaisesRegex(ModelInputError, name):
+                service.predict(self.full_row(**{name: bad}))
 
     def test_alcohol_none_stage1s_does_not_drink_is_translated_to_missing_not_refused(self):
         service = self.service(self.good.directory)

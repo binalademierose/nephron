@@ -54,8 +54,8 @@ class ClinicalReviewTests(ReviewAndFollowUpTestCase):
 
     def test_a_blank_note_is_refused(self):
         response = self.add_note("   ")
-        page = self.text(self.professional.get(response.headers["Location"]))
-        self.assertIn("cannot be empty", page)
+        self.assertEqual(response.status_code, 200)               # the form is shown again with the problem, nothing saved
+        self.assertIn("Write your clinical note.", self.text(response))
 
     def test_a_professional_who_is_not_authorized_cannot_add_a_note(self):
         other_professional = self.signed_in(**self.professional_details(email="dr.other@example.com", full_name="Dr. Ana Other"))

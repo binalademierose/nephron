@@ -127,11 +127,14 @@ class ExtractCandidateValuesTests(unittest.TestCase):
         names = {f["name"] for f in self.catalog["fields"]}
         self.assertTrue(set(self.found) <= names)
 
-    def test_a_value_outside_the_plausible_range_is_dropped_not_offered(self):
-        text = "Sodium: 9999 mmol/L\nPotassium: 4.6 mmol/L"
+    def test_an_abnormal_reading_is_kept_for_the_person_to_check_not_dropped(self):
+        text = "Sodium: 9999 mmol/L\nPotassium: 4.6 mmol/L\nUrine Albumin-to-Creatinine Ratio 12,000 mg/g\nSerum Creatinine 9.8 mg/dL"
         found = self.lab_ocr.extract_candidate_values(text, self.catalog)
-        self.assertNotIn("Sodium", found)
-        self.assertIn("Potassium", found)
+        self.assertEqual((found["Sodium"], found["Potassium"]), (9999.0, 4.6))
+        self.assertEqual(found["Urine_ACR"], 12000.0)                 # "12,000" is read whole, never cut short to 12
+        self.assertEqual(found["Serum_Creatinine"], 9.8)              # not the "...Creatinine Ratio" number above it
+        from services import lab_contract
+        self.assertEqual({u["name"] for u in lab_contract.unusual_values(self.catalog, found)}, {"Sodium", "Urine_ACR"})
 
     def test_text_with_no_lab_values_at_all_finds_nothing(self):
         self.assertEqual(self.lab_ocr.extract_candidate_values("Just a note with no numbers on it.", self.catalog), {})

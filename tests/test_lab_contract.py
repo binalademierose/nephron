@@ -59,11 +59,11 @@ class ValidateLabValuesTests(unittest.TestCase):
         self.assertEqual(errors, {})
         self.assertEqual(values, {"Serum_Creatinine": 1.0, "HbA1c": 5.4, "Sodium": 140.0, "Systolic_BP": 120.0, "Diastolic_BP": 80.0})
 
-    def test_a_value_outside_the_plausible_range_is_refused_not_clamped(self):
+    def test_a_value_outside_the_usual_range_is_kept_as_given_never_clamped_and_flagged_for_a_check(self):
         values, errors = lab_contract.validate_lab_values(CATALOG, {"Serum_Creatinine": "1.0", "Sodium": "999"})
-        self.assertIn("Sodium", errors)
-        self.assertNotIn("Sodium", values)
-        self.assertIn("Serum_Creatinine", values)
+        self.assertEqual(errors, {})
+        self.assertEqual(values["Sodium"], 999.0)                 # exactly what was typed - never clamped
+        self.assertEqual([f["name"] for f in lab_contract.unusual_values(CATALOG, values)], ["Sodium"])
 
     def test_text_that_is_not_a_number_is_refused_with_a_clear_reason_not_guessed(self):
         values, errors = lab_contract.validate_lab_values(CATALOG, {"Serum_Creatinine": "1.0", "HbA1c": "high"})
@@ -79,6 +79,32 @@ class ValidateLabValuesTests(unittest.TestCase):
         values, errors = lab_contract.validate_lab_values(CATALOG, {"Serum_Creatinine": "1.0", "Something_Else": "5"})
         self.assertEqual(errors, {})
         self.assertNotIn("Something_Else", values)
+
+    def test_any_real_lab_value_is_accepted_however_abnormal(self):
+        values, errors = lab_contract.validate_lab_values(CATALOG, {"Serum_Creatinine": "25", "Urine_ACR": "12,000",
+                                                                    "Fasting_Glucose": "1 050", "Triglycerides": "1,280.5", "CRP": 400})
+        self.assertEqual(errors, {})
+        self.assertEqual(values, {"Serum_Creatinine": 25.0, "Urine_ACR": 12000.0, "Fasting_Glucose": 1050.0, "Triglycerides": 1280.5, "CRP": 400.0})
+
+    def test_what_cannot_be_a_lab_value_is_still_refused(self):
+        for bad in ("abc", "1e5", "nan", "inf", "-inf", "1,00", "12..5", True):
+            values, errors = lab_contract.validate_lab_values(CATALOG, {"Serum_Creatinine": "1.0", "Sodium": bad})
+            self.assertIn("must be a number", errors.get("Sodium", ""), bad)
+        values, errors = lab_contract.validate_lab_values(CATALOG, {"Serum_Creatinine": "1.0", "Sodium": "-140"})
+        self.assertIn("cannot be a negative number", errors["Sodium"])
+        values, errors = lab_contract.validate_lab_values(CATALOG, {"Serum_Creatinine": "0"})
+        self.assertIn("must be more than 0", errors["Serum_Creatinine"])             # eGFR cannot be worked out from 0
+        values, errors = lab_contract.validate_lab_values(CATALOG, {"Serum_Creatinine": "1.0", "CRP": "0"})
+        self.assertEqual(errors, {})                                                     # 0 is fine where it is possible
+
+    def test_unusual_values_are_listed_for_a_check_and_the_check_is_tied_to_those_exact_values(self):
+        flagged = lab_contract.unusual_values(CATALOG, {"Serum_Creatinine": 1.0, "Urine_ACR": 12000.0, "Sodium": 140.0})
+        self.assertEqual([(f["name"], f["value"]) for f in flagged], [("Urine_ACR", "12,000 mg/g")])
+        self.assertIn("mg/g", flagged[0]["usual"])
+        changed = lab_contract.unusual_values(CATALOG, {"Serum_Creatinine": 1.0, "Urine_ACR": 13000.0})
+        self.assertNotEqual(lab_contract.unusual_signature(flagged), lab_contract.unusual_signature(changed))
+        self.assertEqual(lab_contract.unusual_values(CATALOG, {"Serum_Creatinine": 1.0}), [])
+        self.assertEqual(lab_contract.outside_usual_range(CATALOG, {"Urine_ACR": 12000.0, "eGFR": 7})[0][:2], ("Urine ACR", "12,000 mg/g"))
 
     def test_boundary_values_are_accepted(self):
         field = lab_contract.field_for(CATALOG, "Serum_Creatinine")

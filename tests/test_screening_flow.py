@@ -190,7 +190,7 @@ class ScreeningTests(AppTestCase):
 
     def test_the_question_reads_gender_and_sex_at_birth_waits_until_it_is_needed(self):
         page = self.text(self.member.get("/screening"))
-        self.assertIn("<legend>Gender</legend>", page)
+        self.assertIn('<legend>Gender <span class="chip chip-required">Required</span></legend>', page)
         self.assertIn('name="Gender" value="Gay man" data-sex="Male"', page)
         self.assertIn('name="Gender" value="Non-binary" data-sex=""', page)
         self.assertRegex(page, r'data-sex-follow-up hidden>')                # nothing chosen yet: not asked
@@ -546,14 +546,14 @@ class RealisticRangeTests(AppTestCase):
         response = self.post(f"/patient-records/{code}/screening", answers(), client=pro, token_from=f"/patient-records/{code}/screening")
         self.assertEqual(response.status_code, 302)
         page = self.text(pro.get(response.headers["Location"]))
-        self.assertIn("Some answers are outside what the model learned from", page)
+        self.assertIn("Some answers are outside the usual range", page)
         self.assertIn("Age: 16 years", page)
 
     def _unused_age_override(self):
         response = self._submit(Age="16")
         self.assertEqual(response.status_code, 302)
         page = self.text(self.browser.get(response.headers["Location"]))
-        self.assertIn("Some answers are outside what the model learned from", page)
+        self.assertIn("Some answers are outside the usual range", page)
         self.assertIn("Age: 16 years", page)
 
     def test_lifestyle_numbers_outside_training_are_accepted(self):
@@ -581,7 +581,7 @@ class RealisticRangeTests(AppTestCase):
     def test_an_ordinary_answer_shows_no_flag(self):
         response = self._submit()
         page = self.text(self.browser.get(response.headers["Location"]))
-        self.assertNotIn("Some answers are outside what the model learned from", page)
+        self.assertNotIn("Some answers are outside the usual range", page)
 
 
 
