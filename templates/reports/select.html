@@ -15,21 +15,21 @@
   <form method="post" action="{{ url_for('reports.download_patient_report') }}">
     {{ csrf_field() }}
     <fieldset class="form-group">
-      <legend class="form-label">What should the report cover?</legend>
+      <legend class="form-label">What should the report cover? <span class="chip chip-required">Required</span></legend>
       <div class="choice-group">
         <label class="choice"><input type="radio" name="report_type" value="single" checked><span class="choice-tile">One result</span></label>
         <label class="choice"><input type="radio" name="report_type" value="history"><span class="choice-tile">Whole history ({{ records|length }})</span></label>
       </div>
     </fieldset>
     <div class="form-group">
-      <label class="form-label" for="assessment_id">Which result? <span class="text-muted">(only used if "One result" is chosen above)</span></label>
+      <label class="form-label" for="assessment_id">Which result? <span class="chip chip-required">Required for one result</span></label>
       <select class="form-control" id="assessment_id" name="assessment_id">
         {% for record in records %}
         <option value="{{ record.assessment_id }}">{{ format_date(record.date) }} &middot; {{ record.type }} &middot; {{ percent_text(record.probability) }}%</option>
         {% endfor %}
       </select>
     </div>
-    <label class="form-check"><input class="pick" type="checkbox" name="include_reviews" checked><span>Include notes from my professional, if any</span></label>
+    <label class="form-check"><input class="pick" type="checkbox" name="include_reviews" checked><span>Include notes from my professional, if any <span class="chip chip-optional">Optional</span></span></label>
     <button class="button button-primary" type="submit" style="margin-top: var(--space-4);">{{ icon('download') }}Download PDF</button>
   </form>
 </section>
