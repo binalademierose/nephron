@@ -23,6 +23,12 @@
 {%- endmacro %}
 
 {# The hidden field every POST form must contain. The server rejects a POST without the right value. #}
+{# Says whether a field must be filled in - every field in every form carries one (Required or Optional), so nobody
+   has to guess. Put it inside the field's <label> or <legend>. note: optional extra words, e.g. "for one result". #}
+{% macro need(required, note='') -%}
+<span class="chip chip-{{ 'required' if required else 'optional' }}">{{ 'Required' if required else 'Optional' }}{% if note %} {{ note }}{% endif %}</span>
+{%- endmacro %}
+
 {% macro csrf_field() -%}
 <input type="hidden" name="csrf_token" value="{{ csrf_token() }}">
 {%- endmacro %}
