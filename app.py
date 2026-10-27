@@ -210,7 +210,10 @@ def create_app(overrides=None, user_store=None, assessment_store=None, model_ser
         relative_day_text=visuals.relative_day_text,
         today=date.today,
         csrf_token=security.csrf_token,
+        # Every time is STORED in UTC; these turn one into the app's own timezone (Asia/Manila) for showing it.
+        # Use them for any stored *_at value - printing it directly shows UTC, 8 hours behind Philippine time.
         local_date=lambda moment: clock.to_local_date(moment, app.config["APP_TIMEZONE"]),
+        local_datetime=lambda moment: clock.to_local_datetime(moment, app.config["APP_TIMEZONE"]),
     )
 
     @app.context_processor
