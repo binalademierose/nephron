@@ -22,7 +22,7 @@
         <strong>{{ p.full_name }}</strong>
         <span class="text-muted">{{ p.profession_title }}{% if p.institution %} &middot; {{ p.institution }}{% endif %}</span>
         <span>Licence number: <strong class="chip chip-mono">{{ p.license_number or 'Not given' }}</strong></span>
-        <span class="text-muted text-small">{{ p.email }} &middot; joined {{ format_date(p.created_at.date()) }}</span>
+        <span class="text-muted text-small">{{ p.email }} &middot; joined {{ format_date(local_date(p.created_at)) }}</span>
       </div>
       <div class="admin-pro-actions">
         <span class="badge {{ 'risk-badge-low' if p.verification_status == 'verified' else ('risk-badge-high' if p.verification_status == 'rejected' else 'badge-neutral') }}">{{ {'verified':'Verified','rejected':'Not verified'}.get(p.verification_status, 'Awaiting') }}</span>

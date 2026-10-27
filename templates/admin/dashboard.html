@@ -118,7 +118,7 @@
     <thead><tr><th scope="col">Name</th><th scope="col">Email</th><th scope="col">Role</th><th scope="col">Joined</th></tr></thead>
     <tbody>{% for a in recent_accounts %}<tr><td>{{ a.full_name }}</td><td>{{ a.email }}</td>
       <td>{{ 'Administrator' if a.is_admin else ('Healthcare Professional' if a.role == 'professional' else 'General User') }}</td>
-      <td>{{ format_date(a.created_at.date()) }}</td></tr>{% endfor %}</tbody>
+      <td>{{ format_date(local_date(a.created_at)) }}</td></tr>{% endfor %}</tbody>
   </table></div>
   {% else %}<p class="empty-inline">{{ icon('info') }}No accounts yet.</p>{% endif %}
 </section>

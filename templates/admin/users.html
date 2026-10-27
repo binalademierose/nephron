@@ -45,7 +45,7 @@
         <td>{{ {'general':'General User','professional':'Healthcare Professional','admin':'Administrator'}[r] }}
           {% if r == 'professional' %}<span class="badge {{ 'risk-badge-low' if a.verification_status == 'verified' else ('risk-badge-high' if a.verification_status == 'rejected' else 'badge-neutral') }}">{{ (a.verification_status or 'pending')|capitalize }}</span>{% endif %}</td>
         <td>{% if a.is_active %}<span class="badge risk-badge-low">Active</span>{% else %}<span class="badge risk-badge-high">Switched off</span>{% endif %}</td>
-        <td>{{ format_date(a.last_login_at.date()) if a.last_login_at else 'Never' }}</td>
+        <td>{{ format_date(local_date(a.last_login_at)) if a.last_login_at else 'Never' }}</td>
         <td class="table-actions">
           {% if a.user_id != current_user.user_id %}
             <form method="post" action="{{ url_for('admin.reset_password', user_id=a.user_id) }}" class="inline-form"

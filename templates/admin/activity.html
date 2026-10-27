@@ -32,7 +32,7 @@
     <tbody>
     {% for r in rows %}
       <tr class="activity-row activity-{{ r.action }}">
-        <td>{{ format_datetime(r.created_at) }}</td>
+        <td>{{ format_datetime(local_datetime(r.created_at)) }}</td>
         <td><span class="badge {{ 'risk-badge-high' if r.action == 'sign_in_failed' else ('badge-info' if r.action in groups.admin else 'badge-neutral') }}">{{ r.label }}</span></td>
         <td>{{ r.actor.name if r.actor else '-' }}</td>
         <td>{% if r.target %}{{ r.target.name }}<br><span class="text-muted text-small">{{ r.target.email }}</span>{% else %}-{% endif %}</td>
