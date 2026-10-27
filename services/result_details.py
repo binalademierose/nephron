@@ -32,5 +32,6 @@ def describe(row, catalog, model_service, model_service_stage2):
         "answers": answers,
         # Worded for the professional reading it ("the answer was ..."), not for the patient ("your answer was ...").
         "explanation": explanations.for_professional(explanations.explain_saved_result(model, describer, row)),
-        "outside": screening_contract.outside_training(catalog, inputs) if inputs else [],
+        "outside": (screening_contract.outside_training(catalog, inputs) if inputs else [])
+                   + (lab_contract.outside_usual_range(lab_contract.load_lab_catalog(), inputs) if row["assessment_type"] == "enhanced" else []),
     }

@@ -255,8 +255,8 @@ class Stage2ModelService:
         Alcohol_Consumption's "None", see STAGE1_VOCABULARY_GAPS), after checking: every OTHER Stage-1-like field is
         present (they come from a completed Preliminary assessment, so a gap there is a real bug, not a person's
         choice); Serum_Creatinine is present; eGFR is computed from it; every lab field is either absent (fine) or a
-        number in its catalog range (checked again here, even though lab_contract already checked it once, so this
-        method is trustworthy on its own).
+        real number of 0 or more (checked again here, even though lab_contract already checked it once, so this
+        method is trustworthy on its own). There is no upper limit: abnormal lab values are real lab values.
         """
         missing_stage1 = [name for name in STAGE1_LIKE_FIELDS
                           if row.get(name) is None and name not in STAGE1_MAY_BE_MISSING]
@@ -274,8 +274,10 @@ class Stage2ModelService:
             if value is None:
                 complete[name] = None
                 continue
-            if isinstance(value, bool) or not isinstance(value, (int, float)) or not field["min"] <= value <= field["max"]:
-                raise ModelInputError(f"{name}: {value!r} is outside the range the model was built for ({field['min']:g} to {field['max']:g})")
+            # Any real, non-negative number is a possible lab value - a failing kidney gives abnormal ones - so there is
+            # no upper limit here (services/lab_contract.py). Only what cannot be a lab value at all is refused.
+            if isinstance(value, bool) or not isinstance(value, (int, float)) or not math.isfinite(value) or value < 0:
+                raise ModelInputError(f"{name}: {value!r} is not a lab value (it must be a real number, 0 or more)")
             complete[name] = float(value)
         complete["eGFR"] = estimate_gfr(complete["Serum_Creatinine"], complete["Age"], complete["Sex"])
 

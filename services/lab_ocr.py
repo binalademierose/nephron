@@ -22,26 +22,32 @@ ALLOWED_CONTENT_TYPES = {"image/jpeg": ".jpg", "image/png": ".png", "application
 # ONE number. Deliberately excludes bare single-letter chemistry symbols (Na, K, Ca, P) as a way to find a value -
 # real reports print those, but matching on a single letter anywhere in noisy OCR text is far too likely to catch
 # the wrong number, so those fields rely on their full name being present instead.
+# One lab number as printed on a report: "1.2", "112", or with thousands separators "12,000" / "1,250.5" - with no
+# cap on its size, because an abnormal result (a urine ACR of 12,000 mg/g) is exactly what a kidney patient's report
+# may show. Grouped digits are tried first, so "12,000" is never cut short to "12".
+_NUMBER = r"(\d{1,3}(?:,\d{3})+(?:\.\d+)?|\d+(?:\.\d+)?)"
+
 _PATTERNS = {
     "HbA1c": [r"Hb.{0,2}A.{0,2}1.{0,2}c\D{0,15}?(\d{1,2}\.\d)", r"(?:Hemoglobin|Glycated)\s*A1c\D{0,15}?(\d{1,2}\.\d)"],
-    "Serum_Creatinine": [r"(?:Serum\s*)?Creatinine\D{0,15}?(\d{1,2}\.?\d*)"],
-    "Blood_Urea_Nitrogen": [r"(?:Blood\s*Urea\s*Nitrogen|BUN)\D{0,15}?(\d{1,3}\.?\d*)"],
-    "Urine_ACR": [r"(?:Urine\s*)?Albumin[- ]?(?:to|/)[- ]?Creatinine\s*Ratio\D{0,15}?(\d{1,4}\.?\d*)",
-                 r"\bU?ACR\b\D{0,15}?(\d{1,4}\.?\d*)"],
-    "Albumin": [r"\bAlbumin\b(?!\D{0,25}(?:creatinine|/creat|ratio))\D{0,15}?(\d{1,2}\.?\d*)"],
-    "Urine_Protein": [r"Urine\s*Protein\D{0,15}?(\d{1,4}\.?\d*)", r"Proteinuria\D{0,15}?(\d{1,4}\.?\d*)"],
-    "Fasting_Glucose": [r"Fasting\s*(?:Blood\s*)?(?:Glucose|Sugar|FBS)\D{0,15}?(\d{1,3}\.?\d*)"],
-    "Hemoglobin": [r"\bHemoglobin\b(?!\D{0,10}A1c)\D{0,15}?(\d{1,2}\.?\d*)"],
-    "Sodium": [r"\bSodium\b\D{0,15}?(\d{2,3}\.?\d*)"],
-    "Potassium": [r"\bPotassium\b\D{0,15}?(\d\.?\d*)"],
-    "Calcium": [r"\bCalcium\b(?!\D{0,15}(?:channel|score))\D{0,15}?(\d{1,2}\.?\d*)"],
-    "Phosphorus": [r"\bPhosphorus\b\D{0,15}?(\d\.?\d*)", r"\bPhosphate\b\D{0,15}?(\d\.?\d*)"],
-    "Uric_Acid": [r"Uric\s*Acid\D{0,15}?(\d{1,2}\.?\d*)"],
-    "Total_Cholesterol": [r"Total\s*Cholesterol\D{0,15}?(\d{2,3}\.?\d*)", r"Cholesterol,?\s*Total\D{0,15}?(\d{2,3}\.?\d*)"],
-    "HDL": [r"\bHDL\b(?:[- ]?Cholesterol|\s*\(HDL\))?\D{0,15}?(\d{1,3}\.?\d*)"],
-    "LDL": [r"\bLDL\b(?:[- ]?Cholesterol|\s*\(LDL\))?\D{0,15}?(\d{1,3}\.?\d*)"],
-    "Triglycerides": [r"Triglycerides\D{0,15}?(\d{1,3}\.?\d*)"],
-    "CRP": [r"(?:C[- ]?Reactive\s*Protein|CRP)\D{0,15}?(\d{1,2}\.?\d*)"],
+    # not the "...Creatinine Ratio" of a urine ACR, and not urine creatinine (a different test)
+    "Serum_Creatinine": [r"(?<!Urine )(?:Serum\s*)?Creatinine(?!\s*Ratio)\D{0,15}?" + _NUMBER],
+    "Blood_Urea_Nitrogen": [r"(?:Blood\s*Urea\s*Nitrogen|BUN)\D{0,15}?" + _NUMBER],
+    "Urine_ACR": [r"(?:Urine\s*)?Albumin[- ]?(?:to|/)[- ]?Creatinine\s*Ratio\D{0,15}?" + _NUMBER,
+                 r"\bU?ACR\b\D{0,15}?" + _NUMBER],
+    "Albumin": [r"\bAlbumin\b(?!\D{0,25}(?:creatinine|/creat|ratio))\D{0,15}?" + _NUMBER],
+    "Urine_Protein": [r"Urine\s*Protein\D{0,15}?" + _NUMBER, r"Proteinuria\D{0,15}?" + _NUMBER],
+    "Fasting_Glucose": [r"Fasting\s*(?:Blood\s*)?(?:Glucose|Sugar|FBS)\D{0,15}?" + _NUMBER],
+    "Hemoglobin": [r"\bHemoglobin\b(?!\D{0,10}A1c)\D{0,15}?" + _NUMBER],
+    "Sodium": [r"\bSodium\b\D{0,15}?" + _NUMBER],
+    "Potassium": [r"\bPotassium\b\D{0,15}?" + _NUMBER],
+    "Calcium": [r"\bCalcium\b(?!\D{0,15}(?:channel|score))\D{0,15}?" + _NUMBER],
+    "Phosphorus": [r"\bPhosphorus\b\D{0,15}?" + _NUMBER, r"\bPhosphate\b\D{0,15}?" + _NUMBER],
+    "Uric_Acid": [r"Uric\s*Acid\D{0,15}?" + _NUMBER],
+    "Total_Cholesterol": [r"Total\s*Cholesterol\D{0,15}?" + _NUMBER, r"Cholesterol,?\s*Total\D{0,15}?" + _NUMBER],
+    "HDL": [r"\bHDL\b(?:[- ]?Cholesterol|\s*\(HDL\))?\D{0,15}?" + _NUMBER],
+    "LDL": [r"\bLDL\b(?:[- ]?Cholesterol|\s*\(LDL\))?\D{0,15}?" + _NUMBER],
+    "Triglycerides": [r"Triglycerides\D{0,15}?" + _NUMBER],
+    "CRP": [r"(?:C[- ]?Reactive\s*Protein|CRP)\D{0,15}?" + _NUMBER],
     "Systolic_BP": [r"Blood\s*Pressure\D{0,10}?(\d{2,3})\s*/\s*\d{2,3}", r"\bBP\D{0,10}?(\d{2,3})\s*/\s*\d{2,3}"],
     "Diastolic_BP": [r"Blood\s*Pressure\D{0,10}?\d{2,3}\s*/\s*(\d{2,3})", r"\bBP\D{0,10}?\d{2,3}\s*/\s*(\d{2,3})"],
 }
@@ -89,25 +95,21 @@ def extract_text(file_path, content_type, tesseract_cmd=None):
 
 def extract_candidate_values(text, catalog):
     """
-    {lab field name: number} for every field a plausible-looking value was found for. A match outside the field's
-    own catalog range (a common sign of a misread digit) is left out rather than offered as a confident-looking
-    wrong answer - the person then simply sees that field blank, the same as if nothing had been found at all.
+    {lab field name: number} for every field a value was found for. A reading outside the field's usual range is
+    KEPT (an abnormal result is exactly what a kidney patient's report may show), never dropped: the confirm page
+    marks it as unusual and asks the person to check it against the report before anything is analysed
+    (services/lab_contract.unusual_values), so a misread digit is caught by a person, not silently thrown away.
     """
     from services import lab_contract
 
-    fields = {f["name"]: f for f in catalog["fields"]}
     found = {}
     for name, patterns in _PATTERNS.items():
-        field = fields[name]
         for pattern in patterns:
             match = re.search(pattern, text, re.IGNORECASE)
             if not match:
                 continue
-            try:
-                number = float(match.group(1))
-            except ValueError:
-                continue
-            if field["min"] <= number <= field["max"]:
+            number = lab_contract.parse_lab_number(match.group(1))
+            if number is not None and number >= 0:
                 found[name] = number
             break
     return found
