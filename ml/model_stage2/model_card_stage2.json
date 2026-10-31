@@ -1,198 +1,28 @@
 {
-  "card_version": "1.0",
-  "created_utc": "2026-09-24T05:33:06+00:00",
-  "smoke_test": false,
-  "generated_by": "CKD_Stage2_Modeling.ipynb",
-  "notebook_code_sha256": "39f99b1f40f81a10a7fe4f239e60a4dc294e06db1b1179e60d3f4cf065b9e15c",
-  "intended_use": "Early CKD risk screening / stratification decision support. Not a diagnosis, treatment recommendation or CKD staging.",
-  "stage": "Stage 2 (enhanced: Stage 1 plus laboratory / clinical measurements)",
-  "model_family": "XGBoost",
-  "model_file": {
-    "name": "final_model_stage2.pkl",
-    "sha256": "4b72784bfddbfed9d7ee0f0d0dfe386f27d0bfaacda9f69b2cfcbdb10ebebf68",
-    "size_mb": 7.447
-  },
-  "schema_file": {
-    "name": "feature_schema_stage2.json",
-    "content_sha256": "7c69bf54702678ceb8e5a31c3a4fcc785f4e56c34f705403fa5802065247a98e",
-    "sha256": "2485b2c89b2847fc9e55f3b5d2ea9974c2dcd1d897812e09d1221b8a68462571"
-  },
-  "stage1_schema": {
-    "name": "feature_schema.json",
-    "content_sha256": "52a1286671f3f3dce38f30cdad618658dedf927e9bd8615fe77d73b41d2cb66b"
-  },
+  "created_utc": "2026-10-31T01:42:42+00:00",
   "dataset": {
-    "file": "CKD_RiskAssessment_Synthetic.csv",
-    "sha256": "51be81bf299aa62b2f4965e9b536709353d33e004a04e2cc6ffa614fa38d392d",
-    "rows_used": 200000,
-    "synthetic": true
-  },
-  "environment": {
-    "python": "3.12.7",
-    "numpy": "2.4.4",
-    "pandas": "3.0.2",
-    "scipy": "1.17.1",
-    "scikit_learn": "1.8.0",
-    "joblib": "1.5.3",
-    "xgboost": "3.1.3",
-    "matplotlib": "3.10.8",
-    "matches_requirements_pins": true
-  },
-  "pipeline": {
-    "artifact_type": "sklearn CalibratedClassifierCV(isotonic, ensemble=False) wrapping Pipeline[ColumnTransformer -> classifier]",
-    "input_columns": [
-      "Country",
-      "Sex",
-      "Ethnicity",
-      "Age",
-      "BMI",
-      "Smoking_Status",
-      "Alcohol_Consumption",
-      "Physical_Activity_Level",
-      "Exercise_Hours_Per_Week",
-      "Water_Intake_L",
-      "Fast_Food_Frequency_Per_Week",
-      "Sleep_Duration_Hours",
-      "Diabetes",
-      "Cardiovascular_Disease",
-      "Hyperlipidemia",
-      "Recurrent_UTI",
-      "Family_History_CKD",
-      "Hypertension",
-      "Heart_Failure",
-      "Kidney_Stones",
-      "Autoimmune_Disease",
-      "ACE_Inhibitor",
-      "Diabetes_Medication",
-      "Diuretic",
-      "ARB",
-      "Statin",
-      "NSAID_Usage",
-      "Systolic_BP",
-      "Diastolic_BP",
-      "Serum_Creatinine",
-      "eGFR",
-      "Blood_Urea_Nitrogen",
-      "Albumin",
-      "Urine_ACR",
-      "Urine_Protein",
-      "HbA1c",
-      "Fasting_Glucose",
-      "Hemoglobin",
-      "Sodium",
-      "Potassium",
-      "Calcium",
-      "Phosphorus",
-      "Uric_Acid",
-      "Total_Cholesterol",
-      "HDL",
-      "LDL",
-      "Triglycerides",
-      "CRP"
-    ],
-    "derived_features": [
-      "Obesity (BMI >= 30, inside the pipeline)"
-    ],
-    "derived_by_application": {
-      "eGFR": "CKD-EPI 2021 from Serum_Creatinine, Age and Sex, rounded to 1 decimal, computed BEFORE the pipeline (constants in the schema)"
-    },
-    "missing_indicator_variables": [
-      "Urine_ACR",
-      "Urine_Protein",
-      "HbA1c",
-      "Fasting_Glucose",
-      "Calcium",
-      "Phosphorus",
-      "HDL",
-      "LDL",
-      "CRP"
-    ],
-    "n_model_features": 75,
-    "imputation_defaults": {
-      "Age": 48.0,
-      "BMI": 28.0,
-      "Exercise_Hours_Per_Week": 1.0,
-      "Water_Intake_L": 1.8,
-      "Fast_Food_Frequency_Per_Week": 2.0,
-      "Sleep_Duration_Hours": 6.8,
-      "Systolic_BP": 120.0,
-      "Diastolic_BP": 68.0,
-      "Serum_Creatinine": 1.04,
-      "eGFR": 78.2,
-      "Blood_Urea_Nitrogen": 14.6,
-      "Albumin": 4.15,
-      "Urine_ACR": 19.9,
-      "Urine_Protein": 15.6,
-      "HbA1c": 5.1,
-      "Fasting_Glucose": 89.0,
-      "Hemoglobin": 14.1,
-      "Sodium": 140.0,
-      "Potassium": 4.0,
-      "Calcium": 9.5,
-      "Phosphorus": 3.6,
-      "Uric_Acid": 6.3,
-      "Total_Cholesterol": 180.0,
-      "HDL": 45.0,
-      "LDL": 75.0,
-      "Triglycerides": 171.0,
-      "CRP": 1.67,
-      "Diabetes": 0.0,
-      "Cardiovascular_Disease": 0.0,
-      "Hyperlipidemia": 0.0,
-      "Recurrent_UTI": 0.0,
-      "Family_History_CKD": 0.0,
-      "Hypertension": 0.0,
-      "Heart_Failure": 0.0,
-      "Kidney_Stones": 0.0,
-      "Autoimmune_Disease": 0.0,
-      "ACE_Inhibitor": 0.0,
-      "Diabetes_Medication": 0.0,
-      "Diuretic": 0.0,
-      "ARB": 0.0,
-      "Statin": 0.0,
-      "NSAID_Usage": 0.0,
-      "Country": "USA",
-      "Sex": "Female",
-      "Ethnicity": "White",
-      "Smoking_Status": "Never",
-      "Physical_Activity_Level": "Sedentary",
-      "Alcohol_Consumption": "Not_Reported"
-    }
+    "file": "CKD_400k.csv",
+    "sha256": "5766a17adfd211046be63784978883c69b8215798f3dd6c8c922aad90ccfdb2e",
+    "rows_used": 400000
   },
   "split": {
-    "test_size": 0.2,
-    "random_state": 42,
-    "stratified": true,
-    "train_rows": 160000,
-    "test_rows": 40000,
-    "train_positive_rate": 0.1852625
+    "train_rows": 340000,
+    "test_rows": 60000,
+    "same_test_rows_as_stage1": true,
+    "random_state": 42
   },
-  "imbalance_handling": "None (no class weights / resampling); decision threshold on calibrated probabilities instead.",
   "selection": {
-    "protocol": "See notebook section 3. Criterion: mean OOF precision at sensitivity >= target; ties -> OOF PR-AUC -> PREFERRED_MODEL_ON_TIE (Brier reported for reference only).",
-    "target_recall": 0.98,
-    "cv": {
-      "strategy": "StratifiedKFold",
-      "folds": 5,
-      "shuffle": true,
-      "random_state": 42
-    },
-    "tuning_metric": "average_precision",
     "winner": "XGBoost",
-    "reason": "OOF precision and PR-AUC tied (differences < 0.005 / 0.002); XGBoost used across both stages by standing project decision (Brier for reference: 0.0023 vs 0.0021)",
-    "tie_break_preference": "XGBoost",
+    "reason": "OOF precision and PR-AUC tied (differences < 0.005 / 0.002); XGBoost by standing project decision",
+    "target_recall": 0.98,
     "evidence_mean_over_folds": {
       "precision": {
-        "Random Forest": 0.9999657592877931,
-        "XGBoost": 0.9998281237679543
+        "Random Forest": 0.9999635647470221,
+        "XGBoost": 0.9999512900399946
       },
       "pr_auc": {
-        "Random Forest": 0.9966178787454407,
-        "XGBoost": 0.9968886756999055
-      },
-      "brier": {
-        "Random Forest": 0.002136351615958117,
-        "XGBoost": 0.0023493846412748097
+        "Random Forest": 0.9991389712442874,
+        "XGBoost": 0.9992642454437297
       }
     },
     "candidates": {
@@ -206,1017 +36,203 @@
             "n_estimators": 274
           },
           "tuning_cv": {
-            "pr_auc": {
-              "mean": 0.9970236372307507,
-              "sd": 0.0005151288388076652
-            },
-            "roc_auc": {
-              "mean": 0.9983033723725752,
-              "sd": 0.0003592281400590222
-            },
-            "neg_brier": {
-              "mean": -0.0021792779995551534,
-              "sd": 0.00023817801893611257
-            }
+            "pr_auc": 0.999173147935547,
+            "roc_auc": 0.9989194316407826,
+            "neg_brier": -0.004851323494232425
           },
           "n_candidates": 20,
-          "cv_folds": 5,
-          "search_seconds": 2734.8
+          "tuning_rows": 100000,
+          "search_seconds": 1075.8
         },
-        "oof_calibrated_mean": {
-          "pr_auc": 0.9966178787454407,
-          "roc_auc": 0.9982387877993301,
-          "brier": 0.002136351615958117,
-          "ece": 0.0007189381383623615,
-          "recall": 0.9802643927045841,
-          "precision": 0.9999657592877931,
-          "specificity": 0.9999923286410187,
-          "f1": 0.990014837969961
+        "oof_pooled": {
+          "pr_auc": 0.9991755977956293,
+          "roc_auc": 0.9989315488092756,
+          "brier": 0.004587752623766039,
+          "recall": 0.9805007940582946,
+          "precision": 0.9999634667608412,
+          "specificity": 0.9999652186010921,
+          "npv": 0.9814184768385239,
+          "f1": 0.9901364973713404,
+          "accuracy": 0.9903764705882353,
+          "TP": 164228,
+          "FP": 6,
+          "TN": 172500,
+          "FN": 3266
         },
-        "oof_calibrated_sd": {
-          "pr_auc": 0.000567095574277341,
-          "roc_auc": 0.0004186560814765777,
-          "brier": 0.00026738496648765153,
-          "ece": 0.00020805951306939664,
-          "recall": 0.003232056779552391,
-          "precision": 7.656456009243902e-05,
-          "specificity": 1.715368016188707e-05,
-          "f1": 0.001616384775980809
-        },
-        "oof_threshold": 1.0,
-        "oof_pooled_operating": {
-          "recall": 0.9802644895756022,
-          "precision": 0.9999655860692408,
-          "specificity": 0.999992328817564,
-          "npv": 0.9955323731117593,
-          "f1": 0.9900170357751278,
-          "accuracy": 0.9963375,
-          "TP": 29057,
-          "FP": 1,
-          "TN": 130357,
-          "FN": 585
-        }
+        "oof_threshold": 0.9960886571056062
       },
       "XGBoost": {
         "tuning": {
           "best_params": {
-            "colsample_bytree": 0.5976214938990223,
-            "gamma": 0.7224521152615053,
-            "learning_rate": 0.023189600426122402,
-            "max_depth": 5,
-            "min_child_weight": 17,
-            "n_estimators": 661,
-            "reg_alpha": 0.0051102567156543965,
-            "reg_lambda": 7.601812767003316,
-            "subsample": 0.9815714308010349
+            "colsample_bytree": 0.662172510502637,
+            "gamma": 0.12208795470067335,
+            "learning_rate": 0.02907730652732417,
+            "max_depth": 8,
+            "min_child_weight": 1,
+            "n_estimators": 534,
+            "reg_alpha": 0.008160948743089917,
+            "reg_lambda": 0.7148510793512985,
+            "subsample": 0.9272059063689972
           },
           "tuning_cv": {
-            "pr_auc": {
-              "mean": 0.9972552094167257,
-              "sd": 0.00045769159205436493
-            },
-            "roc_auc": {
-              "mean": 0.9985108429333813,
-              "sd": 0.00028944524878897704
-            },
-            "neg_brier": {
-              "mean": -0.002332073263823986,
-              "sd": 0.00035442128752917967
-            }
+            "pr_auc": 0.9992716472363361,
+            "roc_auc": 0.9990609662276666,
+            "neg_brier": -0.004728138912469149
           },
           "n_candidates": 40,
-          "cv_folds": 5,
-          "search_seconds": 594.2
+          "tuning_rows": 100000,
+          "search_seconds": 354.8
         },
-        "oof_calibrated_mean": {
-          "pr_auc": 0.9968886756999055,
-          "roc_auc": 0.9984728867929711,
-          "brier": 0.0023493846412748097,
-          "ece": 0.0007056393241975478,
-          "recall": 0.9806356607621133,
-          "precision": 0.9998281237679543,
-          "specificity": 0.9999616440878061,
-          "f1": 0.9901355471774227
+        "oof_pooled": {
+          "pr_auc": 0.9992814108822401,
+          "roc_auc": 0.9990771112534756,
+          "brier": 0.004414987284690142,
+          "recall": 0.9801724240868329,
+          "precision": 0.9999512732898448,
+          "specificity": 0.9999536248014562,
+          "npv": 0.9811112564626121,
+          "f1": 0.9899630662546168,
+          "accuracy": 0.9902088235294118,
+          "TP": 164173,
+          "FP": 8,
+          "TN": 172498,
+          "FN": 3321
         },
-        "oof_calibrated_sd": {
-          "pr_auc": 0.0006192806984935938,
-          "roc_auc": 0.00032303991402649507,
-          "brier": 0.0003986115504775861,
-          "ece": 0.0002978093997989618,
-          "recall": 0.004006317830368046,
-          "precision": 0.00012168573962254699,
-          "specificity": 2.7121309508231578e-05,
-          "f1": 0.002026115220872806
-        },
-        "oof_threshold": 0.9655172228813171,
-        "oof_pooled_operating": {
-          "recall": 0.9806355846434114,
-          "precision": 0.9998280191242733,
-          "specificity": 0.9999616440878197,
-          "npv": 0.9956158775500852,
-          "f1": 0.9901388060972495,
-          "accuracy": 0.99638125,
-          "TP": 29068,
-          "FP": 5,
-          "TN": 130353,
-          "FN": 574
-        }
-      }
-    }
-  },
-  "calibration": {
-    "method": "isotonic",
-    "fitted_on": "out-of-fold scores of the training set",
-    "cv_folds": 5,
-    "pooled_oof_before_after": {
-      "Random Forest": {
-        "brier_raw": 0.002179277999555154,
-        "brier_calibrated": 0.002136351615958117,
-        "ece_raw": 0.002344185464385558,
-        "ece_calibrated": 0.00014643958233473352
-      },
-      "XGBoost": {
-        "brier_raw": 0.0023320731706917286,
-        "brier_calibrated": 0.002349384594708681,
-        "ece_raw": 0.0004774317160496103,
-        "ece_calibrated": 0.0002458985551900757
+        "oof_threshold": 0.9907692074775696
       }
     }
   },
   "threshold": {
-    "value": 0.9655172228813171,
-    "scale": "calibrated probability",
-    "rule": "highest threshold with pooled OOF sensitivity >= 0.98",
-    "chosen_on": "training out-of-fold predictions only",
-    "oof_operating_point": {
-      "recall": 0.9806355846434114,
-      "precision": 0.9998280191242733,
-      "specificity": 0.9999616440878197,
-      "npv": 0.9956158775500852,
-      "f1": 0.9901388060972495,
-      "accuracy": 0.99638125,
-      "TP": 29068,
-      "FP": 5,
-      "TN": 130353,
-      "FN": 574
+    "value": 0.9907692074775696,
+    "rule": "highest calibrated threshold with pooled out-of-fold sensitivity >= 0.98 (5-fold cross-fitted isotonic calibration, 340,000 training rows)"
+  },
+  "rule_baseline_oof": {
+    "recall": 0.9825784804231793,
+    "precision": 1.0,
+    "specificity": 1.0,
+    "npv": 0.9833660160525356,
+    "f1": 0.9912126961182883,
+    "accuracy": 0.9914176470588235,
+    "TP": 164576,
+    "FP": 0,
+    "TN": 172506,
+    "FN": 2918
+  },
+  "tier_ablation_oof": {
+    "A: Stage 1 inputs only": {
+      "inputs": 27,
+      "pr_auc": 0.9720204563531395,
+      "roc_auc": 0.9655243920567818,
+      "brier": 0.06357413530349731,
+      "threshold": 0.059791553765535355,
+      "recall": 0.9800709279138358,
+      "precision": 0.6704568660605615,
+      "FP": 80686,
+      "FN": 3338
+    },
+    "B: + other laboratory values (no eGFR / creatinine / ACR)": {
+      "inputs": 45,
+      "pr_auc": 0.9909270549716613,
+      "roc_auc": 0.9904500591359023,
+      "brier": 0.034930769354104996,
+      "threshold": 0.18853695690631866,
+      "recall": 0.9800291353720133,
+      "precision": 0.9031134634323472,
+      "FP": 17610,
+      "FN": 3345
+    },
+    "C: full Stage 2 (+ eGFR, creatinine, ACR)": {
+      "inputs": 48,
+      "pr_auc": 0.9992814108822401,
+      "roc_auc": 0.9990771112534756,
+      "brier": 0.004414987284690142,
+      "threshold": 0.9907692074775696,
+      "recall": 0.9801724240868329,
+      "precision": 0.9999512732898448,
+      "FP": 8,
+      "FN": 3321
     }
   },
-  "stage2_safeguards": {
-    "renal_markers_included": [
-      "eGFR",
-      "Serum_Creatinine",
-      "Urine_ACR"
-    ],
-    "decided_by": "project owner: the CKD label is (nearly) a rule on these markers, so results are near-circular by construction",
-    "rule_baseline_vs_model_oof": {
-      "table": {
-        "Plain rule (no machine learning)": {
-          "recall": 0.9839079684231833,
-          "precision": 1.0,
-          "specificity": 1.0,
-          "TP": 29165.0,
-          "FP": 0.0,
-          "TN": 130358.0,
-          "FN": 477.0
-        },
-        "Model at the frozen threshold": {
-          "recall": 0.9806355846434114,
-          "precision": 0.9998280191242733,
-          "specificity": 0.9999616440878197,
-          "TP": 29068.0,
-          "FP": 5.0,
-          "TN": 130353.0,
-          "FN": 574.0
-        }
-      },
-      "positives_missed_by_the_rule": 477,
-      "of_those_caught_by_the_model": 86,
-      "rule_false_positives": 0,
-      "model_false_positives": 5,
-      "model_best_recall_at_the_rules_precision_minus_0.001": 0.9842453275757371
-    },
-    "tier_ablation_oof": {
-      "A: Stage 1 only": {
-        "inputs": 27.0,
-        "PR-AUC": 0.9243482448749808,
-        "ROC-AUC": 0.9626699053169466,
-        "Brier": 0.039054811000823975,
-        "threshold": 0.013009327463805676,
-        "recall": 0.9804331691518791,
-        "precision at target recall": 0.2971483492326411,
-        "FN": 580.0,
-        "FP": 68741.0
-      },
-      "B: + other laboratory values (no eGFR / creatinine / ACR)": {
-        "inputs": 45.0,
-        "PR-AUC": 0.9698160360194967,
-        "ROC-AUC": 0.9899301784098612,
-        "Brier": 0.02493036352097988,
-        "threshold": 0.050579559057950974,
-        "recall": 0.9803319614061129,
-        "precision at target recall": 0.686941515767576,
-        "FN": 583.0,
-        "FP": 13243.0
-      },
-      "C: full Stage 2 (+ eGFR, creatinine, ACR)": {
-        "inputs": 48.0,
-        "PR-AUC": 0.9970482344177466,
-        "ROC-AUC": 0.9983961333373099,
-        "Brier": 0.002349384594708681,
-        "threshold": 0.9655172228813171,
-        "recall": 0.9806355846434114,
-        "precision at target recall": 0.9998280191242733,
-        "FN": 574.0,
-        "FP": 5.0
-      }
-    },
-    "group_permutation_importance": [
-      {
-        "group": "Renal markers together (eGFR + creatinine + ACR)",
-        "columns": 3,
-        "PR-AUC drop": 0.5810424350088695,
-        "SD": 0.006923554337382774
-      },
-      {
-        "group": "eGFR + creatinine (exact functions of each other)",
-        "columns": 2,
-        "PR-AUC drop": 0.5518525389123441,
-        "SD": 0.0031731387303238195
-      },
-      {
-        "group": "Urine ACR (value and its blank pattern)",
-        "columns": 1,
-        "PR-AUC drop": 0.0024414791775348556,
-        "SD": 0.00010652265654979914
-      },
-      {
-        "group": "Stage 1 fields (27, together)",
-        "columns": 27,
-        "PR-AUC drop": 0.002047147410660299,
-        "SD": 0.0002271796216361964
-      },
-      {
-        "group": "Other laboratory values (together)",
-        "columns": 18,
-        "PR-AUC drop": 0.0012972346070659225,
-        "SD": 0.00018813548429125236
-      }
-    ],
-    "subgroup_oof": [
-      {
-        "grouping": "Sex",
-        "group": "Female",
-        "n": 81404,
-        "positives": 17404,
-        "recall": 0.9882785566536428,
-        "recall 95% low": 0.9865683028769006,
-        "recall 95% high": 0.9897733017020383,
-        "precision": 0.9999418638451253,
-        "specificity": 0.999984375,
-        "FN": 204,
-        "FP": 1,
-        "ROC-AUC": 0.9988595626364629,
-        "recall gap vs overall": 0.0076429720102314525,
-        "overall recall": 0.9806355846434114,
-        "flag": ""
-      },
-      {
-        "grouping": "Sex",
-        "group": "Male",
-        "n": 78596,
-        "positives": 12238,
-        "recall": 0.9697663016832816,
-        "recall 95% low": 0.9665820290553976,
-        "recall 95% high": 0.9726557405298583,
-        "precision": 0.9996630727762803,
-        "specificity": 0.9999397209078031,
-        "FN": 370,
-        "FP": 4,
-        "ROC-AUC": 0.9976846410582255,
-        "recall gap vs overall": -0.010869282960129789,
-        "overall recall": 0.9806355846434114,
-        "flag": ""
-      },
-      {
-        "grouping": "Ethnicity",
-        "group": "Asian",
-        "n": 15859,
-        "positives": 3003,
-        "recall": 0.985014985014985,
-        "recall 95% low": 0.9800087220987042,
-        "recall 95% high": 0.9887819185522697,
-        "precision": 0.9996620479891856,
-        "specificity": 0.9999222153080274,
-        "FN": 45,
-        "FP": 1,
-        "ROC-AUC": 0.999006904731858,
-        "recall gap vs overall": 0.004379400371573583,
-        "overall recall": 0.9806355846434114,
-        "flag": ""
-      },
-      {
-        "grouping": "Ethnicity",
-        "group": "Black",
-        "n": 20898,
-        "positives": 3824,
-        "recall": 0.9793410041841004,
-        "recall 95% low": 0.9743282358906696,
-        "recall 95% high": 0.9833916446811911,
-        "precision": 1.0,
-        "specificity": 1.0,
-        "FN": 79,
-        "FP": 0,
-        "ROC-AUC": 0.9982581360094847,
-        "recall gap vs overall": -0.0012945804593109678,
-        "overall recall": 0.9806355846434114,
-        "flag": ""
-      },
-      {
-        "grouping": "Ethnicity",
-        "group": "Hispanic",
-        "n": 26957,
-        "positives": 4996,
-        "recall": 0.9819855884707767,
-        "recall 95% low": 0.9779099810934239,
-        "recall 95% high": 0.9853205340492958,
-        "precision": 0.9997962094966375,
-        "specificity": 0.9999544647329357,
-        "FN": 90,
-        "FP": 1,
-        "ROC-AUC": 0.9989058365676194,
-        "recall gap vs overall": 0.001350003827365276,
-        "overall recall": 0.9806355846434114,
-        "flag": ""
-      },
-      {
-        "grouping": "Ethnicity",
-        "group": "Other",
-        "n": 7975,
-        "positives": 1551,
-        "recall": 0.9780786589297228,
-        "recall 95% low": 0.9695238691925576,
-        "recall 95% high": 0.9842710382758302,
-        "precision": 1.0,
-        "specificity": 1.0,
-        "FN": 34,
-        "FP": 0,
-        "ROC-AUC": 0.9982332231726126,
-        "recall gap vs overall": -0.002556925713688596,
-        "overall recall": 0.9806355846434114,
-        "flag": ""
-      },
-      {
-        "grouping": "Ethnicity",
-        "group": "White",
-        "n": 88311,
-        "positives": 16268,
-        "recall": 0.9799606589623802,
-        "recall 95% low": 0.9776911691308653,
-        "recall 95% high": 0.9820035220957258,
-        "precision": 0.9998118532455316,
-        "specificity": 0.99995835820274,
-        "FN": 326,
-        "FP": 3,
-        "ROC-AUC": 0.9981726747618535,
-        "recall gap vs overall": -0.0006749256810312243,
-        "overall recall": 0.9806355846434114,
-        "flag": ""
-      },
-      {
-        "grouping": "Country",
-        "group": "Australia",
-        "n": 13011,
-        "positives": 2391,
-        "recall": 0.9815976578837307,
-        "recall 95% low": 0.9753870092290406,
-        "recall 95% high": 0.9862632310206694,
-        "precision": 1.0,
-        "specificity": 1.0,
-        "FN": 44,
-        "FP": 0,
-        "ROC-AUC": 0.9986827761985664,
-        "recall gap vs overall": 0.0009620732403192722,
-        "overall recall": 0.9806355846434114,
-        "flag": ""
-      },
-      {
-        "grouping": "Country",
-        "group": "Canada",
-        "n": 16118,
-        "positives": 2972,
-        "recall": 0.9804845222072678,
-        "recall 95% low": 0.9748556406455493,
-        "recall 95% high": 0.9848728610327657,
-        "precision": 0.9993141289437586,
-        "specificity": 0.9998478624676708,
-        "FN": 58,
-        "FP": 2,
-        "ROC-AUC": 0.9979897574378975,
-        "recall gap vs overall": -0.00015106243614360082,
-        "overall recall": 0.9806355846434114,
-        "flag": ""
-      },
-      {
-        "grouping": "Country",
-        "group": "India",
-        "n": 23929,
-        "positives": 4452,
-        "recall": 0.9804582210242587,
-        "recall 95% low": 0.9759586213090209,
-        "recall 95% high": 0.9841293674561095,
-        "precision": 1.0,
-        "specificity": 1.0,
-        "FN": 87,
-        "FP": 0,
-        "ROC-AUC": 0.9985312577080225,
-        "recall gap vs overall": -0.00017736361915265952,
-        "overall recall": 0.9806355846434114,
-        "flag": ""
-      },
-      {
-        "grouping": "Country",
-        "group": "Other",
-        "n": 11154,
-        "positives": 2111,
-        "recall": 0.9767882520132638,
-        "recall 95% low": 0.9694464110235875,
-        "recall 95% high": 0.9823979256870198,
-        "precision": 1.0,
-        "specificity": 1.0,
-        "FN": 49,
-        "FP": 0,
-        "ROC-AUC": 0.9982138603743481,
-        "recall gap vs overall": -0.003847332630147582,
-        "overall recall": 0.9806355846434114,
-        "flag": ""
-      },
-      {
-        "grouping": "Country",
-        "group": "UK",
-        "n": 24065,
-        "positives": 4485,
-        "recall": 0.9843924191750278,
-        "recall 95% low": 0.9803281424703867,
-        "recall 95% high": 0.9876275991623766,
-        "precision": 1.0,
-        "specificity": 1.0,
-        "FN": 70,
-        "FP": 0,
-        "ROC-AUC": 0.9984817738848027,
-        "recall gap vs overall": 0.0037568345316164597,
-        "overall recall": 0.9806355846434114,
-        "flag": ""
-      },
-      {
-        "grouping": "Country",
-        "group": "USA",
-        "n": 71723,
-        "positives": 13231,
-        "recall": 0.9798956994936134,
-        "recall 95% low": 0.9773610655611019,
-        "recall 95% high": 0.9821517403949586,
-        "precision": 0.9997686613201727,
-        "specificity": 0.9999487109348287,
-        "FN": 266,
-        "FP": 3,
-        "ROC-AUC": 0.9983918791902577,
-        "recall gap vs overall": -0.0007398851497979475,
-        "overall recall": 0.9806355846434114,
-        "flag": ""
-      },
-      {
-        "grouping": "Age band",
-        "group": "18-39",
-        "n": 49423,
-        "positives": 1303,
-        "recall": 0.920951650038373,
-        "recall 95% low": 0.9050331507658679,
-        "recall 95% high": 0.9343952849374338,
-        "precision": 0.9966777408637874,
-        "specificity": 0.9999168744804655,
-        "FN": 103,
-        "FP": 4,
-        "ROC-AUC": 0.9947724383081692,
-        "recall gap vs overall": -0.0596839346050384,
-        "overall recall": 0.9806355846434114,
-        "flag": "CHECK"
-      },
-      {
-        "grouping": "Age band",
-        "group": "40-59",
-        "n": 70704,
-        "positives": 7805,
-        "recall": 0.9598975016015375,
-        "recall 95% low": 0.9553136555333094,
-        "recall 95% high": 0.9640288497622266,
-        "precision": 0.9998665421059656,
-        "specificity": 0.9999841014960492,
-        "FN": 313,
-        "FP": 1,
-        "ROC-AUC": 0.9960129638091894,
-        "recall gap vs overall": -0.020738083041873856,
-        "overall recall": 0.9806355846434114,
-        "flag": ""
-      },
-      {
-        "grouping": "Age band",
-        "group": "60-79",
-        "n": 34631,
-        "positives": 15839,
-        "recall": 0.9904034345602627,
-        "recall 95% low": 0.9887617595688202,
-        "recall 95% high": 0.9918072817829536,
-        "precision": 1.0,
-        "specificity": 1.0,
-        "FN": 152,
-        "FP": 0,
-        "ROC-AUC": 0.999010606501764,
-        "recall gap vs overall": 0.009767849916851312,
-        "overall recall": 0.9806355846434114,
-        "flag": ""
-      },
-      {
-        "grouping": "Age band",
-        "group": "80+",
-        "n": 5242,
-        "positives": 4695,
-        "recall": 0.9987220447284345,
-        "recall 95% low": 0.9972144337233101,
-        "recall 95% high": 0.9994141821466097,
-        "precision": 1.0,
-        "specificity": 1.0,
-        "FN": 6,
-        "FP": 0,
-        "ROC-AUC": 0.9996439091725026,
-        "recall gap vs overall": 0.018086460085023126,
-        "overall recall": 0.9806355846434114,
-        "flag": ""
-      }
-    ],
-    "subgroup_flag_rule": "overall recall outside the subgroup's 95% Wilson interval AND gap > 0.03, with n >= 200 (about one flag in 17 is expected by chance)"
+  "feature_importance_builtin": {
+    "eGFR": 0.5187829732894897,
+    "Sex": 0.14331500232219696,
+    "Serum_Creatinine": 0.06827499717473984,
+    "Hypertension": 0.04488600045442581,
+    "Age": 0.03881099820137024,
+    "Urine_ACR": 0.03479599952697754,
+    "Diabetes": 0.027372000738978386,
+    "Urine_Protein": 0.013690000399947166,
+    "ACE_Inhibitor": 0.012405999936163425,
+    "Systolic_BP": 0.009554999880492687,
+    "Phosphorus": 0.008917000144720078,
+    "CRP": 0.007226999849081039,
+    "Fasting_Glucose": 0.005547999870032072,
+    "Diastolic_BP": 0.005415999796241522,
+    "Smoking_Status": 0.005098999943584204,
+    "Country": 0.004708999767899513,
+    "Ethnicity": 0.004089000169187784,
+    "ARB": 0.003828000044450164,
+    "HbA1c": 0.0035639998968690634,
+    "Physical_Activity_Level": 0.003317000111564994,
+    "Blood_Urea_Nitrogen": 0.0026549999602138996,
+    "Obesity": 0.0025690000038594007,
+    "Alcohol_Consumption": 0.0025140000507235527,
+    "Cardiovascular_Disease": 0.0022249999456107616,
+    "BMI": 0.0020089999306946993,
+    "Autoimmune_Disease": 0.001854000031016767,
+    "LDL": 0.0017470000311732292,
+    "Calcium": 0.001576000009663403,
+    "HDL": 0.0013960000360384583,
+    "Hemoglobin": 0.0013899999903514981,
+    "Kidney_Stones": 0.0011680000461637974,
+    "Diabetes_Medication": 0.0011239999439567327,
+    "Hyperlipidemia": 0.0009820000268518925,
+    "Potassium": 0.0009510000236332417,
+    "Exercise_Hours_Per_Week": 0.000893999997060746,
+    "Water_Intake_L": 0.0008750000270083547,
+    "Triglycerides": 0.0008629999938420951,
+    "Uric_Acid": 0.0008500000112690032,
+    "Fast_Food_Frequency_Per_Week": 0.0008490000036545098,
+    "Total_Cholesterol": 0.0008479999960400164,
+    "NSAID_Usage": 0.0008399999933317304,
+    "Sleep_Duration_Hours": 0.0008299999753944576,
+    "Albumin": 0.0008210000232793391,
+    "Recurrent_UTI": 0.0008140000281855464,
+    "Sodium": 0.0008099999977275729,
+    "Diuretic": 0.0007520000217482448,
+    "Statin": 0.0007510000141337514,
+    "Family_History_CKD": 0.0007270000060088933,
+    "Heart_Failure": 0.0007149999728426337
   },
-  "feature_importance_builtin_top10": {
-    "eGFR": 0.4608415961265564,
-    "Sex": 0.15651032328605652,
-    "Serum_Creatinine": 0.07002777606248856,
-    "Hypertension": 0.055803850293159485,
-    "Age": 0.05378454551100731,
-    "Systolic_BP": 0.034415751695632935,
-    "Urine_ACR": 0.033253345638513565,
-    "Diabetes": 0.024874962866306305,
-    "Urine_Protein": 0.02421768568456173,
-    "Diastolic_BP": 0.011269227601587772
-  },
-  "permutation_importance_top10": {
-    "eGFR": 0.4078642193585994,
-    "Urine_ACR": 0.0024807201584237325,
-    "Serum_Creatinine": 0.0011339236571644485,
-    "ACE_Inhibitor": 0.0006868387401058218,
-    "CRP": 0.0005480458114730524,
-    "Age": 0.0005251188515277949,
-    "Sex": 0.0003749473616999177,
-    "Urine_Protein": 0.00019527384661146562,
-    "ARB": 0.0001042372191387031,
-    "Sleep_Duration_Hours": 3.096218923530625e-05
-  },
-  "missing_input_robustness": [
-    {
-      "share of optional fields blanked": 0.0,
-      "PR-AUC": 0.9974376677326464,
-      "ROC-AUC": 0.9985945019015129
-    },
-    {
-      "share of optional fields blanked": 0.1,
-      "PR-AUC": 0.9972045736032378,
-      "ROC-AUC": 0.9985019360380204
-    },
-    {
-      "share of optional fields blanked": 0.25,
-      "PR-AUC": 0.9969058425754513,
-      "ROC-AUC": 0.9984328019904601
-    },
-    {
-      "share of optional fields blanked": 0.5,
-      "PR-AUC": 0.9960995447306743,
-      "ROC-AUC": 0.9980083377020099
-    },
-    {
-      "share of optional fields blanked": 1.0,
-      "PR-AUC": 0.992997302914154,
-      "ROC-AUC": 0.996377097689405
-    }
-  ],
-  "missing_urine_acr_scenario": {
-    "scenario": "Urine_ACR blank in every row",
-    "PR-AUC": 0.9969149453667516,
-    "ROC-AUC": 0.9984415173448882
-  },
-  "output_semantics": "predict_proba(...)[:, 1] is an isotonic-calibrated probability estimated on this (synthetic) dataset. Values >= threshold are classified 'Higher Risk'. CAUTION: this Stage 2 model uses eGFR, serum creatinine and urine ACR, which define CKD in this dataset, so it is a confirmation-level estimate, NOT independent risk evidence. It is a screening estimate, not a diagnosis.",
   "test_evaluation": {
-    "n_test": 40000,
-    "n_positive": 7410,
-    "threshold": 0.9655172228813171,
-    "model": "XGBoost",
-    "ranking_and_calibration": {
-      "pr_auc": 0.9976239465424097,
-      "roc_auc": 0.9988449695414214,
-      "brier": 0.0021532357156132565,
-      "log_loss": 0.010998033426188521,
-      "ece": 0.0006764957786644379
+    "ranking": {
+      "pr_auc": 0.9991525318940886,
+      "roc_auc": 0.9989407861863918,
+      "brier": 0.004582892308530884
     },
     "operating_point": {
-      "recall": 0.9785425101214575,
+      "recall": 0.980546721699709,
+      "precision": 0.9999654982059067,
+      "specificity": 0.9999671506471323,
+      "npv": 0.9814611813257673,
+      "f1": 0.9901609101158143,
+      "accuracy": 0.9904,
+      "TP": 28983,
+      "FP": 1,
+      "TN": 30441,
+      "FN": 575
+    },
+    "rule_baseline": {
+      "recall": 0.9829826104607889,
       "precision": 1.0,
       "specificity": 1.0,
-      "npv": 0.9951448899203029,
-      "f1": 0.9891549007571108,
-      "accuracy": 0.996025,
-      "TP": 7251,
+      "npv": 0.9837453546614962,
+      "f1": 0.9914182860457578,
+      "accuracy": 0.9916166666666667,
+      "TP": 29055,
       "FP": 0,
-      "TN": 32590,
-      "FN": 159
-    },
-    "reliability_table": [
-      {
-        "bin": "(-0.001, 0.1]",
-        "n": 32507,
-        "mean_predicted": 0.0018,
-        "observed_rate": 0.0015
-      },
-      {
-        "bin": "(0.1, 0.2]",
-        "n": 97,
-        "mean_predicted": 0.1225,
-        "observed_rate": 0.1443
-      },
-      {
-        "bin": "(0.2, 0.3]",
-        "n": 29,
-        "mean_predicted": 0.257,
-        "observed_rate": 0.3793
-      },
-      {
-        "bin": "(0.3, 0.4]",
-        "n": 3,
-        "mean_predicted": 0.3588,
-        "observed_rate": 0.0
-      },
-      {
-        "bin": "(0.4, 0.5]",
-        "n": 25,
-        "mean_predicted": 0.4288,
-        "observed_rate": 0.56
-      },
-      {
-        "bin": "(0.6, 0.7]",
-        "n": 29,
-        "mean_predicted": 0.6092,
-        "observed_rate": 0.6897
-      },
-      {
-        "bin": "(0.7, 0.8]",
-        "n": 35,
-        "mean_predicted": 0.7543,
-        "observed_rate": 0.8
-      },
-      {
-        "bin": "(0.8, 0.9]",
-        "n": 7,
-        "mean_predicted": 0.8387,
-        "observed_rate": 1.0
-      },
-      {
-        "bin": "(0.9, 1.0]",
-        "n": 7268,
-        "mean_predicted": 0.9997,
-        "observed_rate": 1.0
-      }
-    ],
-    "rule_baseline_vs_model": {
-      "table": {
-        "Plain rule (no machine learning)": {
-          "recall": 0.9843454790823212,
-          "precision": 1.0,
-          "specificity": 1.0,
-          "TP": 7294.0,
-          "FP": 0.0,
-          "TN": 32590.0,
-          "FN": 116.0
-        },
-        "Model at the frozen threshold": {
-          "recall": 0.9785425101214575,
-          "precision": 1.0,
-          "specificity": 1.0,
-          "TP": 7251.0,
-          "FP": 0.0,
-          "TN": 32590.0,
-          "FN": 159.0
-        }
-      },
-      "positives_missed_by_the_rule": 116,
-      "of_those_caught_by_the_model": 22,
-      "rule_false_positives": 0,
-      "model_false_positives": 0,
-      "model_best_recall_at_the_rules_precision_minus_0.001": 0.9855600539811066
-    },
-    "subgroups": [
-      {
-        "grouping": "Sex",
-        "group": "Female",
-        "n": 20511,
-        "positives": 4317,
-        "recall": 0.9867963863794301,
-        "recall 95% low": 0.9829326250963104,
-        "recall 95% high": 0.9897945399078405,
-        "precision": 1.0,
-        "specificity": 1.0,
-        "FN": 57,
-        "FP": 0,
-        "ROC-AUC": 0.9994230683790635,
-        "recall gap vs overall": 0.008253876257972581,
-        "overall recall": 0.9785425101214575,
-        "flag": ""
-      },
-      {
-        "grouping": "Sex",
-        "group": "Male",
-        "n": 19489,
-        "positives": 3093,
-        "recall": 0.9670223084384093,
-        "recall 95% low": 0.9601267193452004,
-        "recall 95% high": 0.9727592248374145,
-        "precision": 1.0,
-        "specificity": 1.0,
-        "FN": 102,
-        "FP": 0,
-        "ROC-AUC": 0.99797070082544,
-        "recall gap vs overall": -0.011520201683048237,
-        "overall recall": 0.9785425101214575,
-        "flag": ""
-      },
-      {
-        "grouping": "Ethnicity",
-        "group": "Asian",
-        "n": 4014,
-        "positives": 787,
-        "recall": 0.97712833545108,
-        "recall 95% low": 0.9641367249489253,
-        "recall 95% high": 0.9854845392840131,
-        "precision": 1.0,
-        "specificity": 1.0,
-        "FN": 18,
-        "FP": 0,
-        "ROC-AUC": 0.9982424736646678,
-        "recall gap vs overall": -0.0014141746703775215,
-        "overall recall": 0.9785425101214575,
-        "flag": ""
-      },
-      {
-        "grouping": "Ethnicity",
-        "group": "Black",
-        "n": 5127,
-        "positives": 971,
-        "recall": 0.9835221421215242,
-        "recall 95% low": 0.9734011292025584,
-        "recall 95% high": 0.9898322822562879,
-        "precision": 1.0,
-        "specificity": 1.0,
-        "FN": 16,
-        "FP": 0,
-        "ROC-AUC": 0.9988656852376274,
-        "recall gap vs overall": 0.0049796320000666805,
-        "overall recall": 0.9785425101214575,
-        "flag": ""
-      },
-      {
-        "grouping": "Ethnicity",
-        "group": "Hispanic",
-        "n": 6863,
-        "positives": 1256,
-        "recall": 0.9761146496815286,
-        "recall 95% low": 0.9661070865946052,
-        "recall 95% high": 0.9832186064131506,
-        "precision": 1.0,
-        "specificity": 1.0,
-        "FN": 30,
-        "FP": 0,
-        "ROC-AUC": 0.9990289520946859,
-        "recall gap vs overall": -0.0024278604399289305,
-        "overall recall": 0.9785425101214575,
-        "flag": ""
-      },
-      {
-        "grouping": "Ethnicity",
-        "group": "Other",
-        "n": 2000,
-        "positives": 362,
-        "recall": 0.9668508287292817,
-        "recall 95% low": 0.9429595230018899,
-        "recall 95% high": 0.9809375953137964,
-        "precision": 1.0,
-        "specificity": 1.0,
-        "FN": 12,
-        "FP": 0,
-        "ROC-AUC": 0.9954237751199077,
-        "recall gap vs overall": -0.011691681392175801,
-        "overall recall": 0.9785425101214575,
-        "flag": ""
-      },
-      {
-        "grouping": "Ethnicity",
-        "group": "White",
-        "n": 21996,
-        "positives": 4034,
-        "recall": 0.9794248884481904,
-        "recall 95% low": 0.9745664421166508,
-        "recall 95% high": 0.9833710856952377,
-        "precision": 1.0,
-        "specificity": 1.0,
-        "FN": 83,
-        "FP": 0,
-        "ROC-AUC": 0.9991947137671844,
-        "recall gap vs overall": 0.00088237832673288,
-        "overall recall": 0.9785425101214575,
-        "flag": ""
-      },
-      {
-        "grouping": "Country",
-        "group": "Australia",
-        "n": 3273,
-        "positives": 620,
-        "recall": 0.9774193548387097,
-        "recall 95% low": 0.9624563424321976,
-        "recall 95% high": 0.986502495837004,
-        "precision": 1.0,
-        "specificity": 1.0,
-        "FN": 14,
-        "FP": 0,
-        "ROC-AUC": 0.9993956932504895,
-        "recall gap vs overall": -0.0011231552827478675,
-        "overall recall": 0.9785425101214575,
-        "flag": ""
-      },
-      {
-        "grouping": "Country",
-        "group": "Canada",
-        "n": 3925,
-        "positives": 742,
-        "recall": 0.9757412398921833,
-        "recall 95% low": 0.9619805510922385,
-        "recall 95% high": 0.984601135957666,
-        "precision": 1.0,
-        "specificity": 1.0,
-        "FN": 18,
-        "FP": 0,
-        "ROC-AUC": 0.9991347649617704,
-        "recall gap vs overall": -0.002801270229274233,
-        "overall recall": 0.9785425101214575,
-        "flag": ""
-      },
-      {
-        "grouping": "Country",
-        "group": "India",
-        "n": 6014,
-        "positives": 1105,
-        "recall": 0.9764705882352941,
-        "recall 95% low": 0.9657465406544458,
-        "recall 95% high": 0.9838931554031335,
-        "precision": 1.0,
-        "specificity": 1.0,
-        "FN": 26,
-        "FP": 0,
-        "ROC-AUC": 0.997106155560615,
-        "recall gap vs overall": -0.0020719218861634525,
-        "overall recall": 0.9785425101214575,
-        "flag": ""
-      },
-      {
-        "grouping": "Country",
-        "group": "Other",
-        "n": 2776,
-        "positives": 513,
-        "recall": 0.9746588693957114,
-        "recall 95% low": 0.957129714617654,
-        "recall 95% high": 0.9851318989985872,
-        "precision": 1.0,
-        "specificity": 1.0,
-        "FN": 13,
-        "FP": 0,
-        "ROC-AUC": 0.9999664059249611,
-        "recall gap vs overall": -0.003883640725746096,
-        "overall recall": 0.9785425101214575,
-        "flag": ""
-      },
-      {
-        "grouping": "Country",
-        "group": "UK",
-        "n": 5955,
-        "positives": 1067,
-        "recall": 0.9831302717900656,
-        "recall 95% low": 0.9734912081944438,
-        "recall 95% high": 0.9893029156050053,
-        "precision": 1.0,
-        "specificity": 1.0,
-        "FN": 18,
-        "FP": 0,
-        "ROC-AUC": 0.9982287398935787,
-        "recall gap vs overall": 0.004587761668608081,
-        "overall recall": 0.9785425101214575,
-        "flag": ""
-      },
-      {
-        "grouping": "Country",
-        "group": "USA",
-        "n": 18057,
-        "positives": 3363,
-        "recall": 0.9791852512637526,
-        "recall 95% low": 0.9737852053313664,
-        "recall 95% high": 0.9834917868502676,
-        "precision": 1.0,
-        "specificity": 1.0,
-        "FN": 70,
-        "FP": 0,
-        "ROC-AUC": 0.9992831966182882,
-        "recall gap vs overall": 0.0006427411422950113,
-        "overall recall": 0.9785425101214575,
-        "flag": ""
-      },
-      {
-        "grouping": "Age band",
-        "group": "18-39",
-        "n": 12382,
-        "positives": 343,
-        "recall": 0.9212827988338192,
-        "recall 95% low": 0.8878937167488683,
-        "recall 95% high": 0.9453396670205525,
-        "precision": 1.0,
-        "specificity": 1.0,
-        "FN": 27,
-        "FP": 0,
-        "ROC-AUC": 0.9951137907727969,
-        "recall gap vs overall": -0.05725971128763829,
-        "overall recall": 0.9785425101214575,
-        "flag": "CHECK"
-      },
-      {
-        "grouping": "Age band",
-        "group": "40-59",
-        "n": 17642,
-        "positives": 1960,
-        "recall": 0.951530612244898,
-        "recall 95% low": 0.9411080172958691,
-        "recall 95% high": 0.9601866696075961,
-        "precision": 1.0,
-        "specificity": 1.0,
-        "FN": 95,
-        "FP": 0,
-        "ROC-AUC": 0.9973024610303246,
-        "recall gap vs overall": -0.027011897876559554,
-        "overall recall": 0.9785425101214575,
-        "flag": ""
-      },
-      {
-        "grouping": "Age band",
-        "group": "60-79",
-        "n": 8673,
-        "positives": 3949,
-        "recall": 0.9913902253735123,
-        "recall 95% low": 0.9879931606312513,
-        "recall 95% high": 0.9938321672543893,
-        "precision": 1.0,
-        "specificity": 1.0,
-        "FN": 34,
-        "FP": 0,
-        "ROC-AUC": 0.9995760135203952,
-        "recall gap vs overall": 0.012847715252054748,
-        "overall recall": 0.9785425101214575,
-        "flag": ""
-      },
-      {
-        "grouping": "Age band",
-        "group": "80+",
-        "n": 1303,
-        "positives": 1158,
-        "recall": 0.9974093264248705,
-        "recall 95% low": 0.9924107394897645,
-        "recall 95% high": 0.9991185705297769,
-        "precision": 1.0,
-        "specificity": 1.0,
-        "FN": 3,
-        "FP": 0,
-        "ROC-AUC": 0.9999702221428146,
-        "recall gap vs overall": 0.018866816303412914,
-        "overall recall": 0.9785425101214575,
-        "flag": ""
-      }
-    ],
-    "note": "Test set used once, after the model, calibration and threshold were frozen."
-  },
-  "limitations": [
-    "Trained on a synthetic dataset: metrics are not evidence of real-world clinical performance.",
-    "Uses eGFR, serum creatinine and urine ACR, which define the CKD label in this dataset: performance is near-circular by construction; compare with the rule baseline.",
-    "Laboratory units are ASSUMED from value ranges (no data dictionary); input limits are rule-based and need clinical review.",
-    "Stage 2 only: requires laboratory results (serum creatinine is required).",
-    "Calibration holds for the data distribution the model was trained on."
-  ]
+      "TN": 30442,
+      "FN": 503
+    }
+  }
 }
