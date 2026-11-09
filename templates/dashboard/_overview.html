@@ -1,16 +1,3 @@
-{# The signed-in overview: hero with the kidney artwork and the path, three stat cards, trend + latest result,
-   classification summary, the daily checklist, resources, and the right-hand column (kidney facts, recent activity).
-   Used by the design preview AND by the real
-   dashboard, so there is one markup and one look.
-
-   It needs (all worked out by services/visuals.py from real assessment records):
-     summary, trend, message, activity, path_labels, path_done, is_sample, profile, links, result_urls
-   (result_urls: {assessment id: address of its result page}; empty in the design preview)
-   links.<name> says where each action goes:
-     a real address  - a working link
-     'preview'       - only in the design preview: a link that explains it is a preview
-     None            - the feature is not built yet: shown as unavailable ("Coming soon"), never as a dead link
-   With no assessments every card shows an honest empty state. Nothing is invented. #}
 {% from "partials/_macros.html" import icon, csrf_field %}
 {% from "partials/_visuals.html" import icon_chip, ring, donut, trend_chart, trend_empty, sparkline, path_steps, risk_pill, info_tip, sample_tag, community_cards, ckd_facts_panel %}
 {% from "partials/_checklist.html" import kidney_checklist %}
@@ -30,7 +17,6 @@
 
 {% set latest = summary.latest %}
 {% set next = summary.next_screening %}
-{# ready: a screening can start. waiting: the waiting period has not passed. unavailable: screening is not built yet. #}
 {% set start_state = 'unavailable' if links.start is none else ('waiting' if next.state == 'waiting' else 'ready') %}
 {% set spark = sparkline_geometry(summary.oldest_first) %}
 {% set tag = sample_tag() if is_sample else '' %}
@@ -79,7 +65,6 @@
     </section>
     {% endfor %}
     {% endif %}
-    {# ---- Hero: the welcome card, the kidney artwork and the path ---- #}
     <div class="hero-frame reveal" style="--i: 0;">
       <section class="hero-card" aria-labelledby="hero-heading">
         <div class="hero-copy">
@@ -102,7 +87,6 @@
       </section>
     </div>
 
-    {# ---- Three stat cards ---- #}
     <div class="stat-row">
       <article class="card stat-card reveal" style="--i: 1;">
         {{ icon_chip('clipboard-list', 'lavender', 'icon-chip-lg') }}
@@ -157,7 +141,6 @@
       </article>
     </div>
 
-    {# ---- Trend + latest result, and the classification summary ---- #}
     <div class="dash-row">
       <section class="card trend-card reveal" style="--i: 4;" aria-labelledby="trend-heading">
         <div class="card-header">
@@ -214,7 +197,6 @@
       </section>
     </div>
 
-    {# ---- Helpful resources ---- #}
     <div class="dash-row dash-row-single">
       <section class="card reveal" style="--i: 6;" aria-labelledby="resources-heading">
         <div class="card-header"><h2 class="card-title" id="resources-heading">{{ icon_chip('book-open', 'lavender') }}Helpful Resources</h2></div>
@@ -227,8 +209,6 @@
     </div>
   </div>
 
-  {# One right-hand column: the kidney-health facts (population figures, never a personal risk claim - see
-     services/ckd_facts.py for every source), then recent activity, so the two columns end level. #}
   <div class="dash-side">
   {% if ckd_facts is defined %}{{ ckd_facts_panel(ckd_facts) }}{% endif %}
 
@@ -259,8 +239,6 @@
 
   </div>
 
-  {# The daily kidney-health checklist, full width under both columns: yesterday/today at a glance, then today's
-     list itself right below it (templates/partials/_checklist.html). #}
   {% if (checklist_days is defined and checklist_days) or (checklist_groups is defined and checklist_groups) %}
   <div class="dash-checklist">
     {% if checklist_days is defined and checklist_days %}
@@ -290,8 +268,6 @@
   </div>
   {% endif %}
 
-  {# Nephron's own anonymous counts of people living in the Philippines (services/community_stats.py), full width
-     under both columns - labelled for what it is, separate from the sourced facts in the right-hand column. #}
   {% if community is defined and community %}
   <aside class="dash-ckd reveal" style="--i: 1.5;" aria-labelledby="community-heading">
     <div class="card-header"><h2 class="card-title" id="community-heading">{{ icon_chip('map-pin', 'lavender') }}Kidney risk in the Philippines, on Nephron</h2></div>
