@@ -1,6 +1,3 @@
-{# The PhilHealth accredited centers directory. Server-renders the first page of results (so the page works
-   with no JavaScript at all - the search form is a plain GET), then a small script upgrades the same search box
-   into a live, debounced search against /philhealth-centers/search once JS is available. #}
 {% extends "layouts/app_base.html" %}
 {% from "partials/_macros.html" import icon %}
 {% set active_nav = 'resources' %}
