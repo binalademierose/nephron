@@ -26,7 +26,7 @@ NCR_REGION = "1300000000"
 
 
 def _rings(geometry):
-    if not geometry:                                             # a few barangays have no outline in the source data
+    if not geometry:
         return []
     if geometry["type"] == "Polygon":
         return [geometry["coordinates"]]
@@ -48,7 +48,7 @@ def provinces(repo):
         for feature in json.load(open(path, encoding="utf-8"))["features"]:
             props = feature["properties"]
             if str(props["adm1_psgc"]) == NCR_REGION:
-                ncr = True                       # Metro Manila's four districts are asked as one choice
+                ncr = True
                 continue
             name, code = _clean_province(props)
             found.append({"code": code, "name": name})
@@ -62,7 +62,7 @@ def _projector(features):
     lons = [pt[0] for f in features for poly in _rings(f["geometry"]) for ring in poly for pt in ring]
     lats = [pt[1] for f in features for poly in _rings(f["geometry"]) for ring in poly for pt in ring]
     min_lon, max_lon, min_lat, max_lat = min(lons), max(lons), min(lats), max(lats)
-    k = math.cos(math.radians((min_lat + max_lat) / 2))          # equirectangular, true to scale at Pangasinan's latitude
+    k = math.cos(math.radians((min_lat + max_lat) / 2))
     scale = MAP_WIDTH / ((max_lon - min_lon) * k)
     height = (max_lat - min_lat) * scale
 
@@ -83,7 +83,7 @@ def _path_and_centre(geometry, project):
             if len(points) < 3:
                 continue
             parts.append("M" + "L".join(f"{x:g},{y:g}" for x, y in points) + "Z")
-            if index == 0:                                       # the outer ring: label the largest piece
+            if index == 0:
                 area = 0.0
                 cx = cy = 0.0
                 for (x1, y1), (x2, y2) in zip(points, points[1:] + points[:1]):

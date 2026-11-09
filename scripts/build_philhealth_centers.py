@@ -35,7 +35,7 @@ def build(xlsx_path):
 
     workbook = openpyxl.load_workbook(xlsx_path, read_only=True, data_only=True)
     sheet = workbook[workbook.sheetnames[0]]
-    rows = sheet.iter_rows(min_row=2, values_only=True)   # skip the header row
+    rows = sheet.iter_rows(min_row=2, values_only=True)
 
     centers = []
     current_region, current_area, next_id = None, None, 1
