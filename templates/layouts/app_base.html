@@ -1,10 +1,7 @@
-{# The signed-in layout: a header on top (logo badge, greeting, tools) and a curved rail on the left.
-   On small screens the rail becomes a drawer. Pages fill two blocks: header_title / header_subtitle (optional) and content. #}
 {% extends "layouts/document.html" %}
 {% from "partials/_macros.html" import icon, csrf_field, avatar_face %}
 {% block body_class %}app-body{% endblock %}
 {% block shell %}
-{# In the design previews the header shows a made-up person. On real pages it shows whoever is signed in. #}
 {% set preview = request.blueprint == 'design' %}
 {% set person = current_user if (current_user and not preview) else {'full_name': 'Sample User', 'first_name': 'Sample', 'initials': 'SU', 'role_label': 'General User'} %}
 <div class="app-backdrop" aria-hidden="true"></div>
