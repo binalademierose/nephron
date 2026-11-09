@@ -29,7 +29,7 @@ def libraries_available():
 
 try:
     from sklearn.base import BaseEstimator, ClassifierMixin
-except ImportError:                                  # scikit-learn is optional; the tests that need it are skipped without it
+except ImportError:
     BaseEstimator = ClassifierMixin = object
 
 
@@ -76,7 +76,7 @@ class AdditiveClassifier(ClassifierMixin, BaseEstimator):
 
 
 class FakeBooster:
-    offset = 0.0            # a test sets this to break the "contributions add up" rule
+    offset = 0.0
 
     def __init__(self, model):
         self.model = model
@@ -174,7 +174,7 @@ def build_stage2_stand_in(directory, lab_catalog, *, artifact_name="final_model_
     for name, (low, high, required) in lab_fields.items():
         values = rng.uniform(low, high, rows)
         if not required:
-            values[rng.random(rows) < 0.3] = np.nan          # about 30% missing, like a real lab report
+            values[rng.random(rows) < 0.3] = np.nan
         data[name] = values
     creatinine = np.clip(data["Serum_Creatinine"], 0.2, None)
     data["eGFR"] = 142 * np.minimum(creatinine / 0.9, 1) ** -0.302 * np.maximum(creatinine / 0.9, 1) ** -1.2 * 0.9938 ** data["Age"]
@@ -195,7 +195,7 @@ def build_stage2_stand_in(directory, lab_catalog, *, artifact_name="final_model_
 
     classes = list(top.classes_)
     p_high = top.predict_proba(frame)[:, classes.index(1)]
-    threshold = float(np.clip(np.quantile(p_high, 0.85), 0.05, 0.95))   # an arbitrary but plausible-shaped cutoff for a stand-in
+    threshold = float(np.clip(np.quantile(p_high, 0.85), 0.05, 0.95))
 
     os.makedirs(directory, exist_ok=True)
     artifact_path = os.path.join(directory, artifact_name)
@@ -238,7 +238,7 @@ def random_answers(catalog, rng, rows):
     for question in catalog["questions"]:
         name, kind = question["name"], question["kind"]
         if kind == "choice":
-            options = sorted({o.get("model_value", o["value"]) for o in question["options"]})   # what the MODEL is trained on (Philippines -> Other)
+            options = sorted({o.get("model_value", o["value"]) for o in question["options"]})
             data[name] = [options[i] for i in rng.integers(0, len(options), rows)]
         elif kind == "yesno":
             data[name] = [int(v) for v in rng.integers(0, 2, rows)]
@@ -283,7 +283,7 @@ def build_stand_in(directory, catalog, *, labels=(0, 1), feature_order=None, art
     from sklearn.preprocessing import OneHotEncoder
 
     rng = np.random.default_rng(0)
-    rows = 12000                                   # generous enough that the one-hot columns of all 31 questions do not overfit
+    rows = 12000
     data = random_answers(catalog, rng, rows)
     if country_options:
         data["Country"] = [country_options[i % len(country_options)] for i in range(rows)]
@@ -321,7 +321,7 @@ def build_stand_in(directory, catalog, *, labels=(0, 1), feature_order=None, art
 
     classes = list(top.classes_)
     p_high = top.predict_proba(frame if not use_numpy else frame.select_dtypes("number").to_numpy())[:, classes.index(high_label)]
-    fpr, tpr, thresholds = roc_curve(high, p_high)                    # Youden's J on the probability of the HIGH-risk class
+    fpr, tpr, thresholds = roc_curve(high, p_high)
     best = float(thresholds[int(np.argmax(tpr - fpr))])
     threshold = best if 0 < best < 1 else 0.5
 

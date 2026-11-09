@@ -37,7 +37,7 @@ class DatabaseUpdatePageTests(AppTestCase):
             page = self.text(response)
             self.assertIn("python init_db.py", page)
             self.assertIn("017_create_checklist_daily.sql", page)
-        self.assertEqual(self.client.get("/static/css/base.css").status_code, 200)      # still styled
+        self.assertEqual(self.client.get("/static/css/base.css").status_code, 200)
 
     def test_pages_work_normally_once_nothing_is_pending(self):
         self.app.extensions["pending_migrations"] = []

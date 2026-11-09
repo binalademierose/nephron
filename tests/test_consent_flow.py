@@ -72,7 +72,7 @@ class ConsentWordingTests(AppTestCase):
         page = self.text(self.patient.get("/share?q=cruz"))
         self.assertIn('data-confirm="consent"', page)
         self.assertIn('data-confirm-template="share-consent-template"', page)
-        self.assertIn('name="consent" value=""', page)              # the field the dialog fills in
+        self.assertIn('name="consent" value=""', page)
         self.assertRegex(page, r'<noscript><label class="consent-inline"><input type="checkbox" name="consent" value="1" required>')
 
 

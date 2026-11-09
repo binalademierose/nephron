@@ -21,7 +21,7 @@ class PeriodTests(unittest.TestCase):
     def test_months_are_calendar_months_and_the_day_is_kept_or_clamped(self):
         three = eligibility.Period(months=3)
         self.assertEqual(three.opens_on(date(2026, 10, 17)), date(2027, 1, 17))
-        self.assertEqual(three.opens_on(date(2026, 11, 30)), date(2027, 2, 28))       # no 30 February
+        self.assertEqual(three.opens_on(date(2026, 11, 30)), date(2027, 2, 28))
         self.assertEqual(eligibility.Period(months=12).opens_on(date(2024, 2, 29)), date(2025, 2, 28))
         self.assertEqual((three.label, eligibility.Period(months=1).label, eligibility.Period(days=30).label),
                          ("3 months", "1 month", "30 days"))
@@ -32,11 +32,11 @@ class PeriodTests(unittest.TestCase):
         self.assertAlmostEqual(status["elapsed_share"], 61 / 92)
         self.assertEqual(eligibility.wait_status(date(2026, 10, 17), date(2027, 1, 17), eligibility.Period(months=3))["state"], "available")
         self.assertEqual(eligibility.wait_status(date(2026, 10, 17), date(2026, 10, 18), eligibility.Period(months=3), True)["state"], "available")
-        self.assertEqual(eligibility.wait_status(date(2026, 10, 17), date(2026, 10, 18), 30)["days_left"], 29)   # the old .env days still work
+        self.assertEqual(eligibility.wait_status(date(2026, 10, 17), date(2026, 10, 18), 30)["days_left"], 29)
 
     def test_the_administrator_setting_wins_over_the_env_value(self):
         self.assertEqual(reassessment.period_from(3, 30), eligibility.Period(months=3))
-        self.assertIsNone(reassessment.period_from(0, 30))                          # 0 = no waiting period, on purpose
+        self.assertIsNone(reassessment.period_from(0, 30))
         self.assertEqual(reassessment.period_from(None, 30), eligibility.Period(days=30))
         self.assertIsNone(reassessment.period_from(None, None))
         with self.assertRaises(ValueError):
@@ -58,7 +58,7 @@ class PeriodTests(unittest.TestCase):
         with self.assertRaises(reassessment.RequestError):
             reassessment.ask_admin(store, 7, "x" * 301, waiting=True, now=NOW)
         reassessment.ask_admin(store, 7, "  ", waiting=True, now=NOW)
-        self.assertIsNone(store.latest_for(7)["reason"])                                # a blank reason is fine
+        self.assertIsNone(store.latest_for(7)["reason"])
         with self.assertRaises(reassessment.RequestError):
             reassessment.ask_admin(store, 7, "again", waiting=True, now=NOW)
         self.assertEqual(store.close_pending(7, NOW), 1)
@@ -70,7 +70,7 @@ class _RuleCase(AppTestCase):
 
     def setUp(self):
         super().setUp()
-        self.member = self.signed_in()                                                   # ana@example.com
+        self.member = self.signed_in()
         self.user_id = self.store.find_by_email("ana@example.com")["user_id"]
         self.admin = self.signed_in(email="admin@example.com", full_name="Site Admin")
         self.admin_id = self.store.find_by_email("admin@example.com")["user_id"]
@@ -89,7 +89,7 @@ class _RuleCase(AppTestCase):
 @NEEDS_ML
 class WaitingPeriodTests(_RuleCase):
     def test_three_months_block_a_new_screening_until_the_same_day_three_months_later(self):
-        with at(NOW):                                                                  # 20 September 2026
+        with at(NOW):
             self.submit()
         with at(NOW + timedelta(days=40)):
             page = self.text(self.member.get("/screening"))
@@ -107,7 +107,7 @@ class WaitingPeriodTests(_RuleCase):
         with at(NOW + timedelta(days=10)):
             dashboard = self.text(self.member.get("/dashboard"))
             history = self.text(self.member.get("/history"))
-        self.assertIn("81 days left", dashboard)                                        # 20 Dec - 30 Sep
+        self.assertIn("81 days left", dashboard)
         self.assertIn("need it sooner?", dashboard)
         self.assertIn("81 days left", history)
 
@@ -140,12 +140,12 @@ class AdministratorOpeningTests(_RuleCase):
             self.assertIn("next one opens", admin_page)
             self.post(f"/admin/reassessment/{self.pending_id()}/approve", {}, client=self.admin, token_from="/admin/reassessment")
             self.assertIn("The administrator approved your request", self.text(self.member.get("/dashboard")))
-            self.submit(Age="49")                                                       # the one early screening
+            self.submit(Age="49")
             self.assertEqual(self.count(), 2)
         with at(NOW + timedelta(days=11)):
             page = self.text(self.member.get("/screening"))
             self.submit(Age="50")
-        self.assertIn("is not open yet", page)                                          # back to 3 months, from day 10
+        self.assertIn("is not open yet", page)
         self.assertEqual(self.count(), 2)
         self.assertEqual(self.rules.latest_for(self.user_id)["status"], "approved")
         notes = self.app.extensions["notification_store"].list_for_user(self.user_id)
@@ -165,7 +165,7 @@ class AdministratorOpeningTests(_RuleCase):
 
     def test_a_request_cannot_be_decided_twice_or_made_when_not_waiting(self):
         with at(NOW):
-            self.ask()                                                                  # never screened: nothing to ask
+            self.ask()
             self.assertEqual(self.rules.list(), [])
             self.submit()
         with at(NOW + timedelta(days=1)):
@@ -210,7 +210,7 @@ class ProfessionalOpeningTests(_RuleCase):
             self.submit(Age="49")
         with at(NOW + timedelta(days=12)):
             self.submit(Age="50")
-        self.assertEqual(self.count(), 2)                                               # one early screening, then the wait again
+        self.assertEqual(self.count(), 2)
 
 
 class AdminPageTests(AppTestCase):
@@ -225,7 +225,7 @@ class AdminPageTests(AppTestCase):
         self.assertEqual(self.member.get("/admin/reassessment").status_code, 403)
         page = self.text(self.admin.get("/admin/reassessment"))
         self.assertIn("Re-assessment rule", page)
-        self.assertIn("No waiting period", page)                                       # nothing set in the tests' store
+        self.assertIn("No waiting period", page)
         self.post("/admin/reassessment/rule", {"months": "3"}, client=self.admin, token_from="/admin/reassessment")
         self.assertEqual(self.app.extensions["reassessment_store"].get_months(), 3)
         self.assertIn("Every 3 months", self.text(self.admin.get("/admin/reassessment")))
@@ -245,11 +245,11 @@ class AdminPageTests(AppTestCase):
             sql = handle.read()
         self.assertIn("CREATE TABLE IF NOT EXISTS app_settings", sql)
         self.assertIn("CREATE TABLE IF NOT EXISTS reassessment_requests", sql)
-        self.assertNotIn("ALTER TABLE", sql)                                             # adds, never modifies
+        self.assertNotIn("ALTER TABLE", sql)
         from services.reassessment_store import MySQLReassessmentStore
-        self.assertEqual(MySQLReassessmentStore.default_months, 3)                       # the real site's rule until changed
+        self.assertEqual(MySQLReassessmentStore.default_months, 3)
         self.assertEqual(reassessment.period_from(None, None, 3), eligibility.Period(months=3))
-        self.assertEqual(reassessment.period_from(None, 30, 3), eligibility.Period(days=30))   # an .env value still wins over the default
+        self.assertEqual(reassessment.period_from(None, 30, 3), eligibility.Period(days=30))
 
 
 if __name__ == "__main__":

@@ -38,7 +38,8 @@ def stage1_answers(**changes):
             "ACE_Inhibitor": "0", "ARB": "1", "Diabetes_Medication": "1", "Diuretic": "0", "Statin": "1", "NSAID_Usage": "0",
             "Smoking_Status": "Never", "Alcohol_Consumption": "None", "Physical_Activity_Level": "Light",
             "Exercise_Hours_Per_Week": "2.5", "Water_Intake_L": "1.8", "Fast_Food_Frequency_Per_Week": "2", "Sleep_Duration_Hours": "6.8",
-            "SugaryDrinksAddedSugar": "None", "UltraProcessedFoodFrequency": "Never", "SaturatedFatDairyIntake": "Low"}
+            "SugaryDrinksAddedSugar": "None", "UltraProcessedFoodFrequency": "Never", "SaturatedFatDairyIntake": "Low",
+            "Single_Kidney": "0"}
     form.update(changes)
     return form
 
@@ -59,7 +60,7 @@ class NoPreliminaryTests(AppTestCase):
 
 @NEEDS_ML
 class ModelUnavailableTests(AppTestCase):
-    stage2_model = None       # no Stage 2 model installed
+    stage2_model = None
 
     def test_enhanced_screening_is_honestly_unavailable_without_a_model(self):
         member = self.signed_in()
@@ -91,9 +92,9 @@ class ManualEntryTests(EnhancedScreeningTestCase):
         self.assertEqual(self.confirm_form(page), {f["name"] for f in self.lab_catalog["fields"]})
         for group in self.lab_catalog["groups"]:
             self.assertIn(group["title"], page)
-        # every field says whether it must be filled in: creatinine Required, every other lab Optional
-        self.assertEqual(page.count('<span class="chip chip-required">Required</span>'), 1)
-        self.assertEqual(page.count('<span class="chip chip-optional">Optional</span>'), len(self.lab_catalog["fields"]) - 1)
+        self.assertEqual(page.count('<span class="required-mark" aria-hidden="true">*</span><span class="visually-hidden">(required)</span>'), 1)
+        self.assertNotIn("optional-mark", page)
+        self.assertNotIn("chip-optional", page)
 
     def test_only_creatinine_is_enough_to_get_a_result(self):
         response = self.post("/enhanced-screening/confirm", {"Serum_Creatinine": "1.1"}, client=self.member, token_from="/enhanced-screening/manual")
@@ -124,19 +125,18 @@ class ManualEntryTests(EnhancedScreeningTestCase):
         return len(self.app.extensions["assessment_store"].list_assessments(self.store.find_by_email("ana@example.com")["user_id"]))
 
     def test_an_abnormal_value_is_accepted_after_one_check_never_refused(self):
-        # A nephrologist's patient can have a urine ACR far above the usual range: that is a real result, not an error.
         before = self._count()
         form = {"Serum_Creatinine": "1.1", "Urine_ACR": "12,000"}
         page = self.text(self.post("/enhanced-screening/confirm", form, client=self.member, token_from="/enhanced-screening/manual"))
-        self.assertIn("Please check this value", page)            # shown back once, with the value kept as typed
+        self.assertIn("Please check this value", page)
         self.assertIn('value="12,000"', page)
         self.assertIn("Urine ACR: 12,000 mg/g", page)
         self.assertNotIn("must be between", page)
-        self.assertEqual(self._count(), before)                   # nothing analysed or saved yet
+        self.assertEqual(self._count(), before)
         signature = re.search(r'name="confirm_unusual" value="([^"]+)"', page).group(1)
         response = self.post("/enhanced-screening/confirm", {**form, "confirm_unusual": signature}, client=self.member,
                              token_from="/enhanced-screening/manual")
-        self.assertEqual(response.status_code, 302)               # accepted and saved
+        self.assertEqual(response.status_code, 302)
         self.assertEqual(self._count(), before + 1)
         result = self.text(self.member.get(response.headers["Location"]))
         self.assertIn("Some answers are outside the usual range", result)
@@ -149,14 +149,14 @@ class ManualEntryTests(EnhancedScreeningTestCase):
         signature = re.search(r'name="confirm_unusual" value="([^"]+)"', page).group(1)
         page = self.text(self.post("/enhanced-screening/confirm", {"Serum_Creatinine": "1.1", "Sodium": "8888", "confirm_unusual": signature},
                                    client=self.member, token_from="/enhanced-screening/manual"))
-        self.assertIn("Please check this value", page)            # a different number is checked again
+        self.assertIn("Please check this value", page)
         self.assertEqual(self._count(), before)
 
     def test_pressing_analyse_again_without_ticking_says_why_the_form_came_back(self):
         form = {"Serum_Creatinine": "1.1", "Triglycerides": "1,280"}
         page = self.text(self.post("/enhanced-screening/confirm", form, client=self.member, token_from="/enhanced-screening/manual"))
-        self.assertIn("Some values need a second look", page)            # a notice at the top, not only at the end
-        self.assertNotIn("Tick this box", page)                           # no error the first time it is shown
+        self.assertIn("Some values need a second look", page)
+        self.assertNotIn("Tick this box", page)
         shown = re.search(r'name="unusual_shown" value="([^"]+)"', page).group(1)
         page = self.text(self.post("/enhanced-screening/confirm", {**form, "unusual_shown": shown}, client=self.member,
                                    token_from="/enhanced-screening/manual"))
@@ -167,7 +167,7 @@ class ManualEntryTests(EnhancedScreeningTestCase):
             page = self.text(self.post("/enhanced-screening/confirm", {"Serum_Creatinine": "1.1", "Sodium": bad},
                                        client=self.member, token_from="/enhanced-screening/manual"))
             self.assertIn(message, page, bad)
-            self.assertIn('value="1.1"', page)                    # the good value the person typed is not lost
+            self.assertIn('value="1.1"', page)
 
     def test_more_lab_values_can_be_given_and_are_all_used(self):
         response = self.post("/enhanced-screening/confirm", {"Serum_Creatinine": "1.1", "Sodium": "140", "HbA1c": "5.4"},
@@ -178,8 +178,6 @@ class ManualEntryTests(EnhancedScreeningTestCase):
         self.assertEqual(row["inputs"]["HbA1c"], 5.4)
 
     def test_alcohol_none_from_the_preliminary_answer_does_not_break_analysis(self):
-        # stage1_answers() sets Alcohol_Consumption to "None" (does not drink), which the Stage 2 model has never
-        # seen (see services/model_service_stage2.STAGE1_VOCABULARY_GAPS) - this must not surface as a server error.
         response = self.post("/enhanced-screening/confirm", {"Serum_Creatinine": "1.1"}, client=self.member, token_from="/enhanced-screening/manual")
         self.assertEqual(response.status_code, 302)
 
@@ -206,7 +204,7 @@ class UploadTests(EnhancedScreeningTestCase):
         page = self.text(self.member.get(response.headers["Location"]))
         self.assertIn("We found", page)
         self.assertIn("Suggested from the upload", page)
-        self.assertIn('value="1.4"', page)                        # the report's own Serum Creatinine value
+        self.assertIn('value="1.4"', page)
         self.assertIn("Found in the upload", page)
 
     @NEEDS_OCR
@@ -217,7 +215,7 @@ class UploadTests(EnhancedScreeningTestCase):
         form = dict(re.findall(r'name="([A-Za-z_]+)"[^>]*value="([^"]*)"', page))
         form = {k: v for k, v in form.items() if k in {f["name"] for f in self.lab_catalog["fields"]}}
         refused = self.post(response.headers["Location"], form, client=self.member, token_from=response.headers["Location"])
-        self.assertEqual(refused.status_code, 200)                          # an uploaded report needs the person's confirmation
+        self.assertEqual(refused.status_code, 200)
         self.assertIn("Please confirm that this report is yours", self.text(refused))
         form["attest"] = "1"
         result = self.post(response.headers["Location"], form, client=self.member, token_from=response.headers["Location"])
@@ -256,7 +254,6 @@ if __name__ == "__main__":
     unittest.main()
 
 
-
 class ReportCheckTests(UploadTests):
     """The report checks (services/lab_verification.py) appear beside the values of an uploaded report."""
 
@@ -264,7 +261,7 @@ class ReportCheckTests(UploadTests):
         response = self.upload()
         page = self.text(self.member.get(response.headers["Location"]))
         self.assertIn("Report checks", page)
-        self.assertIn("2026-09-20", page)                                # the date read from the sample report
-        self.assertIn("does not match your name", page)                  # the sample is Jane Doe's, not this member's
-        self.assertIn("No signature, licence number", page)              # the sample carries no signature
+        self.assertIn("2026-09-20", page)
+        self.assertIn("does not match your name", page)
+        self.assertIn("No signature, licence number", page)
         self.assertIn("signs, not proof", page)

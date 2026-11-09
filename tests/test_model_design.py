@@ -24,13 +24,13 @@ class MeasurementTests(unittest.TestCase):
         dist = self.m["distribution"]
         self.assertEqual((sum(dist["positive"]), sum(dist["negative"])), (4, 6))
         self.assertEqual(len(dist["edges"]), model_insights.SCORE_BINS + 1)
-        self.assertEqual(dist["positive"][-2], 1)                  # 0.9 falls in 90-95%
-        self.assertEqual(dist["negative"][1], 1)                   # 0.05 falls in 5-10%
+        self.assertEqual(dist["positive"][-2], 1)
+        self.assertEqual(dist["negative"][1], 1)
 
     def test_the_tradeoff_runs_from_flag_everyone_to_flag_no_one_and_matches_the_threshold(self):
         rows = self.m["tradeoff"]
-        self.assertEqual(rows[0], [0.0, 1.0, 0.0])                 # threshold 0: every case caught, no one cleared
-        self.assertEqual(rows[-1][1], 0.0)                         # threshold 100%: nothing above it here
+        self.assertEqual(rows[0], [0.0, 1.0, 0.0])
+        self.assertEqual(rows[-1][1], 0.0)
         at_half = next(r for r in rows if r[0] == 0.5)
         self.assertEqual((at_half[1], at_half[2]), (self.m["sensitivity"], self.m["specificity"]))
 
@@ -131,7 +131,6 @@ class PagesTests(AdminTestCase):
         self.assertIn("<strong>75.0%</strong> sensitivity", page)
 
     def test_the_model_comparison_page_is_gone(self):
-        # The Model comparison feature was removed: its route no longer exists and its menu item is gone.
         self.assertEqual(self.admin.get("/admin/model/compare").status_code, 404)
         self.assertNotIn("Model comparison", self.text(self.admin.get("/admin")))
 

@@ -44,7 +44,7 @@ class VerifyModelTests(unittest.TestCase):
         score = 0.04 * (frame["Age"] - 50) + 0.9 * frame["Diabetes"] + 0.8 * frame["Hypertension"] + 0.6 * frame["Family_History_CKD"] + 0.03 * (frame["BMI"] - 27) - 0.9
         frame["Diagnosis"] = (rng.random(len(frame)) < 1 / (1 + np.exp(-score))).astype(int)
         cls.csv = os.path.join(cls.root, "held_out.csv")
-        frame.to_csv(cls.csv, index=False)            # writes the text None for a person who does not drink
+        frame.to_csv(cls.csv, index=False)
 
     @classmethod
     def tearDownClass(cls):
@@ -109,7 +109,7 @@ class VerifyModelTests(unittest.TestCase):
 
         def wrong(self, values, _checking=False):
             answer = real(self, values, _checking=_checking)
-            return dict(answer, probability=1 - answer["probability"])       # a website that reads the wrong probability column
+            return dict(answer, probability=1 - answer["probability"])
 
         with mock.patch.object(ModelService, "predict", wrong):
             code, text = run("--model-dir", self.good.directory, "--validation-csv", self.csv, "--target", "Diagnosis")
@@ -119,7 +119,7 @@ class VerifyModelTests(unittest.TestCase):
     def test_rows_the_form_could_never_send_are_counted_and_left_out_not_hidden(self):
         import pandas as pd
         frame = pd.read_csv(self.csv, keep_default_na=False)
-        frame.loc[:40, "Water_Intake_L"] = 40.3                                   # above the form's realistic limit of 10
+        frame.loc[:40, "Water_Intake_L"] = 40.3
         path = os.path.join(self.root, "over_limit.csv")
         frame.to_csv(path, index=False)
         code, text = run("--model-dir", self.good.directory, "--validation-csv", path, "--target", "Diagnosis")
@@ -127,7 +127,6 @@ class VerifyModelTests(unittest.TestCase):
         self.assertRegex(text, r"Refused by the website's own checks \(not answers the form can send\): [1-9]\d*")
 
     def test_a_threshold_that_belongs_to_another_model_is_caught(self):
-        # This is the exact mistake of the earlier notebook: another model's threshold saved beside this model.
         folder = self.copy()
         meta = self.read_meta(folder)
         meta["threshold"] = 0.05 if meta["threshold"] > 0.3 else 0.95
@@ -140,10 +139,10 @@ class VerifyModelTests(unittest.TestCase):
         import pandas as pd
         with open(self.csv, encoding="utf-8") as handle:
             raw = handle.read()
-        self.assertIn(",None,", raw)                                              # the file really contains the text None
+        self.assertIn(",None,", raw)
         code, text = run("--model-dir", self.good.directory, "--validation-csv", self.csv, "--target", "Diagnosis")
         self.assertEqual(code, 0, text)
-        self.assertEqual(int(pd.read_csv(self.csv)["Alcohol_Consumption"].isna().sum()) > 0, True)     # pandas' default WOULD have lost them
+        self.assertEqual(int(pd.read_csv(self.csv)["Alcohol_Consumption"].isna().sum()) > 0, True)
 
     def test_a_validation_file_with_missing_columns_or_no_positive_rows_is_reported(self):
         import pandas as pd
@@ -153,7 +152,7 @@ class VerifyModelTests(unittest.TestCase):
         code, text = run("--model-dir", self.good.directory, "--validation-csv", path, "--target", "Diagnosis")
         self.assertEqual((code, "lacks these columns: Age" in text), (2, True))
         code, text = run("--model-dir", self.good.directory, "--validation-csv", self.csv)
-        self.assertEqual(code, 2)                                                  # --target is required
+        self.assertEqual(code, 2)
         code, text = run("--model-dir", self.good.directory, "--validation-csv", self.csv, "--target", "Country")
         self.assertEqual(code, 2)
 

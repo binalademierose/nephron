@@ -31,16 +31,16 @@ class DashboardTests(AppTestCase):
         for gone in ("Quick Actions", "quick-action", "profile-row"):
             self.assertNotIn(gone, page)
         side = page.index('class="dash-side"')
-        self.assertLess(side, page.index('id="ckd-facts-heading"'))                       # the facts are in the right-hand column,
-        self.assertLess(page.index('id="ckd-facts-heading"'), page.index('id="activity-heading"'))   # above recent activity
+        self.assertLess(side, page.index('id="ckd-facts-heading"'))
+        self.assertLess(page.index('id="ckd-facts-heading"'), page.index('id="activity-heading"'))
         self.assertIn("Kidney health in the Philippines", page)
 
     def test_the_checklist_is_right_under_the_checklist_days_card(self):
         page = self.text(self.member.get("/dashboard"))
         days, checklist = page.index('id="checklist-days-heading"'), page.index('id="checklist"')
         self.assertLess(days, checklist)
-        self.assertNotIn("Helpful Resources", page[days:checklist])                         # nothing in between
-        self.assertIn('name="next" value="/dashboard"', page)                             # a tick without JavaScript comes back here
+        self.assertNotIn("Helpful Resources", page[days:checklist])
+        self.assertIn('name="next" value="/dashboard"', page)
         self.assertIn("js/checklist.js", page)
 
     def test_without_a_screening_there_is_no_checklist_but_the_facts_still_show(self):
@@ -87,7 +87,7 @@ class ChecklistToggleTests(AppTestCase):
 
     def test_the_follow_up_page_shows_the_same_list(self):
         page = self.text(self.member.get("/follow-up"))
-        self.assertIn('id="checklist-heading"', page)          # old links to #checklist-heading still land on it
+        self.assertIn('id="checklist-heading"', page)
         self.assertIn(f"/follow-up/checklist/{self.tip}", page)
 
 
@@ -114,7 +114,7 @@ class SharedResultTests(AppTestCase):
         self.assertIn("Family history of kidney disease", page)
         self.assertIn("What raised the estimate", page)
         for patient_wording in ("Your answer", "your answer was", "your estimate"):
-            self.assertNotIn(patient_wording, page)                                           # worded for the professional
+            self.assertNotIn(patient_wording, page)
 
     def test_the_history_and_the_shared_list_link_to_it(self):
         self.assertIn(self.url, self.text(self.professional.get(f"/patients/{self.patient_id}")))

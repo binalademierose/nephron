@@ -31,7 +31,6 @@ class StructureTests(unittest.TestCase):
             self.assertNotIn("stop your", lowered, tip["id"])
 
     def test_hydration_never_states_a_single_universal_target(self):
-        # guards against ever rewriting this into an unqualified "drink 8 glasses a day" style claim
         hydration = [tip for tip in kidney_tips.TIPS if tip["category"] == "hydration" and tip.get("always")]
         self.assertTrue(any("no one safe number" in tip["text"] or "varies" in tip["text"] for tip in hydration))
 
@@ -62,7 +61,6 @@ class MatchingTests(unittest.TestCase):
         self.assertTrue(any("sodium" in t.lower() for t in all_tip_texts(grouped)))
 
     def test_a_lab_only_tip_never_appears_for_a_preliminary_only_assessment(self):
-        # Potassium is never present in a Preliminary assessment's own inputs
         grouped = kidney_tips.personalized_tips({"Diabetes": 1}, "low")
         self.assertFalse(any("potassium" in t.lower() for t in all_tip_texts(grouped)))
 
@@ -111,7 +109,7 @@ class MatchingTests(unittest.TestCase):
 
     def test_a_missing_inputs_dict_does_not_crash(self):
         grouped = kidney_tips.personalized_tips(None, "low")
-        self.assertTrue(len(grouped) > 0)   # the "always" tips still show
+        self.assertTrue(len(grouped) > 0)
 
 
 if __name__ == "__main__":

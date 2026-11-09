@@ -32,7 +32,6 @@ class EstimateGfrTests(unittest.TestCase):
         self.assertGreater(estimate_gfr(0.9, 30, "Female"), estimate_gfr(0.9, 80, "Female"))
 
     def test_known_reference_values_are_in_the_expected_clinical_range(self):
-        # A healthy young adult should land in the normal range; a raised creatinine in an older adult should not.
         self.assertGreater(estimate_gfr(0.8, 25, "Male"), 90)
         self.assertLess(estimate_gfr(2.5, 75, "Female"), 30)
 

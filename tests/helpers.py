@@ -21,10 +21,10 @@ NEW_PASSWORD = "a-brand-new-phrase-2026"
 
 
 class AppTestCase(unittest.TestCase):
-    debug = False          # a test class sets this to True to also get the /design previews
+    debug = False
 
-    model = None           # True = a READY stand-in model; "explainable" = one that can also explain a single result; None = no model
-    stage2_model = None     # same idea, for the Enhanced Screening (Stage 2) model
+    model = None
+    stage2_model = None
 
     def setUp(self):
         self.store = MemoryUserStore()
@@ -38,7 +38,6 @@ class AppTestCase(unittest.TestCase):
                               model_service_stage2=ready_stage2_model_service(explainable=self.stage2_model == "explainable") if self.stage2_model else None)
         self.client = self.app.test_client()
 
-    # ---- talking to the app the way a browser does ----
     def csrf(self, client=None, path="/login"):
         """Open a page that has a form and read the secret token out of it, like a browser would send it back."""
         html = (client or self.client).get(path).get_data(as_text=True)
@@ -58,11 +57,9 @@ class AppTestCase(unittest.TestCase):
         form = {"role": "general", "full_name": "Ana Reyes", "email": "ana@example.com", "password": PASSWORD,
                "confirm_password": PASSWORD, "username": f"user_{uuid.uuid4().hex[:12]}", "date_of_birth": "1978-05-14",
                "address": "", "avatar": "avatar-1", "country": "Other", "agree_terms": "agree"}
-        # 1978 and "Other" match the default screening answers (Age 48, Country Other), which are now fixed by the
-        # account's own birthday and country (services/fixed_answers.py).
         form.update(changes)
         if "confirm_password" not in changes and "password" in changes:
-            form["confirm_password"] = changes["password"]        # a test changing the password still confirms it correctly
+            form["confirm_password"] = changes["password"]
         return self.post("/register", form, client, token_from="/register")
 
     def login(self, client=None, email="ana@example.com", password=PASSWORD, **extra):
@@ -74,7 +71,7 @@ class AppTestCase(unittest.TestCase):
         from services import assessments
         values = {"assessment_type": "preliminary", "probability": 0.31, "classification": "high", "threshold_used": 0.21,
                   "model_version": "test-model", "assessed_at": datetime(2026, 9, 18, 4, 0, 0)}
-        inputs = changes.pop("inputs", None)                     # the answers behind the result, if the test needs them
+        inputs = changes.pop("inputs", None)
         values.update(changes)
         user = self.store.find_by_email(email)
         return assessments.record_assessment(self.app.extensions["assessment_store"], user["user_id"], values, inputs)
@@ -100,7 +97,6 @@ class AppTestCase(unittest.TestCase):
         return response.get_data(as_text=True)
 
 
-# ---- a stand-in screening model, shared by the tests that need a READY model (see tests/model_fixtures.py) ----
 _STAND_IN = {}
 
 
@@ -133,7 +129,6 @@ def ready_model_service(explainable=False):
     return _STAND_IN[key]
 
 
-# ---- a stand-in Stage 2 (Enhanced Screening) model, shared by the tests that need a READY one ----
 _STAGE2_STAND_IN = {}
 
 

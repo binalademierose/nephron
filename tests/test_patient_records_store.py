@@ -100,9 +100,6 @@ class MySQLStoreTests(PatientRecordsStoreContract, unittest.TestCase):
         return MySQLUserStore(), MySQLPatientRecordsStore()
 
     def test_deleting_the_professional_deletes_their_patient_records_but_leaves_the_orphaned_shadow_account(self):
-        # An orphaned patient_record shadow account is harmless (it can never sign in, and nothing lists it once
-        # its patient_records row is gone) - there is no "delete a professional's account" feature to attach
-        # further cleanup to, so this only checks the one thing patient_records.py itself promises.
         user_id, _ = self.store.create(self.professional_id, "Juan Dela Cruz", 52, "Male",
                                        "shadow-e@patient-records.nephron.invalid", "h", NOW)
         from db import execute, query_one

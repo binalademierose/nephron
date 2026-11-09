@@ -89,9 +89,9 @@ class NotificationStoreContract:
         self.store.set_read(a, self.user_id, True)
         other_n = self.store.create(other, "follow_up", "Other", None, None, NOW)
         changed = self.store.mark_all_read(self.user_id)
-        self.assertEqual(changed, 1)                       # only b was unread
+        self.assertEqual(changed, 1)
         self.assertTrue(self.store.get(b, self.user_id)["is_read"])
-        self.assertFalse(self.store.get(other_n, other)["is_read"])   # someone else's is untouched
+        self.assertFalse(self.store.get(other_n, other)["is_read"])
 
     def test_delete_removes_it_and_reports_true(self):
         nid = self.store.create(self.user_id, "follow_up", "A", None, None, NOW)
@@ -113,7 +113,7 @@ class NotificationStoreContract:
         nid = self.store.create(self.user_id, "follow_up", "Private", None, None, NOW)
         self.assertFalse(self.store.set_read(nid, other, True))
         self.assertFalse(self.store.delete(nid, other))
-        self.assertFalse(self.store.get(nid, self.user_id)["is_read"])   # untouched
+        self.assertFalse(self.store.get(nid, self.user_id)["is_read"])
 
 
 class MemoryStoreTests(NotificationStoreContract, unittest.TestCase):

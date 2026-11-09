@@ -111,7 +111,7 @@ class NotificationManagementTests(AppTestCase):
         self.assertEqual(response.status_code, 404)
         response = self.post(f"/notifications/{self.notification_id}/delete", {}, client=other, token_from="/notifications")
         self.assertEqual(response.status_code, 404)
-        self.assertIn("Test title", self.text(self.patient.get("/notifications")))   # untouched
+        self.assertIn("Test title", self.text(self.patient.get("/notifications")))
 
     def test_an_anonymous_visitor_is_sent_to_sign_in(self):
         response = self.client.get("/notifications")

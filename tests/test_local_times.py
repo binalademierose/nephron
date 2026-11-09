@@ -13,7 +13,7 @@ sys.path.insert(0, os.path.abspath(os.path.dirname(__file__)))
 from test_admin_flow import AdminTestCase  # noqa: E402
 from services import activity, admin_overview  # noqa: E402
 
-EARLY_MORNING_UTC = datetime(2026, 10, 27, 22, 15)       # = Oct 28, 2026, 6:15 AM in Manila
+EARLY_MORNING_UTC = datetime(2026, 10, 27, 22, 15)
 
 
 class AdminTimesTests(AdminTestCase):
@@ -36,8 +36,8 @@ class AdminTimesTests(AdminTestCase):
 
 class MonthStartTests(unittest.TestCase):
     def test_this_month_starts_at_midnight_in_the_philippines_not_at_8_am(self):
-        joined_just_after_midnight_oct_1_manila = datetime(2026, 9, 30, 17, 0)        # 1:00 AM Oct 1 in Manila
-        joined_late_sep_30_manila = datetime(2026, 9, 30, 15, 0)                       # 11:00 PM Sep 30 in Manila
+        joined_just_after_midnight_oct_1_manila = datetime(2026, 9, 30, 17, 0)
+        joined_late_sep_30_manila = datetime(2026, 9, 30, 15, 0)
         accounts = [{"created_at": joined_just_after_midnight_oct_1_manila, "role": "general"},
                     {"created_at": joined_late_sep_30_manila, "role": "general"}]
         kpis = admin_overview.user_kpis(accounts, datetime(2026, 10, 15, 4, 0), timezone_name="Asia/Manila")

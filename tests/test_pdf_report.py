@@ -69,7 +69,6 @@ class AssessmentReportTests(unittest.TestCase):
         self.assertGreater(len(pdf_bytes), 500)
 
     def test_it_works_with_no_factors_and_no_reviews(self):
-        # a saved result the current model can no longer explain, and no clinical note yet - still a valid PDF
         pdf_bytes = pdf_report.build_assessment_report(single_data(factors_up=[], factors_down=[], reviews=[]))
         self.assertTrue(pdf_bytes.startswith(b"%PDF"))
 
@@ -100,8 +99,6 @@ class AssessmentReportTests(unittest.TestCase):
         self.assertIn("Nephron provides risk screening", text)
 
     def test_a_review_note_containing_xml_special_characters_does_not_break_the_pdf(self):
-        # a clinical review note is free text a professional typed - the one place in a report that is not a
-        # controlled vocabulary - so it can contain '<', '>' or '&' without breaking Paragraph's own XML-like markup
         data = single_data(reviews=[{"professional_name": "Dr. A & B", "profession_title": "Nephrologist",
                                     "date": date(2026, 9, 26), "note": "BP < 120 & pulse > 60, target achieved."}])
         pdf_bytes = pdf_report.build_assessment_report(data)
@@ -117,8 +114,6 @@ class AssessmentReportTests(unittest.TestCase):
 
     @NEEDS_PYPDF
     def test_a_superscript_two_unit_reads_back_as_a_plain_2(self):
-        # the PDF has no glyph for U+00B2 at all (see pdf_report._escape) - it is rendered as a real <super> 2
-        # instead, which pypdf's own text extraction reads back as a plain "2"
         data = single_data(answers=[("Kidney function", [("eGFR", "42.8 mL/min/1.73m\u00b2")])])
         text = _text_of(pdf_report.build_assessment_report(data))
         self.assertIn("1.73m2", text.replace("\n", ""))

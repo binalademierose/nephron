@@ -39,7 +39,7 @@ class SummaryTests(unittest.TestCase):
     def test_one_assessment_can_be_counted_but_is_not_a_trend(self):
         summary = visuals.summarize_assessments([record(date(2026, 9, 20), 12, "low")], today=TODAY)
         self.assertTrue(summary["has_distribution"])
-        self.assertFalse(summary["has_trend"])          # one point cannot show change
+        self.assertFalse(summary["has_trend"])
         self.assertIsNone(summary["change"])
         self.assertIsNone(visuals.trend_geometry(summary["oldest_first"], 21))
 
@@ -77,14 +77,14 @@ class SummaryTests(unittest.TestCase):
             visuals.summarize_assessments([record(date(2026, 9, 1), 140, "high")], today=TODAY)
 
     def test_this_month_count_only_counts_this_month(self):
-        summary = visuals.summarize_assessments(THREE, today=TODAY)          # only Sep 20 is in September
+        summary = visuals.summarize_assessments(THREE, today=TODAY)
         self.assertEqual(summary["month_count"], 1)
         self.assertEqual(visuals.summarize_assessments([], today=TODAY)["month_count"], 0)
 
     def test_screening_path_position(self):
-        self.assertEqual(visuals.screening_path(0), 0)                        # nothing yet: Screening is current
-        self.assertEqual(visuals.screening_path(2), 3)                        # screened, analysed, result exists
-        self.assertEqual(visuals.screening_path(2, follow_up_count=1), 4)     # a follow-up exists too
+        self.assertEqual(visuals.screening_path(0), 0)
+        self.assertEqual(visuals.screening_path(2), 3)
+        self.assertEqual(visuals.screening_path(2, follow_up_count=1), 4)
         self.assertEqual(len(visuals.PATH_STEPS), 4)
 
     def test_date_wording(self):
@@ -113,7 +113,7 @@ class MessageAndActivityTests(unittest.TestCase):
         items = visuals.activity_items(summary["newest_first"])
         self.assertEqual([i["date"] for i in items], [date(2026, 9, 20), date(2026, 8, 10), date(2026, 6, 12)])
         self.assertTrue(all(i["title"] == "Assessment completed" for i in items))
-        self.assertEqual(visuals.activity_items([]), [])                      # nothing is added to look busy
+        self.assertEqual(visuals.activity_items([]), [])
 
     def test_activity_is_limited(self):
         many = [record(date(2026, 1, d), 10, "low") for d in range(1, 8)]
@@ -162,10 +162,10 @@ class RingTests(unittest.TestCase):
 
     def test_threshold_tick_sits_at_the_right_angle(self):
         centre = visuals.RING_BOX / 2
-        top = visuals.ring_geometry(10, threshold=0)["tick"]                   # 0% is straight up
+        top = visuals.ring_geometry(10, threshold=0)["tick"]
         self.assertAlmostEqual(top["x1"], centre, places=1)
         self.assertLess(top["y1"], centre)
-        right = visuals.ring_geometry(10, threshold=25)["tick"]                # 25% is 3 o'clock
+        right = visuals.ring_geometry(10, threshold=25)["tick"]
         self.assertGreater(right["x1"], centre)
         self.assertAlmostEqual(right["y1"], centre, places=1)
 
@@ -209,7 +209,7 @@ class TrendTests(unittest.TestCase):
 
     def test_axis_is_always_zero_to_one_hundred(self):
         self.assertEqual([t["value"] for t in self.trend["ticks"]], [0, 25, 50, 75, 100])
-        self.assertEqual(self.trend["ticks"][0]["y"], self.trend["baseline"])          # 0% sits on the baseline
+        self.assertEqual(self.trend["ticks"][0]["y"], self.trend["baseline"])
 
     def test_points_stay_inside_the_plot_area(self):
         for point in self.trend["points"]:
@@ -229,7 +229,7 @@ class TrendTests(unittest.TestCase):
 
     def test_points_are_placed_by_real_date(self):
         xs = [p["x"] for p in self.trend["points"]]
-        gap_first, gap_second = xs[1] - xs[0], xs[2] - xs[1]      # 59 days, then 41 days
+        gap_first, gap_second = xs[1] - xs[0], xs[2] - xs[1]
         self.assertAlmostEqual(gap_first / gap_second, 59 / 41, places=1)
 
     def test_the_smooth_line_never_invents_a_peak(self):
@@ -240,8 +240,8 @@ class TrendTests(unittest.TestCase):
         ys = [p["y"] for p in trend["points"]]
         curve = sample_bezier(trend["line"])
         self.assertGreater(len(curve), 20)
-        self.assertLessEqual(max(y for _, y in curve), max(ys) + 0.2)               # never lower than the lowest value
-        self.assertGreaterEqual(min(y for _, y in curve), min(ys) - 0.2)            # never higher than the highest value
+        self.assertLessEqual(max(y for _, y in curve), max(ys) + 0.2)
+        self.assertGreaterEqual(min(y for _, y in curve), min(ys) - 0.2)
         for (x, y) in curve:
             self.assertGreaterEqual(x, trend["points"][0]["x"] - 0.2)
             self.assertLessEqual(x, trend["points"][-1]["x"] + 0.2)
@@ -268,11 +268,11 @@ class TrendTests(unittest.TestCase):
         self.assertTrue(trend["points"][0]["show_label"] and trend["points"][-1]["show_label"])
         for left, right in zip(labelled, labelled[1:]):
             self.assertGreaterEqual(right["x"] - left["x"], visuals.MIN_LABEL_GAP)
-        self.assertLess(len(labelled), len(trend["points"]))       # something had to be dropped
+        self.assertLess(len(labelled), len(trend["points"]))
 
     def test_line_and_area_paths_are_built(self):
         self.assertTrue(self.trend["line"].startswith("M"))
-        self.assertIn("C", self.trend["line"])                     # smooth curve segments
+        self.assertIn("C", self.trend["line"])
         self.assertTrue(self.trend["area"].endswith("Z"))
 
     def test_one_point_is_not_a_trend(self):
@@ -285,7 +285,7 @@ class TrendFrameTests(unittest.TestCase):
         real = visuals.trend_geometry(visuals.summarize_assessments(THREE, today=TODAY)["oldest_first"], 21)
         for key in ("width", "height", "left", "right", "top", "baseline", "ticks"):
             self.assertEqual(frame[key], real[key])
-        self.assertNotIn("points", frame)                          # a frame never contains data
+        self.assertNotIn("points", frame)
 
 
 class SparklineTests(unittest.TestCase):

@@ -18,7 +18,7 @@ class EmptyDashboardTests(AppTestCase):
         professional = self.signed_in(**self.professional_details())
         page = self.text(professional.get("/professional"))
         self.assertIn("No patients yet", page)
-        self.assertNotIn("Total Patient Records", page)          # the stat row does not render at all when empty
+        self.assertNotIn("Total Patient Records", page)
 
     def test_a_general_user_cannot_reach_it(self):
         general = self.signed_in()
@@ -88,9 +88,6 @@ class SharedPatientReviewStatusTests(AppTestCase):
         self.assertRegex(page, r'Pending Reviews</p>\s*<p class="stat-value">0</p>')
 
     def test_a_shared_patients_result_appears_in_recent_activity(self):
-        # the dashboard's compact Recent Activity table shows Patient/Date/Risk/Status only (no ID column,
-        # matching the same table style the patient dashboard itself never had either) - a shared patient's own
-        # row is confirmed by their name and "Awaiting review" showing up together.
         page = self.text(self.professional.get("/professional"))
         self.assertIn("Ana Reyes", page)
         self.assertIn("Awaiting review", page)
@@ -129,7 +126,6 @@ class PatientInsightsOnDashboardTests(AppTestCase):
         self.assertIn("not a general population statistic", page)
         self.assertIn("18-44", page)
         self.assertIn("65+", page)
-        # the gender count plot: 1 woman (none at higher risk), 2 men (both at higher risk)
         self.assertIn("Your patients, by gender", page)
         self.assertIn('aria-label="Female: 1 patient, 0 at higher risk"', page)
         self.assertIn('aria-label="Male: 2 patients, 2 at higher risk"', page)

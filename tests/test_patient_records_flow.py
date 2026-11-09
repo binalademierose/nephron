@@ -55,7 +55,6 @@ class CreatePatientTests(AppTestCase):
         self.assertEqual(response.status_code, 403)
 
 
-
 class OwnershipTests(AppTestCase):
     def setUp(self):
         super().setUp()
@@ -77,8 +76,6 @@ class OwnershipTests(AppTestCase):
 
     def test_a_different_professional_does_not_see_the_patient_in_their_own_list(self):
         page = self.text(self.other.get("/patient-records"))
-        # "Juan Dela Cruz" also appears as the search box's own placeholder example text, so check for an actual
-        # row instead of the name (a plain substring search would pass even if ownership were broken).
         self.assertNotIn('class="patient-name-link"', page)
         self.assertIn("No patients yet", page)
 
@@ -131,7 +128,7 @@ class ScreeningForAPatientTests(AppTestCase):
     def test_a_success_toast_and_the_result_page_both_show(self):
         response = self.post(f"/patient-records/{self.code}/screening", answers(), client=self.professional, token_from=f"/patient-records/{self.code}/screening")
         page = self.text(self.professional.get(response.headers["Location"]))
-        self.assertIn("saved to this patient", page)          # Jinja escapes the apostrophe in "patient's" to &#39;
+        self.assertIn("saved to this patient", page)
         self.assertIn("Risk Classification", page)
         self.assertIn("Juan Dela Cruz", page)
 
@@ -165,7 +162,7 @@ class RiskAnalysisTests(AppTestCase):
     def test_the_owning_professional_sees_the_real_result(self):
         page = self.text(self.professional.get(self.result_url))
         self.assertIn("Risk Classification", page)
-        self.assertIn("What raised the estimate", page)          # worded for the professional, not "your estimate"
+        self.assertIn("What raised the estimate", page)
 
     def test_a_different_professional_gets_404(self):
         self.assertEqual(self.other.get(self.result_url).status_code, 404)
@@ -187,11 +184,10 @@ class ShadowAccountCannotSignInTests(AppTestCase):
         record = self.app.extensions["patient_records_store"].get_by_code(code)
         shadow_user = self.store.find_by_id(record["user_id"])
         self.assertTrue(shadow_user["is_patient_record"])
-        # Even with (a hypothetically known) correct password, the login route must refuse it.
         known_password = "Whatever-Password-1"
         self.store._users[record["user_id"]]["password_hash"] = security.hash_password(known_password)
         response = self.post("/login", {"email": shadow_user["email"], "password": known_password}, token_from="/login")
-        self.assertEqual(response.status_code, 200)                          # stayed on the sign-in page
+        self.assertEqual(response.status_code, 200)
         self.assertIn("Check your email address and password", self.text(response))
 
     def test_role_required_blocks_a_patient_record_even_if_a_session_were_forced(self):
@@ -205,7 +201,7 @@ class ShadowAccountCannotSignInTests(AppTestCase):
             session["user_id"] = user_id
             from datetime import datetime
             session["issued_at"] = datetime(2026, 1, 1).isoformat()
-        self.assertEqual(shadow_client.get("/dashboard").status_code, 302)   # treated as signed out, sent to /login
+        self.assertEqual(shadow_client.get("/dashboard").status_code, 302)
 
 
 if __name__ == "__main__":

@@ -15,7 +15,7 @@ class TermsPageTests(AppTestCase):
         self.assertEqual(response.status_code, 200)
         body = response.get_data(as_text=True)
         self.assertIn("Terms &amp; Conditions", body)
-        self.assertIn("not a diagnosis", body)          # the disclaimer heading must be there
+        self.assertIn("not a diagnosis", body)
         self.assertIn("Your information and privacy", body)
 
     def test_registration_links_to_terms(self):

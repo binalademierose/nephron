@@ -29,7 +29,7 @@ class ReportsSectionTests(AppTestCase):
     def test_the_stats_reflect_the_one_report(self):
         page = self.text(self.professional.get("/patient-reports"))
         self.assertRegex(page, r'Total Reports</p>\s*<p class="stat-value">1</p>')
-        self.assertRegex(page, r'Reviewed Reports</p>\s*<p class="stat-value[^"]*">1</p>')      # self-recorded counts as reviewed
+        self.assertRegex(page, r'Reviewed Reports</p>\s*<p class="stat-value[^"]*">1</p>')
 
     def test_lists_the_report_with_a_download_form(self):
         page = self.text(self.professional.get("/patient-reports"))

@@ -74,7 +74,7 @@ class MySQLStoreTests(ConsentStoreContract, unittest.TestCase):
 class ConsentRulesTests(unittest.TestCase):
     def test_only_an_explicit_one_counts_as_consent(self):
         self.assertTrue(consents.given(MultiDict([("consent", "1")])))
-        self.assertTrue(consents.given(MultiDict([("consent", ""), ("consent", "1")])))     # hidden field + ticked checkbox
+        self.assertTrue(consents.given(MultiDict([("consent", ""), ("consent", "1")])))
         for form in (MultiDict(), MultiDict([("consent", "")]), MultiDict([("consent", "0")]), MultiDict([("consent", "true")])):
             self.assertFalse(consents.given(form), form)
 

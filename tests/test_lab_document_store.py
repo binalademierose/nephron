@@ -74,7 +74,7 @@ class LabDocumentStoreContract:
         self.store.confirm(self.user_id, document_id, {"Serum_Creatinine": 1.2}, assessment_id=assessment_id, confirmed_at=NOW)
         row = self.store.get_document(self.user_id, document_id)
         self.assertEqual(row["status"], "confirmed")
-        self.assertEqual(row["confirmed_values"], {"Serum_Creatinine": 1.2})     # the CONFIRMED value, which the person may have edited
+        self.assertEqual(row["confirmed_values"], {"Serum_Creatinine": 1.2})
         self.assertEqual(row["assessment_id"], assessment_id)
         self.assertEqual(row["confirmed_at"], NOW)
 
@@ -93,7 +93,7 @@ class LabDocumentStoreContract:
         other = new_user(self.users, "Ben Cruz")
         mine = self.upload()
         self.assertIsNone(self.store.get_document(other, mine))
-        self.store.set_ocr_values(other, mine, {"Serum_Creatinine": 9.9})       # silently affects nothing
+        self.store.set_ocr_values(other, mine, {"Serum_Creatinine": 9.9})
         self.store.confirm(other, mine, {"Serum_Creatinine": 9.9}, assessment_id=1, confirmed_at=NOW)
         self.store.discard(other, mine)
         row = self.store.get_document(self.user_id, mine)

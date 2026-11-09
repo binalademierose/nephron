@@ -25,7 +25,7 @@ PANGASINAN = ph_locations.PANGASINAN
 
 class LocationDataTests(unittest.TestCase):
     def test_the_lists_match_the_psgc_counts(self):
-        self.assertEqual(len(ph_locations.municipalities()), 48)                    # 44 municipalities + 4 cities
+        self.assertEqual(len(ph_locations.municipalities()), 48)
         self.assertEqual(sum(len(ph_locations.barangays(m["code"])) for m in ph_locations.municipalities()), 1364)
         self.assertIn("Pangasinan", {p["name"] for p in ph_locations.provinces()})
         self.assertEqual(ph_locations.describe({"province_code": PANGASINAN, "municipality_code": LAOAC, "barangay_code": CAARINGAYAN}),
@@ -35,7 +35,7 @@ class LocationDataTests(unittest.TestCase):
         self.assertEqual(ph_locations.validate("USA", {"province_code": PANGASINAN}), (dict.fromkeys(ph_locations.FIELDS), {}))
         self.assertIn("province_code", ph_locations.validate("Philippines", {})[1])
         values, errors = ph_locations.validate("Philippines", {"province_code": METRO_MANILA, "municipality_code": LAOAC})
-        self.assertEqual((errors, values["municipality_code"]), ({}, None))                 # a stale town answer is not kept
+        self.assertEqual((errors, values["municipality_code"]), ({}, None))
         self.assertIn("municipality_code", ph_locations.validate("Philippines", {"province_code": PANGASINAN})[1])
         self.assertIn("barangay_code", ph_locations.validate("Philippines", {"province_code": PANGASINAN, "municipality_code": LAOAC})[1])
         values, errors = ph_locations.validate("Philippines", {"province_code": PANGASINAN, "municipality_code": LAOAC, "barangay_code": CAARINGAYAN})
@@ -98,7 +98,7 @@ class HeatmapTests(unittest.TestCase):
         view = location_heatmap.view(people, "share", "municipality")
         laoac = next(a for a in view["areas"] if a["code"] == LAOAC)
         self.assertEqual((laoac["registered"], laoac["screened"], laoac["high"], laoac["share"]), (5, 4, 3, 75))
-        self.assertEqual(laoac["fill"], location_heatmap.RAMPS["risk"][3])               # 75% falls in 60-79%
+        self.assertEqual(laoac["fill"], location_heatmap.RAMPS["risk"][3])
         self.assertEqual(len(view["areas"]), 48)
         self.assertEqual(view["totals"]["screened"], 4)
 
@@ -107,7 +107,7 @@ class HeatmapTests(unittest.TestCase):
         place = next(a for a in view["areas"] if a["code"] == CAARINGAYAN)
         self.assertEqual((place["screened"], place["high"], place["share"], place["state"]), (2, None, None, "suppressed"))
         counts = location_heatmap.view([entry(CAARINGAYAN, "high")] * 2, "screened", "barangay", LAOAC)
-        self.assertEqual(next(a for a in counts["areas"] if a["code"] == CAARINGAYAN)["state"], "value")   # a count is not a health fact
+        self.assertEqual(next(a for a in counts["areas"] if a["code"] == CAARINGAYAN)["state"], "value")
 
     def test_one_towns_barangays_are_zoomed_in_and_only_that_town_is_drawn(self):
         view = location_heatmap.view([], "share", "barangay", LAOAC)
@@ -151,9 +151,9 @@ class MapAndResearchPagesTests(AppTestCase):
         self.assertIn("Fewer than 3 screened - hidden for privacy", page)
         town = self.text(self.admin.get(f"/admin/map?level=barangay&town={LAOAC}"))
         self.assertIn("Caaringayan, Laoac: 3 screened", town)
-        self.assertNotIn("Person 0", town)                                                 # never a name
+        self.assertNotIn("Person 0", town)
         everything = self.text(self.admin.get("/admin/map?level=barangay&metric=screened"))
-        drawable = len([b for b in ph_locations.map_data()["barangays"] if b["path"]])          # 9 barangays have no outline in the source
+        drawable = len([b for b in ph_locations.map_data()["barangays"] if b["path"]])
         self.assertEqual(everything.count('class="map-area"'), drawable)
 
     def test_only_an_administrator_can_open_the_map_and_the_research_data(self):

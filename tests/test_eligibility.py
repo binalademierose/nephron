@@ -29,10 +29,10 @@ class WaitStatusTests(unittest.TestCase):
         self.assertAlmostEqual(status["elapsed_share"], 4 / 30)
 
     def test_the_last_day_of_waiting_and_the_day_it_opens(self):
-        self.assertEqual(eligibility.wait_status(LAST, date(2026, 9, 30), 30)["days_left"], 1)          # one day still to wait
-        opens = eligibility.wait_status(LAST, date(2026, 10, 1), 30)                                     # the day it opens
+        self.assertEqual(eligibility.wait_status(LAST, date(2026, 9, 30), 30)["days_left"], 1)
+        opens = eligibility.wait_status(LAST, date(2026, 10, 1), 30)
         self.assertEqual((opens["state"], opens["days_left"], opens["elapsed_share"]), ("available", 0, 1.0))
-        self.assertEqual(eligibility.wait_status(LAST, date(2027, 1, 1), 30)["state"], "available")      # long after
+        self.assertEqual(eligibility.wait_status(LAST, date(2027, 1, 1), 30)["state"], "available")
 
     def test_the_same_day_is_the_start_of_the_wait(self):
         status = eligibility.wait_status(LAST, LAST, 30)
@@ -43,7 +43,7 @@ class WaitStatusTests(unittest.TestCase):
         self.assertEqual(eligibility.wait_status(LAST, date(2026, 9, 2), 1)["state"], "available")
 
     def test_an_open_follow_up_request_lets_a_person_screen_again_right_away(self):
-        status = eligibility.wait_status(LAST, LAST, 30, follow_up_open=True)                          # the very first day of a 30-day wait
+        status = eligibility.wait_status(LAST, LAST, 30, follow_up_open=True)
         self.assertEqual((status["state"], status["date"], status["days_left"]), ("available", None, 0))
 
     def test_a_follow_up_request_that_is_not_open_changes_nothing(self):

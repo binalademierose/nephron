@@ -23,7 +23,6 @@ class CkdFactsTests(unittest.TestCase):
             self.assertTrue(fact.get("source_url", "").startswith("https://"), name)
 
     def test_no_figure_about_us_adults_is_left(self):
-        # the panel asked for these to go: Nephron's users are in the Philippines
         text = repr(ckd_facts.all_facts())
         for gone in ("US adults", "United States", "1 in 7", "CDC"):
             self.assertNotIn(gone, text)
@@ -41,7 +40,6 @@ class CkdFactsTests(unittest.TestCase):
         self.assertTrue(0 < ckd_facts.AWARENESS["ring_percent"] <= 100)
 
     def test_sex_differences_does_not_oversimplify_to_a_single_cause(self):
-        # guards against ever rewriting this into a bare "men progress faster because no estrogen" claim
         detail = ckd_facts.SEX_DIFFERENCES["stats"][0]["detail"]
         self.assertIn("several possible reasons", detail)
         self.assertIn("not a settled", detail)

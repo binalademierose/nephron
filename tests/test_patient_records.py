@@ -34,8 +34,8 @@ class ValidationTests(unittest.TestCase):
         self.assertEqual((values["age"], values["date_of_birth"], values["country"]), (52, date(1974, 1, 15), "Philippines"))
 
     def test_the_age_only_changes_on_the_birthday(self):
-        self.assertEqual(self.form(date_of_birth="1974-10-04")[0]["age"], 51)    # birthday is tomorrow
-        self.assertEqual(self.form(date_of_birth="1974-10-03")[0]["age"], 52)    # birthday is today
+        self.assertEqual(self.form(date_of_birth="1974-10-04")[0]["age"], 51)
+        self.assertEqual(self.form(date_of_birth="1974-10-03")[0]["age"], 52)
 
     def test_a_blank_name_is_refused(self):
         self.assertIn("full_name", self.form(full_name="  ")[1])
@@ -46,7 +46,7 @@ class ValidationTests(unittest.TestCase):
     def test_a_missing_future_or_unrealistic_birthday_is_refused(self):
         for bad in ("", "not-a-date", "2030-01-01", "1890-01-01"):
             self.assertIn("date_of_birth", self.form(date_of_birth=bad)[1], bad)
-        self.assertNotIn("date_of_birth", self.form(date_of_birth="2010-06-01")[1])     # a 16-year-old is accepted
+        self.assertNotIn("date_of_birth", self.form(date_of_birth="2010-06-01")[1])
 
     def test_sex_at_birth_is_needed_only_when_the_gender_does_not_tell(self):
         self.assertIn("sex", self.form(gender="Non-binary", sex="Other")[1])
@@ -87,7 +87,7 @@ class RegisterAndScopeTests(unittest.TestCase):
         self.assertEqual(shadow["role"], "general")
         self.assertTrue(shadow["is_patient_record"])
         self.assertTrue(shadow["email"].endswith("@patient-records.nephron.invalid"))
-        self.assertGreater(len(shadow["password_hash"]), 20)             # a real, unguessable hash, not a placeholder
+        self.assertGreater(len(shadow["password_hash"]), 20)
 
     def test_for_professional_lists_only_this_professionals_own_and_supports_a_search_term(self):
         other = new_professional(self.users)

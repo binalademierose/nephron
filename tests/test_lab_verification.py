@@ -30,7 +30,7 @@ class LabVerificationTests(unittest.TestCase):
     def test_an_old_and_a_future_date_are_flagged(self):
         self.assertEqual(v.check("Date: 2025-01-10", "x", TODAY)["date"]["status"], "old")
         self.assertEqual(v.check("Date: 2027-01-10", "x", TODAY)["date"]["status"], "future")
-        self.assertEqual(v.check("Date: 10/01/2026", "x", TODAY)["date"]["found"], "2026-10-01")    # month/day/year
+        self.assertEqual(v.check("Date: 10/01/2026", "x", TODAY)["date"]["found"], "2026-10-01")
 
     def test_an_unsigned_report_and_an_empty_text_report_missing_signs(self):
         unsigned = v.check("LAB\nPatient: Juan Dela Cruz\nDate: 2026-09-20\nCreatinine 1.1", "Juan Dela Cruz", TODAY)

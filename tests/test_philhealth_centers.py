@@ -15,7 +15,7 @@ from services import philhealth_centers  # noqa: E402
 class DirectoryTests(unittest.TestCase):
     def test_the_real_directory_loads_and_is_not_empty(self):
         directory = philhealth_centers.load_directory()
-        self.assertGreater(len(directory["centers"]), 900)          # the real source file has 959
+        self.assertGreater(len(directory["centers"]), 900)
         self.assertIn("source", directory)
 
     def test_every_center_has_the_fields_a_result_needs(self):
@@ -28,7 +28,7 @@ class DirectoryTests(unittest.TestCase):
         found = philhealth_centers.regions()
         self.assertEqual(len(found), len(set(found)))
         self.assertIn("CORDILLERA ADMINISTRATIVE REGION", found)
-        self.assertGreaterEqual(len(found), 17)                     # the 17 standard Philippine regions
+        self.assertGreaterEqual(len(found), 17)
 
     def test_sector_is_always_one_of_the_two_real_labels(self):
         for center in philhealth_centers.load_directory()["centers"]:
@@ -52,7 +52,6 @@ class SearchTests(unittest.TestCase):
         self.assertEqual(total_lower, total_upper)
 
     def test_search_matches_the_facility_name_too(self):
-        # a real facility name from the source file
         matches, total = philhealth_centers.search(term="Nephrology Care")
         self.assertGreater(total, 0)
         self.assertTrue(any("NEPHROLOGY CARE" in m["name"] for m in matches))

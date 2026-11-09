@@ -33,7 +33,7 @@ class FoundationTests(unittest.TestCase):
     @classmethod
     def setUpClass(cls):
         cls.app = create_app()
-        cls.app.config["PROPAGATE_EXCEPTIONS"] = False  # show the friendly 500 page
+        cls.app.config["PROPAGATE_EXCEPTIONS"] = False
         cls.app.add_url_rule("/_test/python-error", "test_python_error", _raise_python_error)
         cls.app.add_url_rule("/_test/database-error", "test_database_error", _raise_database_error)
         cls.client = cls.app.test_client()
@@ -54,7 +54,6 @@ class FoundationTests(unittest.TestCase):
             self.assertIn(disclaimer, self.client.get(path).data, path)
 
     def test_diagnostic_wording_is_not_used(self):
-        # The system must never claim to diagnose. Check the public pages.
         for path in ("/", "/about"):
             text = self.client.get(path).get_data(as_text=True).lower()
             for phrase in ("you have ckd", "confirms kidney disease", "confidence score"):
@@ -71,7 +70,6 @@ class FoundationTests(unittest.TestCase):
         self.assertIn(b"Action not allowed", response.data)
 
     def test_unexpected_error_hides_technical_details(self):
-        # The detail must reach the log file but never the screen.
         with self.assertLogs(self.app.logger, level="ERROR") as logged:
             response = self.client.get("/_test/python-error")
         self.assertIn("secret internal detail", "\n".join(logged.output))
@@ -119,12 +117,10 @@ class FoundationTests(unittest.TestCase):
     def test_official_logo_is_used_and_not_replaced(self):
         for path in ("/", "/about", "/does-not-exist"):
             page = self.client.get(path).get_data(as_text=True)
-            self.assertIn("images/brand/nephron-logo.png", page, path)       # the mark, in the header and the footer
-            self.assertIn('class="brand-name"', page, path)                  # and the name, as real text
+            self.assertIn("images/brand/nephron-logo.png", page, path)
+            self.assertIn('class="brand-name"', page, path)
 
     def test_logo_files_keep_their_shape(self):
-        # The mark must never be stretched: the width and height written in the HTML must match the
-        # real picture. (We read the PNG header directly: no extra library.)
         import re
         import struct
         base = os.path.join(os.path.dirname(os.path.dirname(os.path.abspath(__file__))), "static", "images", "brand")
@@ -137,15 +133,14 @@ class FoundationTests(unittest.TestCase):
         home = self.client.get("/").get_data(as_text=True)
         for width, height in re.findall(r'nephron-logo\.png[^>]*width="(\d+)" height="(\d+)"', home):
             self.assertEqual((int(width), int(height)), sizes["nephron-logo.png"])
-        self.assertEqual(sizes["nephron-badge.png"][0], sizes["nephron-badge.png"][1])      # a round badge is square
+        self.assertEqual(sizes["nephron-badge.png"][0], sizes["nephron-badge.png"][1])
         self.assertEqual(sizes["favicon-64.png"], (64, 64))
         self.assertEqual(sizes["apple-touch-icon.png"], (180, 180))
-        # The mark is a wide shape: cropping must not have changed its proportions (the master is the untouched original).
         master_w, master_h = sizes["nephron-logo-master.png"]
         crop_w, crop_h = sizes["nephron-logo.png"]
         self.assertLessEqual(crop_w, master_w)
         self.assertLessEqual(crop_h, master_h)
-        self.assertEqual(colour_types["nephron-logo.png"], 6, "the logo lost its transparent background")   # 6 = RGBA
+        self.assertEqual(colour_types["nephron-logo.png"], 6, "the logo lost its transparent background")
 
     def test_public_pages_load_nothing_from_other_sites(self):
         import re
@@ -193,7 +188,6 @@ class _PageInspector(HTMLParser):
             self.ids.append(a["id"])
         if tag == "label" and "for" in a:
             self.label_targets.add(a["for"])
-        # An image needs a text alternative. An EMPTY alt is right for a purely decorative picture, but only if it is also hidden from screen readers.
         if tag == "img" and ("alt" not in a or (a["alt"] == "" and a.get("aria-hidden") != "true")):
             self.images_without_alt.append(a.get("src"))
         if tag == "a" and a.get("href") == "#" and "data-preview-link" not in a:
@@ -201,7 +195,7 @@ class _PageInspector(HTMLParser):
         if tag in ("input", "select", "textarea") and a.get("type") not in ("hidden", "radio", "submit"):
             self.fields.append(a)
         if tag == "input" and a.get("type") == "radio":
-            pass   # radios are labelled by the <label class="choice"> that wraps them
+            pass
         if tag == "button":
             self._button = {"aria-label": a.get("aria-label"), "text": ""}
             self.buttons.append(self._button)
@@ -239,7 +233,6 @@ class DesignPreviewTests(unittest.TestCase):
             self.assertIn(b"Sample values only", response.data, path)
 
     def test_no_dead_links(self):
-        # A link that goes nowhere must say so (data-preview-link shows a "Preview only" message).
         for path in self.PAGES:
             inspector = _PageInspector()
             inspector.feed(self.client.get(path).get_data(as_text=True))
@@ -287,7 +280,7 @@ class DesignPreviewTests(unittest.TestCase):
                 self.assertIn("<svg", inner, f"{path}: {kind} badge has no icon")
                 words = "High Preliminary Risk" if kind.endswith("high") else "Low Preliminary Risk"
                 self.assertIn(words, inner, f"{path}: {kind} badge has no words")
-        self.assertGreater(found, 5)   # make sure the check actually looked at badges
+        self.assertGreater(found, 5)
 
     def test_result_wording_for_high_and_low(self):
         high = self.client.get("/design/result?level=high").get_data(as_text=True)
@@ -327,8 +320,8 @@ class MigrationRunnerTests(unittest.TestCase):
         from unittest import mock
         import init_db
 
-        applied_files = []     # what the fake "schema_migrations" table holds
-        executed_sql = []      # every statement the runner sends
+        applied_files = []
+        executed_sql = []
 
         class FakeCursor:
             def execute(self, sql, params=None):
@@ -357,13 +350,12 @@ class MigrationRunnerTests(unittest.TestCase):
             with mock.patch.object(init_db, "MIGRATIONS_DIR", folder), \
                  mock.patch.object(init_db.mysql.connector, "connect", return_value=FakeConnection()):
                 init_db.apply_migrations()
-                self.assertEqual(applied_files, ["001_first.sql", "002_second.sql"])  # number order
+                self.assertEqual(applied_files, ["001_first.sql", "002_second.sql"])
                 statements_after_first_run = len(executed_sql)
-                init_db.apply_migrations()  # second run: nothing new should be applied
+                init_db.apply_migrations()
                 self.assertEqual(applied_files, ["001_first.sql", "002_second.sql"])
                 new_statements = executed_sql[statements_after_first_run:]
                 self.assertFalse(any("first_table" in sql or "second_table" in sql for sql in new_statements))
-
 
 
 class DataHonestyTests(unittest.TestCase):
@@ -383,24 +375,21 @@ class DataHonestyTests(unittest.TestCase):
         html = self.page("/design/dashboard")
         for words in ("No assessments yet", "Chart appears when sufficient data exists", "No result yet", "No activity yet", "No results to summarise yet"):
             self.assertIn(words, html)
-        # "Kidney health, by the numbers" always draws its own rings - population statistics, not this person's
-        # data (see the equivalent note in tests/test_dashboard.py) - so it is excluded here.
         without_ckd_facts = re.sub(r'<section class="ckd-side[^>]*aria-labelledby="ckd-facts-heading".*?</section>', "", html, flags=re.S)
         self.assertIn("ckd-facts-heading", html)
         self.assertNotIn("ckd-facts-heading", without_ckd_facts)
         for drawn in ('class="chart-line"', 'class="ring-value"', "donut-segment", "timeline-item timeline-", "activity-item",
                       'class="sparkline"', 'class="sample-tag"', "risk-pill"):
             self.assertNotIn(drawn, without_ckd_facts, f"{drawn} appears with no assessment data")
-        self.assertRegex(html, r'class="stat-value"\s*>0<')                   # the honest count is zero
+        self.assertRegex(html, r'class="stat-value"\s*>0<')
 
     def test_sample_dashboard_is_labelled_on_every_chart_card(self):
         html = self.page("/design/dashboard?data=sample")
-        self.assertGreaterEqual(html.count('class="sample-tag"'), 2)   # trend and summary cards
+        self.assertGreaterEqual(html.count('class="sample-tag"'), 2)
         for drawn in ('class="chart-line"', 'class="ring-value"', "donut-segment", "activity-item", 'class="sparkline"'):
             self.assertIn(drawn, html)
-        self.assertIn('data-count-to="3"', html)                       # 3 sample records, counted by visuals.py
+        self.assertIn('data-count-to="3"', html)
 
-    # ---- the blueprint's dashboard rules: no fake notification count, no invented statistics ----
     def test_dashboard_has_no_notification_count_in_either_state(self):
         import re
         for path in ("/design/dashboard", "/design/dashboard?data=sample"):
@@ -413,21 +402,21 @@ class DataHonestyTests(unittest.TestCase):
         html = self.page("/design/dashboard?data=sample")
         self.assertEqual(html.count('class="activity-title">Assessment completed<'), 3)
         for invented in ("Profile Updated", "Lab Result Uploaded"):
-            self.assertNotIn(invented, html)                            # no such records exist in this phase
+            self.assertNotIn(invented, html)
 
     def test_risk_is_only_ever_low_or_high(self):
         for path in ("/design/dashboard", "/design/dashboard?data=sample", "/design/result", "/design/result?level=low", "/", "/about"):
-            self.assertNotIn("Moderate", self.page(path), path)         # the model is binary
+            self.assertNotIn("Moderate", self.page(path), path)
 
     def test_no_assessment_means_no_invented_latest_result(self):
         html = self.page("/design/dashboard")
-        self.assertNotIn("Preliminary Risk", html)                      # neither classification is named without a result
+        self.assertNotIn("Preliminary Risk", html)
 
     def test_a_waiting_period_disables_starting_a_new_assessment(self):
         html = self.page("/design/dashboard?data=sample&locked=1")
         self.assertIn("Your next screening opens on", html)
         self.assertIn('aria-disabled="true"', html)
-        self.assertNotIn("Start Assessment</a>", html)                  # no working link to start while locked
+        self.assertNotIn("Start Assessment</a>", html)
 
     def test_result_page_always_says_its_values_are_sample_values(self):
         for path in ("/design/result", "/design/result?level=low"):
@@ -448,9 +437,9 @@ class DataHonestyTests(unittest.TestCase):
         import re
         html = self.page("/design/states")
         body = re.search(r"<tbody>(.*?)</tbody>", html, re.S).group(1)
-        self.assertEqual(body.count("<tr>"), 3)                      # it once rendered silently empty
+        self.assertEqual(body.count("<tr>"), 3)
         self.assertIn('class="sample-tag"', html)
-        self.assertNotIn("31.0%", html)                               # numbers are formatted like the rest of the page
+        self.assertNotIn("31.0%", html)
 
     def test_register_offers_both_roles_as_labelled_choices(self):
         html = self.page("/design/register")
@@ -458,7 +447,7 @@ class DataHonestyTests(unittest.TestCase):
         self.assertIn('value="professional"', html)
         self.assertIn("General user", html)
         self.assertIn("Healthcare professional", html)
-        self.assertGreaterEqual(html.count("chip-required"), 3)
+        self.assertGreaterEqual(html.count("required-mark"), 3)
 
 
 class NoSilentEmptinessTests(unittest.TestCase):

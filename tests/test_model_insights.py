@@ -52,7 +52,6 @@ class ModelPageTests(AdminTestCase):
 
     def setUp(self):
         super().setUp()
-        # The stand-in model's folder is shared between tests: start each test without a saved metrics file.
         path = os.path.join(self.app.extensions["model_service"].model_dir, model_insights.METRICS_FILE)
         if os.path.exists(path):
             os.remove(path)
@@ -69,7 +68,7 @@ class ModelPageTests(AdminTestCase):
         model_insights.save_metrics(service.model_dir, metrics)
         page = self.text(self.admin.get("/admin/model"))
         self.assertIn("holdout.csv", page)
-        self.assertIn("75.0%", page)                                  # sensitivity
+        self.assertIn("75.0%", page)
         self.assertIn('class="roc-line"', page)
         self.assertRegex(page, r'cm-bad">1<small>missed')
 

@@ -35,7 +35,7 @@ class PatientRecordEnhancedTests(AppTestCase):
         self.assertIn("Available once this patient has a Preliminary Screening", page)
         self.assertNotIn(f'href="/patient-records/{self.code}/enhanced"', page)
         response = self.professional.get(f"/patient-records/{self.code}/enhanced")
-        self.assertEqual(response.status_code, 302)                       # sent back to choose, with a message
+        self.assertEqual(response.status_code, 302)
 
     def test_with_a_preliminary_the_choice_is_a_real_link(self):
         self._screen()
@@ -63,7 +63,7 @@ class PatientRecordEnhancedTests(AppTestCase):
         self.assertEqual(saved["source_assessment_id"], rows[1]["assessment_id"])
         page = self.text(self.professional.get(response.headers["Location"]))
         self.assertIn("Enhanced", page)
-        self.assertIn("Serum creatinine", page)                          # the lab answers are listed too
+        self.assertIn("Serum creatinine", page)
 
     def test_a_missing_creatinine_is_refused_and_nothing_is_saved(self):
         self._screen()
@@ -127,15 +127,15 @@ class PatientRecordLabUploadTests(PatientRecordEnhancedTests):
         self.assertIn("document=", response.headers["Location"])
         page = self.text(self.professional.get(response.headers["Location"]))
         self.assertIn("Suggested from the upload", page)
-        self.assertIn("against the patient&#39;s report", page)          # a professional checks the PATIENT's report
-        self.assertRegex(page, r'id="f-Serum_Creatinine"[^>]*value="[0-9.]+"')       # read by Tesseract, shown for checking
+        self.assertIn("against the patient&#39;s report", page)
+        self.assertRegex(page, r'id="f-Serum_Creatinine"[^>]*value="[0-9.]+"')
 
     def test_confirming_the_prefilled_values_saves_and_marks_the_document_confirmed(self):
         self._screen()
         location = self._upload().headers["Location"]
         document_id = int(location.split("document=")[-1])
         refused = self.post(location, {"Serum_Creatinine": "1.2"}, client=self.professional, token_from=location)
-        self.assertIn("Please confirm that this report is the patient", self.text(refused))   # must be vouched for first
+        self.assertIn("Please confirm that this report is the patient", self.text(refused))
         response = self.post(location, {"Serum_Creatinine": "1.2", "attest": "1"}, client=self.professional, token_from=location)
         self.assertIn("/results/", response.headers["Location"])
         stored = self.app.extensions["lab_document_store"].get_document(self.user_id, document_id)

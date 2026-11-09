@@ -55,7 +55,7 @@ class GenderCountPlotTests(unittest.TestCase):
         profiles = [person("low", "Female")] * 5 + [person("high", "Non-binary")]
         data = community_stats.by_gender(profiles, CATALOG)
         self.assertEqual([r["label"] for r in data["rows"]], ["Female"])
-        self.assertEqual(data["hidden"], 1)                      # that one person's result is never shown
+        self.assertEqual(data["hidden"], 1)
 
     def test_several_small_groups_are_combined_when_together_they_are_big_enough(self):
         profiles = [person("low", "Female")] * 5 + [person("high", "Non-binary")] * 2 + [person("low", "Lesbian woman")] * 2
@@ -86,7 +86,7 @@ class StoreTests(unittest.TestCase):
         store.add_assessment(user_id, {**result, "classification": "high"},
                              {"Age": 41, "Country": "Philippines", "Gender": "Lesbian woman", "Sex": "Female", "Diabetes": 1})
         self.assertEqual(store.latest_profiles(), [{"level": "high", "age": 41, "country": "Philippines", "gender": "Lesbian woman"}])
-        self.assertEqual(store.latest_per_person(), [("high", 41)])          # the admin's age view is unchanged
+        self.assertEqual(store.latest_per_person(), [("high", 41)])
 
 
 class OnTheDashboardsTests(AppTestCase):
@@ -135,7 +135,7 @@ class OnTheDashboardsTests(AppTestCase):
         page = self.text(admin.get("/admin"))
         self.assertIn("People living in the Philippines", page)
         self.assertIn('aria-label="Female: 3 people, 3 at higher risk"', page)
-        self.assertNotIn("Non-binary", page.split("People living in the Philippines")[1].split("</section>")[0])   # 1 person: left out
+        self.assertNotIn("Non-binary", page.split("People living in the Philippines")[1].split("</section>")[0])
         self.assertIn("1 person in smaller groups not shown", page)
 
 

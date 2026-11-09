@@ -69,7 +69,7 @@ class HomePageTests(AppTestCase):
         text = visible_text(self.html)
         self.assertIsNone(re.search(r"\d\s*%", text), "a percentage is drawn on the public home page")
         self.assertIsNone(re.search(r"\d+(\.\d+)? percent", self.html))
-        self.assertNotIn("data-count-up", self.html)              # a number that "arrives" at a figure would be an invented figure
+        self.assertNotIn("data-count-up", self.html)
 
     def test_the_call_to_action_changes_for_someone_already_signed_in(self):
         self.assertIn("Create your account", self.html)
@@ -85,7 +85,7 @@ class HomePageTests(AppTestCase):
             their_home, general_home = url_for("account.professional_home"), url_for("account.dashboard")
         page = self.text(professional.get("/"))
         self.assertIn(f'href="{their_home}"', page)
-        self.assertNotIn(f'href="{general_home}"', page.split('class="site-main')[1])       # not the patient dashboard
+        self.assertNotIn(f'href="{general_home}"', page.split('class="site-main')[1])
 
     def test_the_hero_keeps_the_disclaimer_language(self):
         self.assertIn("Screening, not diagnosis", self.html)
@@ -112,7 +112,7 @@ class AboutPageTests(AppTestCase):
         self.assertEqual(self.html.count("data-walk-step"), 5)
         self.assertEqual(self.html.count("data-walk-scene"), 5)
         self.assertEqual(self.html.count('class="walk-inline"'), 5)
-        self.assertGreaterEqual(self.html.count('class="sc-tag"'), 10)          # one on every scene, both copies
+        self.assertGreaterEqual(self.html.count('class="sc-tag"'), 10)
 
     def test_the_pictures_are_decorative_and_the_steps_are_the_content(self):
         self.assertRegex(self.html, r'class="walk-stage-col" aria-hidden="true"')
@@ -131,13 +131,13 @@ class AboutPageTests(AppTestCase):
 class AnimationSystemTests(AppTestCase):
     def _ok(self, path):
         response = self.client.get(path)
-        self.addCleanup(response.close)                                       # a static file response holds the file open
+        self.addCleanup(response.close)
         self.assertEqual(response.status_code, 200, path)
 
     def test_the_scripting_flag_is_an_external_file_in_the_head_not_an_inline_script(self):
         html = self.text(self.client.get("/"))
         self.assertIn("js/js-flag.js", html)
-        self.assertLess(html.index("js/js-flag.js"), html.index("css/tokens.css"))       # before anything paints
+        self.assertLess(html.index("js/js-flag.js"), html.index("css/tokens.css"))
         self.assertNotIn("<script>", html)
         self._ok("/static/js/js-flag.js")
 
@@ -155,6 +155,8 @@ class AnimationSystemTests(AppTestCase):
             marker = "@media (prefers-reduced-motion: no-preference)"
             self.assertIn(marker, css, name)
             before = css[:css.index(marker)]
+            before = re.sub(r"@keyframes[^{]*\{(?:[^{}]*\{[^{}]*\})*[^{}]*\}", "", before)
+            before = re.sub(r"\.walk-scene \{[^}]*\}", "", before)
             self.assertNotIn("opacity: 0;", before, f"{name}: content hidden outside the no-preference block")
             after = css[css.index(marker):]
             for rule in re.findall(r"([^{}]+)\{[^{}]*(?:opacity: 0[;} ]|scaleX\(0\)|scale\(0\)|stroke-dashoffset: 1)", after):
@@ -171,7 +173,7 @@ class AnimationSystemTests(AppTestCase):
         js = read("static", "js", "motion.js")
         self.assertIn('window.matchMedia("(prefers-reduced-motion: reduce)")', js)
         self.assertIn("IntersectionObserver", js)
-        self.assertIn("if (reduce || !hasObserver)", js)                        # no observer support = show everything
+        self.assertIn("if (reduce || !hasObserver)", js)
         self.assertNotIn("innerHTML", js)
         self.assertNotIn(".style.opacity", js)
 

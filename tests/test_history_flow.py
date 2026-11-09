@@ -57,7 +57,7 @@ class HistoryPageTests(HistoryTestCase):
         self.assertIn("No assessments yet", page)
         self.assertIn("Start assessment", page)
         self.assertNotIn("<table", page)
-        self.assertNotIn("chart-line", page)                                        # no line is drawn for no data
+        self.assertNotIn("chart-line", page)
         self.assertIn("Chart appears when sufficient data exists", page)
 
     def test_the_assessments_are_listed_newest_first_with_their_result_in_the_agreed_words(self):
@@ -66,7 +66,7 @@ class HistoryPageTests(HistoryTestCase):
         self.add_assessment(probability=0.40, classification="low", assessed_at=days_ago(20))
         page = self.page()
         self.assertEqual(len(self.rows(page)), 3)
-        self.assertEqual(re.findall(r'data-label="Predicted Risk Probability">([\d.]+)%', page), ["55", "40", "30"])         # newest first
+        self.assertEqual(re.findall(r'data-label="Predicted Risk Probability">([\d.]+)%', page), ["55", "40", "30"])
         self.assertIn("High Preliminary Risk", page)
         self.assertIn("Low Preliminary Risk", page)
         self.assertIn("Preliminary screening", page)
@@ -114,7 +114,7 @@ class HistoryPageTests(HistoryTestCase):
         for value in ("0", "-3", "abc", "", "99", "1e9", "2.5"):
             response = self.member.get(f"/history?page={value}")
             self.assertEqual(response.status_code, 200, value)
-        self.assertIn("Page 2 of 2", self.page("/history?page=99"))                 # too high goes to the last page
+        self.assertIn("Page 2 of 2", self.page("/history?page=99"))
         self.assertIn("Page 1 of 2", self.page("/history?page=abc"))
 
     def test_a_trend_chart_and_a_first_to_latest_link_only_appear_when_there_are_two_or_more(self):
@@ -183,7 +183,7 @@ class EligibilityOnTheHistoryTests(HistoryTestCase):
         self.assertIn("25 days left", page)
         self.assertNotIn(">Start assessment<", page.split("Your assessments")[0])
         self.assertIn('role="progressbar"', page)
-        self.assertIn('aria-valuenow="17"', page)                                    # 5 of 30 days passed
+        self.assertIn('aria-valuenow="17"', page)
 
     def test_the_history_and_the_screening_page_always_agree(self):
         self.app.config["REASSESSMENT_DAYS"] = 30
@@ -199,7 +199,7 @@ class EligibilityOnTheHistoryTests(HistoryTestCase):
         self.app.config["REASSESSMENT_DAYS"] = 30
         self.add_assessment(assessed_at=days_ago(29))
         self.assertIn("1 day left", self.page())
-        self.add_assessment(assessed_at=days_ago(0))                                 # a newer assessment restarts the wait
+        self.add_assessment(assessed_at=days_ago(0))
         self.assertIn("30 days left", self.page())
 
     def test_the_waiting_period_counts_from_the_newest_assessment_not_the_oldest(self):
@@ -256,12 +256,12 @@ class ComparePageTests(HistoryTestCase):
         table = page.split("The answers that changed")[1].split("</table>")[0]
         for label, before, after in (("Age", "48 years", "49 years"), ("Smoking", "Never", "Used to"), ("Diabetes", "Yes", "No")):
             self.assertRegex(table, rf"{label}</td>\s*<td[^>]*>{before}</td>\s*<td[^>]*>{after}</td>")
-        self.assertEqual(table.split("<tbody>")[1].count("<tr>"), 3)                    # only the three that changed
+        self.assertEqual(table.split("<tbody>")[1].count("<tr>"), 3)
         self.assertIn("5 other answers did not change.", page)
 
     def test_the_order_of_the_two_ids_does_not_matter(self):
         a, b = self.two()
-        self.member.get("/dashboard")                                                # a waiting flash message is shown once; use it up first
+        self.member.get("/dashboard")
         self.assertEqual(self.compare(a, b), self.compare(b, a))
         page = self.compare(b, a)
         self.assertLess(page.index("Earlier:"), page.index("Later:"))
@@ -271,7 +271,7 @@ class ComparePageTests(HistoryTestCase):
         page = self.compare(a, b)
         self.assertIn("None of the answers changed. All 8 stayed the same.", page)
         self.assertIn("The classification stayed Low Preliminary Risk.", page)
-        self.assertIn("went from 30% to 31%: 1 point higher.", page)                    # one point, not "1 points"
+        self.assertIn("went from 30% to 31%: 1 point higher.", page)
 
     def test_when_the_answers_were_not_saved_nothing_is_guessed(self):
         a = self.add_assessment(assessed_at=days_ago(30))
@@ -282,7 +282,7 @@ class ComparePageTests(HistoryTestCase):
 
     def test_results_from_different_versions_of_the_model_carry_a_warning(self):
         a, b = self.two()
-        self.assertNotIn("Different model versions", self.compare(a, b))            # both are "test-model"
+        self.assertNotIn("Different model versions", self.compare(a, b))
         c, d = self.two(model_version="another-model")
         page = self.compare(c, d)
         self.assertIn("Different model versions", page)
@@ -317,13 +317,12 @@ class ComparePageTests(HistoryTestCase):
         mine, _ = self.two()
         other = self.signed_in(email="ben@example.com", full_name="Ben Cruz")
         theirs = self.add_assessment(email="ben@example.com", assessed_at=days_ago(9), inputs=answers(Age=70))
-        self.member.get("/dashboard")                                                # use up any waiting flash message so the bodies can be compared
+        self.member.get("/dashboard")
         stranger = self.member.get(f"/history/compare?id={mine}&id={theirs}")
         missing = self.member.get(f"/history/compare?id={mine}&id=99999")
         self.assertEqual((stranger.status_code, missing.status_code), (404, 404))
         self.assertEqual(stranger.get_data(as_text=True), missing.get_data(as_text=True))
         self.assertNotIn("70 years", stranger.get_data(as_text=True))
-        # and the other person cannot compare mine either
         self.assertEqual(other.get(f"/history/compare?id={mine}&id={theirs}").status_code, 404)
 
     def test_a_visitor_and_a_professional_cannot_compare(self):

@@ -101,10 +101,10 @@ class UserStoreContract:
 
     def test_failed_attempts_are_counted_only_inside_the_window_and_only_for_that_email(self):
         email, other = new_email(), new_email()
-        self.store.record_login_attempt(email, "10.0.0.1", False, NOW - timedelta(minutes=30))   # too old
+        self.store.record_login_attempt(email, "10.0.0.1", False, NOW - timedelta(minutes=30))
         self.store.record_login_attempt(email, "10.0.0.1", False, NOW - timedelta(minutes=5))
         self.store.record_login_attempt(email, None, False, NOW - timedelta(minutes=1))
-        self.store.record_login_attempt(email, "10.0.0.1", True, NOW - timedelta(minutes=2))     # successes never count
+        self.store.record_login_attempt(email, "10.0.0.1", True, NOW - timedelta(minutes=2))
         self.store.record_login_attempt(other, "10.0.0.1", False, NOW - timedelta(minutes=1))
         self.assertEqual(self.store.count_failed_attempts(email, NOW - timedelta(minutes=15)), 2)
         self.assertEqual(self.store.count_failed_attempts(other, NOW - timedelta(minutes=15)), 1)
@@ -125,7 +125,6 @@ class UserStoreContract:
         self.store.delete_old_login_attempts(NOW - timedelta(days=30))
         self.assertEqual(self.store.count_failed_attempts(email, NOW - timedelta(days=100)), 1)
 
-    # ---- new profile fields (Phase 9 refinement) ----
     def test_username_date_of_birth_address_and_avatar_are_saved_and_read_back(self):
         from datetime import date
         values = general()
@@ -162,10 +161,6 @@ class UserStoreContract:
     def test_find_by_username_with_no_match_is_none(self):
         self.assertIsNone(self.store.find_by_username("no-such-user-xyz"))
 
-    # ---- search_professionals ----
-    # Each test below uses its OWN never-reused surname (a fresh uuid fragment): the MySQL contract runs against a
-    # single shared database across every test method in the file (see tests/mysql_support.py), so a name reused
-    # across tests would collide with rows an earlier test already inserted and never removes.
     def test_search_finds_a_professional_by_partial_name_case_insensitively(self):
         surname = f"Cruz{uuid.uuid4().hex[:8]}"
         self.store.create_user(professional(name=f"Dr. Maria {surname}"), "h", NOW)
@@ -196,9 +191,6 @@ class UserStoreContract:
         self.assertEqual(self.store.search_professionals("   "), [])
 
     def test_a_percent_in_the_search_term_still_finds_the_exact_name_it_is_part_of(self):
-        # % is SQL's own wildcard, so this also matches a little more broadly than the exact text (see
-        # search_professionals's own docstring for why that trade-off is fine) - what matters here is that a name
-        # that genuinely contains a % is still found by a search that includes it, on both stores alike.
         surname = f"Cruz{uuid.uuid4().hex[:8]}"
         self.store.create_user(professional(name=f"Dr. 100% {surname}"), "h", NOW)
         self.assertIn(f"Dr. 100% {surname}", [u["full_name"] for u in self.store.search_professionals(f"100% {surname}")])
@@ -216,13 +208,12 @@ class MySQLStoreTests(UserStoreContract, unittest.TestCase):
         mysql_support.push_app_context(self)
         return MySQLUserStore()
 
-    # ---- checks that only make sense for a real database ----
     def test_a_failed_professional_insert_leaves_no_user_behind(self):
         values = professional()
-        values["professional"]["profession_title"] = None            # violates NOT NULL in the second table
+        values["professional"]["profession_title"] = None
         with self.assertRaises(mysql.connector.Error):
             self.store.create_user(values, "h", NOW)
-        self.assertIsNone(self.store.find_by_email(values["email"]))   # the first insert was undone as well
+        self.assertIsNone(self.store.find_by_email(values["email"]))
 
     def test_the_database_itself_refuses_details_for_a_user_that_does_not_exist(self):
         from db import execute

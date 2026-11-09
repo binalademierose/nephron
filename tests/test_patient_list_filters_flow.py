@@ -26,7 +26,7 @@ class PatientListFiltersTests(AppTestCase):
                  client=self.professional, token_from=f"/patient-records/{self.low_code}/screening")
         self.post("/patient-records/new", {"full_name": "New Patient No Screening", "date_of_birth": "1991-01-15", "country": "Other", "gender": "Male", "sex": "Male"},
                  client=self.professional, token_from="/patient-records/new")
-        self.professional.get("/patient-records")   # flush the "patient added" flash message so it never leaks into a test's own page check
+        self.professional.get("/patient-records")
 
     def test_the_all_tab_shows_every_patient_with_an_accurate_count(self):
         page = self.text(self.professional.get("/patient-records"))

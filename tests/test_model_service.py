@@ -94,7 +94,7 @@ class HappyPathTests(ServiceCase):
         import pandas as pd
         folder = os.path.join(self.root, "labels")
         stand_in = model_fixtures.build_stand_in(folder, self.catalog, labels=("low", "high"))
-        self.assertEqual(list(stand_in.pipeline.steps[-1][1].classes_), ["high", "low"])       # 'high' is column 0
+        self.assertEqual(list(stand_in.pipeline.steps[-1][1].classes_), ["high", "low"])
         service = self.service(folder)
         self.assertTrue(service.ready, service.reason)
         row = contract.reference_row(self.catalog)
@@ -121,7 +121,7 @@ class HappyPathTests(ServiceCase):
 
     def test_a_different_input_order_than_the_catalog_is_fine_when_the_metadata_states_it(self):
         service = self.service(self.base.directory)
-        self.assertNotEqual(service.metadata["features"], contract.feature_names(self.catalog))     # the fixture trains in reverse order
+        self.assertNotEqual(service.metadata["features"], contract.feature_names(self.catalog))
         self.assertTrue(service.ready)
 
     def test_the_metadata_can_be_read_back_for_the_result_page(self):
@@ -148,7 +148,6 @@ class FactorTests(ServiceCase):
         self.assertEqual(set(importance), set(contract.feature_names(self.catalog)))
         self.assertIn("Diabetes", importance)
         self.assertIn("Diabetes_Medication", importance)
-        # Compare with the raw importances: Country has 5 encoded columns, their sum is Country's importance.
         pipeline = self.base.pipeline
         names = list(pipeline[:-1].get_feature_names_out())
         raw = pipeline.steps[-1][1].feature_importances_
@@ -188,7 +187,7 @@ class ExplainTests(ServiceCase):
         self.assertTrue(self.explainer.can_explain)
         check = next(c for c in self.explainer.checks if "explained" in c.name)
         self.assertTrue(check.ok)
-        self.assertFalse(check.fatal)                                         # explaining is never needed to screen
+        self.assertFalse(check.fatal)
 
     def test_every_question_gets_an_effect_strongest_first(self):
         result = self.explainer.explain(self.row)
@@ -209,14 +208,14 @@ class ExplainTests(ServiceCase):
         frame = self.explainer._frame(self.row, features)
         encoded = np.asarray(pipeline[:-1].transform(frame), dtype=float)[0]
         names = list(pipeline[:-1].get_feature_names_out())
-        exact = estimator.weights_ * (encoded - estimator.means_)                    # the true contribution of every encoded column
+        exact = estimator.weights_ * (encoded - estimator.means_)
         result = self.effects(self.explainer.explain(self.row))
         column = lambda name: names.index(name)
         self.assertAlmostEqual(result["Age"], exact[column("numeric__Age")], places=9)
-        self.assertAlmostEqual(result["Diabetes"], exact[column("numeric__Diabetes")], places=9)                 # not Diabetes_Medication
+        self.assertAlmostEqual(result["Diabetes"], exact[column("numeric__Diabetes")], places=9)
         self.assertAlmostEqual(result["Diabetes_Medication"], exact[column("numeric__Diabetes_Medication")], places=9)
         self.assertNotAlmostEqual(result["Diabetes"], result["Diabetes_Medication"], places=6)
-        for question in ("Country", "Physical_Activity_Level"):                                                      # several columns, added together
+        for question in ("Country", "Physical_Activity_Level"):
             parts = [exact[i] for i, n in enumerate(names) if n.startswith(f"categorical__{question}_")]
             self.assertGreater(len(parts), 1)
             self.assertAlmostEqual(result[question], sum(parts), places=9)
@@ -229,12 +228,11 @@ class ExplainTests(ServiceCase):
         self.assertGreater(old["probability"], young["probability"])
 
     def test_the_direction_is_towards_the_high_risk_class_even_when_it_is_the_first_class(self):
-        # With labels low/high scikit-learn orders the classes ['high', 'low'], and XGBoost-style contributions are for the SECOND class.
         service = self.service(self.labelled.directory)
         self.assertTrue(service.can_explain, [c for c in service.checks if not c.ok])
         old = service.explain(dict(self.row, Age=88))
         young = service.explain(dict(self.row, Age=22))
-        self.assertGreater(self.effects(old)["Age"], 0)                      # older raises the estimate of HIGH risk
+        self.assertGreater(self.effects(old)["Age"], 0)
         self.assertLess(self.effects(young)["Age"], 0)
         self.assertGreater(old["probability"], young["probability"])
         self.assertAlmostEqual(old["probability"], service.predict(dict(self.row, Age=88))["probability"], places=9)
@@ -242,7 +240,7 @@ class ExplainTests(ServiceCase):
     def test_contributions_that_do_not_add_up_are_refused_and_never_shown(self):
         model_fixtures.FakeBooster.offset = 0.5
         service = self.service(self.additive.directory)
-        self.assertTrue(service.ready)                                       # screening still works
+        self.assertTrue(service.ready)
         self.assertFalse(service.can_explain)
         warning = next(c for c in service.checks if "explained" in c.name)
         self.assertFalse(warning.ok)
@@ -265,7 +263,7 @@ class ExplainTests(ServiceCase):
                 service.explain(self.row)
 
     def test_a_model_that_is_not_xgboost_screens_but_cannot_explain(self):
-        service = self.service(self.base.directory)                          # the ordinary gradient-boosting stand-in
+        service = self.service(self.base.directory)
         self.assertTrue(service.ready)
         self.assertFalse(service.can_explain)
         with self.assertRaisesRegex(ExplanationUnavailable, "XGBoost"):
@@ -310,7 +308,6 @@ class CalibratedModelTests(ServiceCase):
         service = self.service(self.calibrated.directory)
         self.assertTrue(service.ready, [c for c in service.checks if not c.ok])
         self.assertTrue(all(c.ok for c in service.checks))
-        # and it really is calibrated, not accidentally unwrapped to something plain
         transform, estimator, calibrator = _decompose(service._pipeline)
         self.assertIsNotNone(calibrator)
         self.assertTrue(hasattr(estimator, "get_booster"))
@@ -321,9 +318,6 @@ class CalibratedModelTests(ServiceCase):
         transform, estimator, calibrator = __import__("services.model_service", fromlist=["_decompose"])._decompose(service._pipeline)
         frame = service._frame(self.row, service.metadata["features"])
         raw_probability = estimator.predict_proba(transform.transform(frame))[0, list(estimator.classes_).index(1) if 1 in estimator.classes_ else 1]
-        # the two probabilities need not be close at all - isotonic recalibration can move them substantially - but they
-        # must both be valid, and predict() must be the one applying calibration (this asserts they are not literally equal
-        # by coincidence, i.e. that calibration is actually being applied and not silently skipped)
         self.assertNotAlmostEqual(calibrated_answer["probability"], float(raw_probability), places=3)
 
     def test_can_explain_and_the_explained_probability_matches_predict_exactly(self):
@@ -349,24 +343,16 @@ class CalibratedModelTests(ServiceCase):
         self.assertEqual(names, set(contract.feature_names(self.catalog)))
 
     def test_a_broken_booster_is_still_caught_after_the_calibration_step(self):
-        # Same idea as the uncalibrated test above (offsetting the booster's own contributions away from what
-        # predict_proba() actually computes), now with a calibration curve in between: the booster's contributions
-        # are wrong BEFORE calibration is even applied, so the honest add-up check (against predict()'s real,
-        # calibrated answer) must still catch it, not just pass by coincidence.
         from services.model_service import ExplanationUnavailable
         model_fixtures.FakeBooster.offset = 0.5
         self.addCleanup(setattr, model_fixtures.FakeBooster, "offset", 0.0)
         service = self.service(self.calibrated.directory)
-        self.assertTrue(service.ready)                                       # screening still works
+        self.assertTrue(service.ready)
         self.assertFalse(service.can_explain)
         with self.assertRaisesRegex(ExplanationUnavailable, "add up"):
             service.explain(self.row)
 
     def test_ensemble_true_cannot_be_proven_and_is_refused_entirely_not_partially(self):
-        # ensemble=True averages several differently-trained folds: there is no single fold whose encoder categories
-        # are provably the form's own, so this is refused the same honest way an unreadable pipeline always is -
-        # not specially made to half-work. The real project uses ensemble=False (see model_card.json); this is only
-        # here to prove a configuration the service cannot verify is refused outright, never partially trusted.
         service = self.service(self.ensemble.directory)
         self.assertFalse(service.ready)
         self.assertFalse(service.can_explain)
@@ -486,7 +472,6 @@ class RefusalTests(ServiceCase):
         self.assertRefused(self.service(folder), "column names")
 
     def test_a_country_the_model_never_saw_is_caught_before_a_single_person_is_screened(self):
-        # The pipeline's OneHotEncoder(handle_unknown="ignore") would quietly treat an unknown country as the first one.
         folder = os.path.join(self.root, "three-countries")
         model_fixtures.build_stand_in(folder, self.catalog, country_options=["USA", "UK", "India"])
         service = self.service(folder)
@@ -541,7 +526,7 @@ class AnswerGuardTests(ServiceCase):
         with mock.patch.object(type(self.base.pipeline), "predict_proba") as predict:
             with self.assertRaises(ModelInputError) as caught:
                 self.service_.predict(row)
-            predict.assert_not_called()                                      # the model is never asked about a bad row
+            predict.assert_not_called()
         for word in words:
             self.assertIn(word, str(caught.exception))
 
@@ -559,15 +544,13 @@ class AnswerGuardTests(ServiceCase):
                 self.refuses(dict(self.row, **{name: bad}), name)
 
     def test_an_answer_the_model_never_saw_is_an_error(self):
-        self.refuses(dict(self.row, Country="Atlantis"), "Country", "Atlantis")         # not an answer the form offers at all
+        self.refuses(dict(self.row, Country="Atlantis"), "Country", "Atlantis")
         self.refuses(dict(self.row, Diabetes=2), "Diabetes")
         self.refuses(dict(self.row, Diabetes=True), "Diabetes")
         self.refuses(dict(self.row, Alcohol_Consumption=None), "Alcohol_Consumption")
         self.refuses(dict(self.row, Obesity=3), "Obesity")
 
     def test_a_number_outside_the_trained_range_is_refused_not_adjusted(self):
-        # Outside the TRAINING range is accepted (so the model can be checked on people it never saw); only an
-        # unrealistic value is refused, and nothing is ever clamped to fit.
         self.refuses(dict(self.row, Age=200), "Age", "outside")
         self.refuses(dict(self.row, BMI=95.0), "BMI")
         self.refuses(dict(self.row, Water_Intake_L=11.0), "Water_Intake_L")
@@ -605,7 +588,7 @@ class NeverTrainsTests(ServiceCase):
             service = self.service(folder)
             service.predict(contract.reference_row(self.catalog))
             service.factors()
-            service.load()                                                # loading again is harmless
+            service.load()
         self.assertTrue(service.ready)
         with open(path, "rb") as handle:
             self.assertEqual(hashlib.sha256(handle.read()).hexdigest(), before)

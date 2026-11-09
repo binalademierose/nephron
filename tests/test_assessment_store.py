@@ -58,7 +58,7 @@ class AssessmentStoreContract:
                          ("preliminary", "high", "xgboost-test", NOW))
         self.assertAlmostEqual(row["probability"], 0.31, places=6)
         self.assertAlmostEqual(row["threshold_used"], 0.21, places=6)
-        self.assertIsInstance(row["probability"], float)                 # never a Decimal
+        self.assertIsInstance(row["probability"], float)
 
     def test_find_owner_returns_the_right_user_id_without_needing_it_first(self):
         assessment_id = self.store.add_assessment(self.user_id, result())
@@ -115,7 +115,7 @@ class AssessmentStoreContract:
     def test_nobody_can_open_another_persons_assessment_or_answers(self):
         other = new_user(self.users, "Ben Lim")
         mine = self.store.add_assessment(self.user_id, result(), {"Age": 48})
-        self.assertIsNone(self.store.get_assessment(other, mine))                  # as if it did not exist
+        self.assertIsNone(self.store.get_assessment(other, mine))
         self.assertIsNone(self.store.get_assessment(self.user_id, 987654321))
         self.assertIsNotNone(self.store.get_assessment(self.user_id, mine))
 
@@ -153,14 +153,13 @@ class MySQLStoreTests(AssessmentStoreContract, unittest.TestCase):
         mysql_support.push_app_context(self)
         return MySQLUserStore(), MySQLAssessmentStore()
 
-    # ---- checks that only make sense for a real database ----
     def test_the_database_itself_refuses_a_probability_outside_zero_to_one(self):
         from db import execute, query_one
         version = None
         try:
             version = query_one("SELECT VERSION() AS v")["v"]
         except mysql.connector.Error:
-            pass                                                        # (the sandbox stand-in has no VERSION(); it enforces CHECK)
+            pass
         if version and version[0].isdigit():
             numbers = tuple(int(part) for part in version.split("-")[0].split(".")[:3])
             if numbers < (8, 0, 16) and "MariaDB" not in version:
@@ -182,9 +181,6 @@ class MySQLStoreTests(AssessmentStoreContract, unittest.TestCase):
             execute("INSERT INTO assessment_inputs (assessment_id, inputs) VALUES (%s, %s)", (987654321, "{}"))
 
     def test_deleting_the_source_assessment_sets_the_link_to_null_not_the_enhanced_result(self):
-        # Meaningful only against a real MySQL server: the sandbox's SQLite stand-in cannot add a foreign key to an
-        # existing table (see stubs/mysql/connector.py), so ON DELETE SET NULL is not actually enforced there -
-        # skip rather than let that gap masquerade as a pass.
         from db import execute, query_one
         try:
             query_one("SELECT VERSION() AS v")

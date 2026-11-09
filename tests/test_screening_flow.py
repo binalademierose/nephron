@@ -36,7 +36,8 @@ def answers(**changes):
             "ACE_Inhibitor": "0", "ARB": "1", "Diabetes_Medication": "1", "Diuretic": "0", "Statin": "1", "NSAID_Usage": "0",
             "Smoking_Status": "Never", "Alcohol_Consumption": "None", "Physical_Activity_Level": "Light",
             "Exercise_Hours_Per_Week": "2.5", "Water_Intake_L": "1.8", "Fast_Food_Frequency_Per_Week": "2", "Sleep_Duration_Hours": "6.8",
-            "SugaryDrinksAddedSugar": "None", "UltraProcessedFoodFrequency": "Never", "SaturatedFatDairyIntake": "Low"}
+            "SugaryDrinksAddedSugar": "None", "UltraProcessedFoodFrequency": "Never", "SaturatedFatDairyIntake": "Low",
+            "Single_Kidney": "0"}
     form.update(changes)
     return form
 
@@ -102,22 +103,21 @@ class ScreeningTests(AppTestCase):
     def submit(self, browser=None, **changes):
         return self.post("/screening", answers(**changes), client=browser or self.member, token_from="/screening")
 
-    # ---- the form ----
     def test_the_form_asks_exactly_the_questions_in_the_catalog_and_nothing_else(self):
         page = self.text(self.member.get("/screening"))
         fields = Fields()
         fields.feed(page)
         catalog = screening_contract.load_catalog()
-        expected = {q["name"] for q in catalog["questions"] if q["kind"] not in ("derived", "bmi") and "derived_from" not in q} | {"height_cm", "weight_kg", "Gender"}
-        fixed = {"Age", "Country"}                    # from the account: sent as fixed hidden answers, never typed
+        expected = {q["name"] for q in catalog["questions"] if q["kind"] not in ("derived", "bmi") and "derived_from" not in q} | {"height_cm", "weight_kg", "Gender", "Single_Kidney"}
+        fixed = {"Age", "Country"}
         self.assertEqual(fields.names, expected - fixed)
         for name in fixed:
             self.assertIn(f'<input type="hidden" name="{name}"', page)
-        self.assertIn('<input type="hidden" name="Physical_Activity_Level"', page)   # worked out from the exercise hours, shown locked
-        self.assertLess(page.index('name="Exercise_Hours_Per_Week"'), page.index('name="Physical_Activity_Level"'))   # the hours come first
-        self.assertNotIn('name="Obesity"', page)                              # worked out from the BMI, never asked
+        self.assertIn('<input type="hidden" name="Physical_Activity_Level"', page)
+        self.assertLess(page.index('name="Exercise_Hours_Per_Week"'), page.index('name="Physical_Activity_Level"'))
+        self.assertNotIn('name="Obesity"', page)
         for lab in ("eGFR", "HbA1c", "Hemoglobin", "Creatinine"):
-            self.assertNotIn(lab, page)                                       # a preliminary screening asks for no laboratory value
+            self.assertNotIn(lab, page)
 
     def test_it_is_a_guided_form_with_a_step_for_each_group_and_a_review(self):
         page = self.text(self.member.get("/screening"))
@@ -132,7 +132,6 @@ class ScreeningTests(AppTestCase):
         self.assertNotIn("Screening is not available yet", page)
         self.assertIn("Start Assessment", page)
 
-    # ---- analysing ----
     def test_a_complete_form_is_analysed_saved_once_and_leads_to_the_result(self):
         with at(NOW):
             response = self.submit()
@@ -160,28 +159,29 @@ class ScreeningTests(AppTestCase):
         saved = self.assessments.get_assessment(self.user_id, self.assessments.list_assessments(self.user_id)[0]["assessment_id"])["inputs"]
         self.assertEqual((saved["Age"], saved["Country"], saved["Diabetes"], saved["height_cm"], saved["weight_kg"]), (48, "Other", 1, 160.0, 70.0))
         self.assertEqual(saved["Obesity"], 1 if saved["BMI"] >= 30 else 0)
-        self.assertEqual(len(saved), 34)                                      # 31 model inputs plus the height, weight and gender
+        self.assertEqual(len(saved), 35)
+        self.assertEqual(saved["Single_Kidney"], 0)
         self.assertEqual((saved["Gender"], saved["Sex"]), ("Female", "Female"))
 
     def test_an_incomplete_or_invalid_form_shows_messages_saves_nothing_and_keeps_the_answers(self):
-        response = self.submit(Sleep_Duration_Hours="30", Ethnicity="Martian", Diabetes="")   # unrealistic, not offered, missing
+        response = self.submit(Sleep_Duration_Hours="30", Ethnicity="Martian", Diabetes="")
         page = self.text(response)
         self.assertEqual(response.status_code, 200)
         for field in ("Sleep_Duration_Hours", "Ethnicity", "Diabetes"):
             self.assertIn(f'id="{field}-error"', page)
         self.assertIn("Please check your answers", page)
-        self.assertIn('value="160"', page)                                    # what was typed is kept
+        self.assertIn('value="160"', page)
         self.assertEqual(self.assessments.list_assessments(self.user_id), [])
         self.assertEqual(re.search(r'data-first-error-step="(-?\d+)"', page).group(1), "0")
 
     def test_the_form_opens_on_the_first_step_that_has_a_problem(self):
         page = self.text(self.submit(Smoking_Status=""))
-        self.assertEqual(re.search(r'data-first-error-step="(-?\d+)"', page).group(1), "3")     # Lifestyle is the fourth step
+        self.assertEqual(re.search(r'data-first-error-step="(-?\d+)"', page).group(1), "3")
 
     def test_a_missing_answer_is_never_filled_in_for_the_person(self):
         for name in answers():
             if name in ("Age", "Country", "Sex", "Physical_Activity_Level"):
-                continue                                  # Age and Country come from the account; Gender "Female" tells the Sex
+                continue
             form = answers()
             del form[name]
             response = self.post("/screening", form, client=self.member, token_from="/screening")
@@ -190,10 +190,10 @@ class ScreeningTests(AppTestCase):
 
     def test_the_question_reads_gender_and_sex_at_birth_waits_until_it_is_needed(self):
         page = self.text(self.member.get("/screening"))
-        self.assertIn('<legend>Gender <span class="chip chip-required">Required</span></legend>', page)
+        self.assertIn('<legend>Gender <span class="required-mark" aria-hidden="true">*</span><span class="visually-hidden">(required)</span></legend>', page)
         self.assertIn('name="Gender" value="Gay man" data-sex="Male"', page)
         self.assertIn('name="Gender" value="Non-binary" data-sex=""', page)
-        self.assertRegex(page, r'data-sex-follow-up hidden>')                # nothing chosen yet: not asked
+        self.assertRegex(page, r'data-sex-follow-up hidden>')
         self.assertNotIn("<legend>Sex</legend>", page)
 
     def test_a_gay_man_is_screened_as_male_and_his_own_answer_is_kept(self):
@@ -206,7 +206,7 @@ class ScreeningTests(AppTestCase):
         self.assertEqual(response.status_code, 200)
         page = self.text(response)
         self.assertIn('id="Sex-error"', page)
-        self.assertNotRegex(page, r'data-sex-follow-up hidden>')              # shown, since it is now needed
+        self.assertNotRegex(page, r'data-sex-follow-up hidden>')
         self.assertEqual(self.assessments.list_assessments(self.user_id), [])
         self.submit(Gender="Prefer not to say", Sex="Male")
         saved = self.assessments.get_assessment(self.user_id, self.assessments.list_assessments(self.user_id)[0]["assessment_id"])["inputs"]
@@ -229,12 +229,12 @@ class ScreeningTests(AppTestCase):
             self.submit()
         with at(NOW + timedelta(days=40)):
             self.submit()
-        self.assertEqual(len(self.assessments.list_assessments(self.user_id)), 2)     # history is never overwritten
+        self.assertEqual(len(self.assessments.list_assessments(self.user_id)), 2)
 
     def test_different_answers_a_moment_later_are_a_new_assessment(self):
         with at(NOW):
             self.submit()
-            self.submit(Diabetes="0")                     # a changeable answer (Age now comes from the birthday)
+            self.submit(Diabetes="0")
         self.assertEqual(len(self.assessments.list_assessments(self.user_id)), 2)
 
     def test_if_the_model_fails_while_analysing_nothing_is_saved_and_no_technical_detail_is_shown(self):
@@ -280,7 +280,7 @@ class ResultTests(AppTestCase):
     def test_the_result_uses_the_agreed_words_and_never_claims_a_diagnosis(self):
         for words in ("Risk Classification", "Predicted Risk Probability", "Preliminary Risk", "not a diagnosis" if "High" in self.page else "does not mean you are free"):
             self.assertIn(words, self.page)
-        for forbidden in ("confidence", "you have ckd", "diagnosed with", "Moderate Risk", "moderate risk"):   # "Moderate" alone is an activity answer
+        for forbidden in ("confidence", "you have ckd", "diagnosed with", "Moderate Risk", "moderate risk"):
             self.assertNotIn(forbidden, self.page.lower() if forbidden.islower() else self.page)
 
     def test_the_result_shows_the_saved_probability_classification_and_threshold(self):
@@ -290,15 +290,14 @@ class ResultTests(AppTestCase):
         self.assertIn(">High Preliminary Risk<" if row["classification"] == "high" else ">Low Preliminary Risk<", self.page)
         self.assertIn("Validated threshold:", self.page)
         from services.visuals import percent_text
-        self.assertIn(percent_text(service.threshold * 100), self.page.replace(" ", ""))     # the same formatter the page uses
-        self.assertIn("Sep 20, 2026", self.page)                                   # local date, in words
+        self.assertIn(percent_text(service.threshold * 100), self.page.replace(" ", ""))
+        self.assertIn("Sep 20, 2026", self.page)
 
     def test_the_tips_panel_shows_tips_matching_this_persons_own_answers(self):
-        # the default answers() include Diabetes=1 and Diabetes_Medication=1
         self.assertIn("Kidney health tips for you", self.page)
         self.assertIn("diabetes medication", self.page.lower())
-        self.assertIn("Never stop, start, or change", self.page)          # an "always" tip
-        self.assertNotIn("Stopping smoking", self.page)                   # Smoking_Status is "Never" by default
+        self.assertIn("Never stop, start, or change", self.page)
+        self.assertNotIn("Stopping smoking", self.page)
 
     def test_a_different_persons_answers_change_which_tips_show(self):
         with at(NOW):
@@ -313,7 +312,6 @@ class ResultTests(AppTestCase):
         self.assertIn("KDIGO", self.page)
 
     def test_a_model_that_cannot_explain_a_single_result_gets_an_honest_empty_state_not_model_wide_factors(self):
-        # (this stand-in is an ordinary gradient-boosting model, so it cannot explain one result)
         self.assertIn("No explanation for this result", self.page)
         self.assertNotIn("explain-card", self.page)
         self.assertNotIn("factor-rank", self.page)
@@ -339,7 +337,7 @@ class ResultTests(AppTestCase):
         self.assertIn("Compared with previous", page)
         self.assertRegex(page, r"(\d+(\.\d+)? points (higher|lower)|No change)")
         self.assertNotIn("better", page.lower().replace("better kidney", ""))
-        self.assertNotIn("Compared with previous", self.page)                     # the first result has nothing to compare with
+        self.assertNotIn("Compared with previous", self.page)
 
     def test_the_dashboard_now_shows_the_result_and_links_to_it(self):
         with at(NOW):
@@ -367,7 +365,7 @@ class ExplainedResultTests(AppTestCase):
 
     def result(self, **changes):
         client = self.member
-        if "Age" in changes:            # age now comes from the birthday: a person of that age is a new account with that birthday
+        if "Age" in changes:
             age = int(changes["Age"])
             client = self.signed_in(email=f"age{age}-{uuid.uuid4().hex[:6]}@example.com", date_of_birth=f"{2026 - age}-01-15")
         location = self.post("/screening", answers(**changes), client=client, token_from="/screening").headers["Location"]
@@ -401,7 +399,7 @@ class ExplainedResultTests(AppTestCase):
             expected_class = "factor-up" if match.group(1) == "raises" else "factor-down"
             classes = re.findall(r'<li class="factor factor-explained (factor-\w+)">', match.group(0))
             self.assertTrue(classes)
-            self.assertEqual(set(classes), {expected_class})                                # never a lowering factor in the raising card
+            self.assertEqual(set(classes), {expected_class})
         self.assertEqual(page.count("Your answer:"), sum(len(v) for v in self.cards(page).values()))
 
     def test_the_old_model_wide_list_and_the_old_single_card_are_gone(self):
@@ -422,7 +420,7 @@ class ExplainedResultTests(AppTestCase):
         for kind in ("raises", "lowers"):
             for sentence in expected["summary"][kind]:
                 self.assertIn(sentence, page)
-        self.assertEqual(page.count("not medical advice"), 1)                              # shown once, below both cards
+        self.assertEqual(page.count("not medical advice"), 1)
         self.assertGreater(page.index("not medical advice"), page.index("What lowered your estimate"))
         self.assertIn("in either direction", page)
 
@@ -440,15 +438,14 @@ class ExplainedResultTests(AppTestCase):
         young_cards, old_cards = self.cards(young), self.cards(old)
         self.assertNotEqual(young_cards, old_cards)
         in_card = lambda cards, label: [kind for kind, items in cards.items() if any(l == label for l, _ in items)]
-        self.assertEqual(in_card(young_cards, "Age"), ["lowers"])                         # being young lowered the estimate
-        self.assertEqual(in_card(old_cards, "Age"), ["raises"])                           # being old raised it
+        self.assertEqual(in_card(young_cards, "Age"), ["lowers"])
+        self.assertEqual(in_card(old_cards, "Age"), ["raises"])
 
     def test_the_result_is_explained_the_same_way_every_time_it_is_opened(self):
         location, page = self.result()
         self.assertEqual(self.cards(self.text(self.member.get(location))), self.cards(page))
 
     def test_a_card_with_nothing_in_it_says_so_instead_of_disappearing(self):
-        # Make the model's estimate depend on nothing that lowers it: patch the explanation to raise-only effects.
         location, _ = self.result()
         raising_only = {"probability": self.assessments.list_assessments(self.user_id)[0]["probability"],
                         "effects": [{"name": "Diabetes", "label": "Diabetes", "effect": 1.0}, {"name": "Age", "label": "Age", "effect": 0.4}]}
@@ -459,7 +456,6 @@ class ExplainedResultTests(AppTestCase):
         self.assertEqual(self.cards(page)["lowers"], [])
         self.assertEqual([label for label, _ in self.cards(page)["raises"]], ["Diabetes", "Age"])
 
-    # ---- every case where showing an explanation would not be honest ----
     def result_after(self, change):
         location, _ = self.result()
         change()
@@ -468,7 +464,7 @@ class ExplainedResultTests(AppTestCase):
     def assertNoExplanation(self, page, has_answers=True):
         self.assertIn("No explanation for this result", page)
         self.assertNotIn("explain-card", page)
-        self.assertEqual("Your answers" in page, has_answers)                              # the rest of the result is still there
+        self.assertEqual("Your answers" in page, has_answers)
         self.assertIn("Risk Classification", page)
 
     def test_a_result_made_by_another_model_version_is_not_explained(self):
@@ -506,12 +502,12 @@ class PrivacyOfResultsTests(AppTestCase):
         ben = self.signed_in(email="ben@example.com", full_name="Ben Lim")
         location = self.post("/screening", answers(), client=ana, token_from="/screening").headers["Location"]
         self.assertEqual(ana.get(location).status_code, 200)
-        ben.get("/dashboard")                                                           # (shows and clears the welcome message first)
+        ben.get("/dashboard")
         stolen, missing = ben.get(location), ben.get("/results/987654")
         self.assertEqual((stolen.status_code, missing.status_code), (404, 404))
-        self.assertEqual(self.text(stolen), self.text(missing))                          # nothing tells the two cases apart
+        self.assertEqual(self.text(stolen), self.text(missing))
         self.assertNotIn("Diabetes", self.text(stolen))
-        self.assertEqual(self.client.get(location).status_code, 302)                    # a visitor is sent to sign in
+        self.assertEqual(self.client.get(location).status_code, 302)
 
     def test_each_person_only_ever_sees_their_own_results_on_their_dashboard(self):
         ana = self.signed_in()
@@ -522,7 +518,6 @@ class PrivacyOfResultsTests(AppTestCase):
 
 if __name__ == "__main__":
     unittest.main()
-
 
 
 class RealisticRangeTests(AppTestCase):
@@ -539,7 +534,6 @@ class RealisticRangeTests(AppTestCase):
         return self.post("/screening", answers(**changes), client=self.browser, token_from="/screening")
 
     def test_an_age_below_the_training_range_is_accepted_and_flagged_on_the_result(self):
-        # A 16-year-old patient record (a professional enters the birthday); the age comes from that birthday.
         pro = self.signed_in(**self.professional_details())
         code = self.post("/patient-records/new", {"full_name": "Teen Patient", "date_of_birth": "2010-01-15", "country": "Other", "gender": "Female", "sex": "Female"},
                          client=pro, token_from="/patient-records/new").headers["Location"].split("/")[-2]
@@ -584,7 +578,6 @@ class RealisticRangeTests(AppTestCase):
         self.assertNotIn("Some answers are outside the usual range", page)
 
 
-
 class FixedAnswerTests(AppTestCase):
     """Age from the birthday, Country from the account, and Sex/Ethnicity/Country kept from the first screening -
     shown locked, and enforced by the server even if the page is tampered with."""
@@ -592,7 +585,7 @@ class FixedAnswerTests(AppTestCase):
 
     def setUp(self):
         super().setUp()
-        self.browser = self.signed_in(country="Philippines", province_code="1300000000")   # helper birthday 1978-05-14 -> 48
+        self.browser = self.signed_in(country="Philippines", province_code="1300000000")
         self.user_id = self.store.find_by_email("ana@example.com")["user_id"]
 
     def _saved(self, n=0):
@@ -610,7 +603,7 @@ class FixedAnswerTests(AppTestCase):
         self.assertEqual((self._saved()["Age"], self._saved()["Country"]), (48, "Philippines"))
 
     def test_sex_and_ethnicity_are_locked_after_the_first_screening(self):
-        self.assertNotIn('<input type="hidden" name="Sex"', self.text(self.browser.get("/screening")))   # not yet
+        self.assertNotIn('<input type="hidden" name="Sex"', self.text(self.browser.get("/screening")))
         self.post("/screening", answers(Sex="Female", Ethnicity="Asian"), client=self.browser, token_from="/screening")
         page = self.text(self.browser.get("/screening"))
         self.assertIn('<input type="hidden" name="Sex" value="Female">', page)
@@ -629,7 +622,7 @@ class FixedAnswerTests(AppTestCase):
         self.assertNotIn('name="Gender" value="Gay man"', page)
         with at(datetime.now() + timedelta(days=60)):
             response = self.post("/screening", answers(Gender="Gay man"), client=self.browser, token_from="/screening")
-        self.assertEqual(response.status_code, 200)                       # refused, not silently changed
+        self.assertEqual(response.status_code, 200)
         self.assertIn('id="Gender-error"', self.text(response))
         with at(datetime.now() + timedelta(days=60)):
             self.post("/screening", answers(Gender="Non-binary", Diabetes="0"), client=self.browser, token_from="/screening")

@@ -122,7 +122,7 @@ class MySQLStoreTests(ClinicalReviewStoreContract, unittest.TestCase):
         execute("DELETE FROM users WHERE user_id = %s", (self.professional,))
         row = query_one("SELECT professional_user_id, professional_name, note FROM clinical_reviews WHERE assessment_id = %s", (self.assessment_id,))
         self.assertIsNone(row["professional_user_id"])
-        self.assertEqual(row["professional_name"], "Dr. Maria Cruz")             # the snapshot survives
+        self.assertEqual(row["professional_name"], "Dr. Maria Cruz")
 
 
 if __name__ == "__main__":

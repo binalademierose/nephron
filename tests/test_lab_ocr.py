@@ -27,7 +27,6 @@ except Exception:
 
 NEEDS_OCR = unittest.skipUnless(OCR_AVAILABLE and shutil.which("pdftoppm"), "needs tesseract, pytesseract and poppler (pdftoppm)")
 
-# What tests/fixtures/sample_lab_report actually says, so the extraction can be checked against known-true values.
 KNOWN_VALUES = {
     "Systolic_BP": 138, "Diastolic_BP": 88, "Serum_Creatinine": 1.4, "Blood_Urea_Nitrogen": 22, "Urine_ACR": 145,
     "HbA1c": 6.8, "Fasting_Glucose": 118, "Hemoglobin": 12.1, "Sodium": 139, "Potassium": 4.6,
@@ -58,7 +57,7 @@ class ExtractTextTests(unittest.TestCase):
         import pytesseract
         original = pytesseract.pytesseract.tesseract_cmd
         try:
-            self.lab_ocr.extract_text(IMAGE, "image/png", tesseract_cmd="tesseract")   # "tesseract" alone: already on PATH here
+            self.lab_ocr.extract_text(IMAGE, "image/png", tesseract_cmd="tesseract")
             self.assertEqual(pytesseract.pytesseract.tesseract_cmd, "tesseract")
         finally:
             pytesseract.pytesseract.tesseract_cmd = original
@@ -70,15 +69,12 @@ class ExtractTextTests(unittest.TestCase):
         try:
             pytesseract.pytesseract.tesseract_cmd = "a-sentinel-value"
             with mock.patch.object(pytesseract, "image_to_string", return_value="text"):
-                self.lab_ocr.extract_text(IMAGE, "image/png")               # tesseract_cmd not given: nothing to pass through
-            self.assertEqual(pytesseract.pytesseract.tesseract_cmd, "a-sentinel-value")   # untouched
+                self.lab_ocr.extract_text(IMAGE, "image/png")
+            self.assertEqual(pytesseract.pytesseract.tesseract_cmd, "a-sentinel-value")
         finally:
             pytesseract.pytesseract.tesseract_cmd = original
 
     def test_tesseract_itself_failing_to_run_is_never_a_crash_for_an_image(self):
-        # Covers every real way tesseract can fail to even start: not installed, not on PATH, TESSERACT_CMD
-        # pointing at the wrong thing, no permission to run it, an antivirus block. All of these surface as SOME
-        # exception from pytesseract.image_to_string - never caught by Image.open() succeeding first.
         import pytesseract
         from unittest import mock
         with mock.patch.object(pytesseract, "image_to_string", side_effect=PermissionError(5, "Access is denied")):
@@ -121,7 +117,7 @@ class ExtractCandidateValuesTests(unittest.TestCase):
             self.assertNotIn(name, self.found, name)
 
     def test_egfr_is_never_extracted_it_is_always_computed_from_creatinine(self):
-        self.assertNotIn("eGFR", self.found)                     # even though the fixture prints an eGFR line
+        self.assertNotIn("eGFR", self.found)
 
     def test_only_real_catalog_fields_are_ever_returned(self):
         names = {f["name"] for f in self.catalog["fields"]}
@@ -131,8 +127,8 @@ class ExtractCandidateValuesTests(unittest.TestCase):
         text = "Sodium: 9999 mmol/L\nPotassium: 4.6 mmol/L\nUrine Albumin-to-Creatinine Ratio 12,000 mg/g\nSerum Creatinine 9.8 mg/dL"
         found = self.lab_ocr.extract_candidate_values(text, self.catalog)
         self.assertEqual((found["Sodium"], found["Potassium"]), (9999.0, 4.6))
-        self.assertEqual(found["Urine_ACR"], 12000.0)                 # "12,000" is read whole, never cut short to 12
-        self.assertEqual(found["Serum_Creatinine"], 9.8)              # not the "...Creatinine Ratio" number above it
+        self.assertEqual(found["Urine_ACR"], 12000.0)
+        self.assertEqual(found["Serum_Creatinine"], 9.8)
         from services import lab_contract
         self.assertEqual({u["name"] for u in lab_contract.unusual_values(self.catalog, found)}, {"Sodium", "Urine_ACR"})
 

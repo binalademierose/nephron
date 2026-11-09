@@ -55,7 +55,7 @@ class LoadingTests(ServiceCase):
         self.assertTrue(all(c.ok for c in service.checks if c.fatal))
 
     def test_the_stage_must_say_enhanced(self):
-        broken = model_fixtures.StandIn.__new__(model_fixtures.StandIn)  # not used; edit metadata file directly instead
+        broken = model_fixtures.StandIn.__new__(model_fixtures.StandIn)
         import json
         directory = os.path.join(self.root, "wrong-stage")
         model_fixtures.build_stage2_stand_in(directory, self.catalog)
@@ -81,7 +81,7 @@ class LoadingTests(ServiceCase):
         meta_path = os.path.join(directory, "model_metadata.json")
         with open(meta_path) as handle:
             meta = json.load(handle)
-        meta["features"] = meta["features"][:-1]  # drop one
+        meta["features"] = meta["features"][:-1]
         with open(meta_path, "w") as handle:
             json.dump(meta, handle)
         service = self.service(directory)
@@ -134,7 +134,7 @@ class PredictTests(ServiceCase):
         service = self.service(self.good.directory)
         for name in STAGE1_LIKE_FIELDS:
             if name == "Alcohol_Consumption":
-                continue                                          # its Stage 1 "None" is translated to missing, not refused
+                continue
             row = self.full_row()
             row[name] = None
             with self.assertRaises(ModelInputError, msg=name):
@@ -142,7 +142,7 @@ class PredictTests(ServiceCase):
 
     def test_an_abnormal_lab_value_is_used_and_something_that_is_not_a_lab_value_is_refused(self):
         service = self.service(self.good.directory)
-        answer = service.predict(self.full_row(Sodium=9999, Urine_ACR=12000))     # abnormal, but a real lab value
+        answer = service.predict(self.full_row(Sodium=9999, Urine_ACR=12000))
         self.assertTrue(0 <= answer["probability"] <= 1)
         for name, bad in (("Serum_Creatinine", -1), ("Sodium", float("nan")), ("Sodium", float("inf")), ("Sodium", "140")):
             with self.assertRaisesRegex(ModelInputError, name):
@@ -150,14 +150,13 @@ class PredictTests(ServiceCase):
 
     def test_alcohol_none_stage1s_does_not_drink_is_translated_to_missing_not_refused(self):
         service = self.service(self.good.directory)
-        row = self.full_row(Alcohol_Consumption="None")           # Stage 1's literal answer; this model has never seen it
-        result = service.predict(row)                             # must not raise: translated to missing, not rejected
+        row = self.full_row(Alcohol_Consumption="None")
+        result = service.predict(row)
         self.assertTrue(0 <= result["probability"] <= 1)
 
     def test_egfr_cannot_be_supplied_directly_it_is_always_computed(self):
         service = self.service(self.good.directory)
         given_egfr = service.predict(self.full_row(Serum_Creatinine=2.0))
-        # even if a caller tried to sneak in a different eGFR, _check_row recomputes it from creatinine/age/sex
         sneaky = dict(self.full_row(Serum_Creatinine=2.0))
         sneaky["eGFR"] = 999
         self.assertEqual(service.predict(sneaky)["probability"], given_egfr["probability"])
@@ -207,12 +206,12 @@ class FactorsTests(ServiceCase):
         percents = [f["percent"] for f in factors]
         self.assertEqual(percents, sorted(percents, reverse=True))
         for factor in factors:
-            self.assertTrue(factor["label"])                     # every factor, lab or Stage-1-like, has a real label
+            self.assertTrue(factor["label"])
 
     def test_a_field_whose_catalog_label_differs_from_its_raw_name_uses_the_label(self):
         service = self.service(self.good.directory)
         row = self.full_row(Hypertension=1)
-        result = service.explain(row) if False else None  # explain needs xgboost; use factors() instead, which does not
+        result = service.explain(row) if False else None
         from services.model_service_stage2 import _stage2_label
         self.assertEqual(_stage2_label("Hypertension"), "High blood pressure")
         self.assertEqual(_stage2_label("Serum_Creatinine"), "Serum creatinine")

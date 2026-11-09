@@ -54,7 +54,7 @@ def tables():
                         found[table].update(_columns_in(added.group(1)))
                 continue
             if re.match(r"CREATE (UNIQUE )?INDEX \w+ ON \w+", statement):
-                continue          # an index on an existing column, not a new column - nothing for tables() to add
+                continue
             raise AssertionError(f"tables() cannot read this statement in {path}: {statement[:80]}")
     return found
 
@@ -78,13 +78,13 @@ class MigrationFileTests(unittest.TestCase):
             for statement in statements:
                 self.assertNotIn("--", statement, f"{path}: a trailing comment would be sent to MySQL")
                 if statement.startswith("ALTER TABLE"):
-                    self.assertIn("ADD ", statement, path)                   # the only ALTER shape a migration here may use
+                    self.assertIn("ADD ", statement, path)
                     continue
                 if statement.startswith("CREATE UNIQUE INDEX") or statement.startswith("CREATE INDEX"):
-                    continue                                                 # an index on a column ADD COLUMN already added
+                    continue
                 self.assertTrue(statement.startswith("CREATE TABLE IF NOT EXISTS"), path)
-                self.assertIn("ENGINE=InnoDB", statement, path)              # InnoDB is what enforces foreign keys
-                self.assertIn("utf8mb4", statement, path)                    # names and text in any language
+                self.assertIn("ENGINE=InnoDB", statement, path)
+                self.assertIn("utf8mb4", statement, path)
 
     def test_an_alter_table_only_ever_targets_a_table_from_an_earlier_file(self):
         created = set()
@@ -102,8 +102,6 @@ class MigrationFileTests(unittest.TestCase):
                 self.assertNotIn(banned, text, f"{path} contains {banned}")
 
     def test_comments_are_whole_lines_and_contain_no_semicolon(self):
-        # The runner cuts a file into statements at every ";", so a ";" inside a comment line would be harmless
-        # only if the whole line is a comment. Check that comment lines never carry code.
         for path in FILES:
             for line in read(path).splitlines():
                 if "--" in line:
@@ -146,13 +144,13 @@ class SchemaMatchesTheCodeTests(unittest.TestCase):
 
     def test_no_column_is_narrower_than_what_the_forms_accept(self):
         users, professionals, attempts = self.schema["users"], self.schema["professionals"], self.schema["login_attempts"]
-        self.assertGreaterEqual(size_of(users["email"]), 254)                # the longest email check_email allows
+        self.assertGreaterEqual(size_of(users["email"]), 254)
         self.assertGreaterEqual(size_of(attempts["email"]), 254)
         self.assertGreaterEqual(size_of(users["full_name"]), 120)
         self.assertGreaterEqual(size_of(professionals["institution"]), 120)
         self.assertGreaterEqual(size_of(professionals["license_number"]), 50)
         self.assertGreaterEqual(size_of(professionals["profession_title"]), max(len(p) for p in validation.PROFESSIONS))
-        self.assertGreaterEqual(size_of(attempts["ip_address"]), 45)         # the longest IPv6 text
+        self.assertGreaterEqual(size_of(attempts["ip_address"]), 45)
 
     def test_a_password_hash_fits_its_column(self):
         self.assertGreaterEqual(size_of(self.schema["users"]["password_hash"]), len(security.hash_password("x" * 128)))
@@ -165,7 +163,6 @@ class SchemaMatchesTheCodeTests(unittest.TestCase):
 
     def test_an_assessment_keeps_enough_precision_and_cannot_hold_nonsense(self):
         text = read(os.path.join(init_db.MIGRATIONS_DIR, "004_create_assessments.sql"))
-        # the store rounds to six decimals, so the column must hold exactly that, and a fraction from 0 to 1
         self.assertIn("probability DECIMAL(7, 6) NOT NULL", text)
         self.assertIn("threshold_used DECIMAL(7, 6) NULL", text)
         self.assertRegex(text, r"CHECK \(probability >= 0 AND probability <= 1\)")
@@ -176,21 +173,20 @@ class SchemaMatchesTheCodeTests(unittest.TestCase):
     def test_the_answers_snapshot_is_one_row_per_assessment_and_goes_with_it(self):
         text = read(os.path.join(init_db.MIGRATIONS_DIR, "005_create_assessment_inputs.sql"))
         self.assertGreaterEqual(set(self.schema["assessment_inputs"]), {"assessment_id", "inputs"})
-        self.assertIn("PRIMARY KEY (assessment_id)", text)                             # one snapshot per assessment
+        self.assertIn("PRIMARY KEY (assessment_id)", text)
         self.assertIn("REFERENCES assessments (assessment_id) ON DELETE CASCADE", text)
-        self.assertIn("inputs TEXT NOT NULL", text)                                   # room for the 30 or so saved answers
+        self.assertIn("inputs TEXT NOT NULL", text)
         self.assertGreater(assessments.MAX_INPUTS_BYTES, 1000)
-        self.assertLess(assessments.MAX_INPUTS_BYTES, 65535)                          # never more than a TEXT column holds
+        self.assertLess(assessments.MAX_INPUTS_BYTES, 65535)
 
     def test_an_assessment_belongs_to_a_user_and_is_removed_with_them(self):
         text = read(os.path.join(init_db.MIGRATIONS_DIR, "004_create_assessments.sql"))
         self.assertIn("FOREIGN KEY (user_id) REFERENCES users (user_id) ON DELETE CASCADE", text)
-        self.assertIn("KEY idx_assessments_user_time (user_id, assessed_at)", text)   # the dashboard's query is by user and time
+        self.assertIn("KEY idx_assessments_user_time (user_id, assessed_at)", text)
 
     def test_the_email_is_unique_and_the_professional_row_belongs_to_a_user(self):
         users = read(os.path.join(init_db.MIGRATIONS_DIR, "001_create_users.sql"))
         self.assertRegex(users, r"UNIQUE KEY \w+ \(email\)")
-        # "_ci" means case-insensitive: Ana@Mail.com and ana@mail.com count as the same address in the unique key.
         self.assertIn("COLLATE=utf8mb4_unicode_ci", users)
         professionals = read(os.path.join(init_db.MIGRATIONS_DIR, "002_create_professionals.sql"))
         self.assertIn("FOREIGN KEY (user_id) REFERENCES users (user_id) ON DELETE CASCADE", professionals)

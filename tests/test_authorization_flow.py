@@ -15,8 +15,8 @@ from helpers import AppTestCase  # noqa: E402
 class SharingFlowTests(AppTestCase):
     def setUp(self):
         super().setUp()
-        self.patient = self.signed_in()                                         # ana@example.com, general
-        self.professional = self.signed_in(**self.professional_details())       # dr.cruz@example.com, professional
+        self.patient = self.signed_in()
+        self.professional = self.signed_in(**self.professional_details())
         self.professional_id = self.store.find_by_email("dr.cruz@example.com")["user_id"]
         self.patient_id = self.store.find_by_email("ana@example.com")["user_id"]
 

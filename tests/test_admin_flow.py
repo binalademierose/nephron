@@ -15,8 +15,8 @@ from helpers import AppTestCase, PASSWORD  # noqa: E402
 class AdminTestCase(AppTestCase):
     def setUp(self):
         super().setUp()
-        self.patient = self.signed_in()                                                   # ana@example.com
-        self.pro = self.signed_in(**self.professional_details())                          # dr.cruz@example.com
+        self.patient = self.signed_in()
+        self.pro = self.signed_in(**self.professional_details())
         self.admin = self.signed_in(email="admin@example.com", full_name="Site Admin")
         self.admin_id = self.store.find_by_email("admin@example.com")["user_id"]
         self.store.set_admin(self.admin_id, True)
@@ -30,7 +30,7 @@ class AccessTests(AdminTestCase):
             self.assertEqual(self.admin.get(path).status_code, 200, path)
             self.assertEqual(self.patient.get(path).status_code, 403, path)
             self.assertEqual(self.pro.get(path).status_code, 403, path)
-            self.assertEqual(self.new_browser().get(path).status_code, 302, path)       # signed out: to the sign-in page
+            self.assertEqual(self.new_browser().get(path).status_code, 302, path)
 
     def test_an_administrator_signs_in_to_the_admin_overview(self):
         browser = self.new_browser()
@@ -48,7 +48,7 @@ class AccountTests(AdminTestCase):
     def test_switching_an_account_off_stops_sign_in_and_ends_the_open_session(self):
         self.post(f"/admin/users/{self.patient_id}/deactivate", {}, client=self.admin, token_from="/admin/users")
         self.assertFalse(self.store.find_by_id(self.patient_id)["is_active"])
-        self.assertEqual(self.patient.get("/dashboard").status_code, 302)                # signed out at once
+        self.assertEqual(self.patient.get("/dashboard").status_code, 302)
         response = self.post("/login", {"email": "ana@example.com", "password": PASSWORD}, client=self.new_browser(), token_from="/login")
         self.assertEqual(response.status_code, 403)
         self.assertIn("This account is not active", self.text(response))
@@ -118,7 +118,7 @@ class PrivacyTests(AdminTestCase):
         for page in (overview, self.text(self.admin.get("/admin/users"))):
             self.assertNotIn("Predicted Risk Probability", page)
             self.assertNotIn("/results/", page)
-            self.assertIsNone(re.search(r"\d+\.\d%", page))                       # no probability anywhere
+            self.assertIsNone(re.search(r"\d+\.\d%", page))
 
 
 if __name__ == "__main__":
@@ -147,8 +147,8 @@ class ResetPasswordTests(AdminTestCase):
         self.assertEqual(response.status_code, 200)
         self.assertIn("no-store", response.headers["Cache-Control"])
         self.assertGreaterEqual(len(temporary), 12)
-        self.assertEqual(self.patient.get("/dashboard").status_code, 302)                     # signed out everywhere
-        self.assertNotIn(temporary, self.text(self.admin.get("/admin/users")))                 # never shown again
+        self.assertEqual(self.patient.get("/dashboard").status_code, 302)
+        self.assertNotIn(temporary, self.text(self.admin.get("/admin/users")))
         self.assertNotIn(temporary, self.text(self.admin.get("/admin/activity")))
 
     def test_the_person_must_choose_a_new_password_before_anything_else(self):
@@ -161,13 +161,13 @@ class ResetPasswordTests(AdminTestCase):
             self.assertTrue(response.headers["Location"].endswith("/account"), path)
         self.assertEqual(browser.get("/account").status_code, 200)
         self.post("/account/password", {"current_password": temporary, "new_password": "my-own-new-phrase-1"}, client=browser, token_from="/account")
-        self.assertEqual(browser.get("/dashboard").status_code, 200)                          # free again
+        self.assertEqual(browser.get("/dashboard").status_code, 200)
         self.assertFalse(self.store.find_by_id(self.patient_id)["must_change_password"])
 
     def test_the_old_password_no_longer_works(self):
         self._reset()
         response = self.post("/login", {"email": "ana@example.com", "password": PASSWORD}, client=self.new_browser(), token_from="/login")
-        self.assertEqual(response.status_code, 200)                                            # refused, form shown again
+        self.assertEqual(response.status_code, 200)
 
     def test_an_administrator_cannot_reset_their_own_password_here(self):
         response = self.post(f"/admin/users/{self.admin_id}/reset-password", {}, client=self.admin, token_from="/admin/users")
@@ -208,7 +208,7 @@ class KpiTests(AdminTestCase):
         now = datetime(2026, 10, 3, 9, 0)
         for name, age, level in (("Young High", 30, "high"), ("Old High", 70, "high"), ("Old Low", 68, "low")):
             uid, _ = patient_records.register_patient(store, self.pro_id, name, age, "Male", now)
-            for when, lvl in ((now.replace(month=9), "low"), (now, level)):         # two results; only the latest counts
+            for when, lvl in ((now.replace(month=9), "low"), (now, level)):
                 assessments.record_assessment(astore, uid, {"assessment_type": "preliminary", "probability": .5, "classification": lvl,
                                                             "threshold_used": .4, "model_version": "v1", "assessed_at": when}, {"Age": age})
         page = self.text(self.admin.get("/admin"))
@@ -217,7 +217,7 @@ class KpiTests(AdminTestCase):
         self.assertIn("67% of people screened", page)
         self.assertRegex(page, r'<th scope="row">18-44</th>\s*<td>1</td>\s*<td>1')
         self.assertRegex(page, r'<th scope="row">65\+</th>\s*<td>2</td>\s*<td>1')
-        self.assertNotIn("Young High", page)                                                 # no names, only totals
+        self.assertNotIn("Young High", page)
 
     def test_people_using_nephron_counts_accounts_but_not_administrators(self):
         self.assertRegex(self.text(self.admin.get("/admin")), r'People using Nephron</p><p class="stat-value">2</p>')

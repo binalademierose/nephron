@@ -63,9 +63,6 @@ class FollowUpCasesTests(AppTestCase):
         self.assertIn("No follow-up cases yet", page)
 
     def test_a_general_user_cannot_reach_it(self):
-        # setUp() already signed in a general user (self.patient) - reuse it rather than registering a second
-        # account with the same email, which would fail and leave a fresh client merely signed OUT (a 302),
-        # masking the role check this test actually means to verify.
         self.assertEqual(self.patient.get("/follow-up-cases").status_code, 403)
 
     def test_an_invalid_date_period_falls_back_to_all_instead_of_crashing(self):
@@ -107,5 +104,5 @@ class FollowUpCalendarTests(FollowUpCasesTests):
 
     def test_the_calendar_is_not_narrowed_by_the_table_filters(self):
         page = self.text(self.professional.get("/follow-up-cases?year=2030&month=11&status=completed"))
-        self.assertIn("Ana Reyes - Recheck labs", page)                 # still on the calendar
-        self.assertIn("No follow-up matches these filters", page)       # while the filtered table is empty
+        self.assertIn("Ana Reyes - Recheck labs", page)
+        self.assertIn("No follow-up matches these filters", page)

@@ -28,7 +28,7 @@ def good(**changes):
 class ValidationTests(unittest.TestCase):
     def test_a_normal_result_is_accepted(self):
         assessments.validate_assessment(good())
-        assessments.validate_assessment(good(threshold_used=None, model_version=None))     # both are optional
+        assessments.validate_assessment(good(threshold_used=None, model_version=None))
 
     def test_impossible_results_are_refused(self):
         bad = [good(assessment_type="lab"), good(classification="moderate"), good(probability=1.2), good(probability=-0.01),
@@ -44,7 +44,7 @@ class ValidationTests(unittest.TestCase):
         assessments.validate_assessment(good(probability=1.0))
 
     def test_only_the_two_known_words_exist(self):
-        self.assertEqual(assessments.CLASSIFICATIONS, visuals.LEVELS)         # the model and the charts agree on the words
+        self.assertEqual(assessments.CLASSIFICATIONS, visuals.LEVELS)
 
 
 class InputsValidationTests(unittest.TestCase):
@@ -85,7 +85,7 @@ class SavingAndLoadingTests(unittest.TestCase):
         self.assertEqual((record["probability"], record["threshold"], record["level"], record["type"]),
                          (31.0, 21.0, "high", "Preliminary screening"))
         self.assertEqual(record["model_version"], "xgboost-2026-09")
-        visuals.summarize_assessments([record])                              # and the charts accept it as it is
+        visuals.summarize_assessments([record])
 
     def test_a_missing_threshold_stays_missing(self):
         assessments.record_assessment(self.store, self.ana, good(threshold_used=None, model_version=None))
@@ -94,16 +94,14 @@ class SavingAndLoadingTests(unittest.TestCase):
         self.assertIsNone(record["model_version"])
 
     def test_the_date_is_the_day_where_the_person_lives_not_the_day_in_utc(self):
-        # 23:30 UTC on the 19th is already 7:30 the next morning in Manila (UTC+8).
         assessments.record_assessment(self.store, self.ana, good(assessed_at=datetime(2026, 9, 19, 23, 30, 0)))
         self.assertEqual(str(assessments.load_records(self.store, self.ana, MANILA)[0]["date"]), "2026-09-20")
         self.assertEqual(str(assessments.load_records(self.store, self.ana, "UTC")[0]["date"]), "2026-09-19")
-        # 15:59 UTC is 23:59 in Manila (same day); 16:00 UTC is midnight, the next day.
         self.store._rows.clear()
         assessments.record_assessment(self.store, self.ana, good(assessed_at=datetime(2026, 9, 20, 15, 59, 0)))
         assessments.record_assessment(self.store, self.ana, good(assessed_at=datetime(2026, 9, 20, 16, 0, 0)))
         dates = [str(r["date"]) for r in assessments.load_records(self.store, self.ana, MANILA)]
-        self.assertEqual(dates, ["2026-09-21", "2026-09-20"])                # newest first
+        self.assertEqual(dates, ["2026-09-21", "2026-09-20"])
 
     def test_each_person_only_ever_gets_their_own_records(self):
         assessments.record_assessment(self.store, self.ana, good(probability=0.31))

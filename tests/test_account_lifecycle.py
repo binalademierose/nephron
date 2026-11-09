@@ -14,9 +14,9 @@ from helpers import AppTestCase, PASSWORD  # noqa: E402
 class TermsCheckboxTests(AppTestCase):
     def test_registration_is_refused_without_agreeing_to_terms(self):
         page = self.register(self.new_browser(), agree_terms="")
-        self.assertEqual(page.status_code, 200)                       # stays on the form, not signed in
+        self.assertEqual(page.status_code, 200)
         self.assertIn("agree to the Terms", self.text(page))
-        self.assertIsNone(self.store.find_by_email("ana@example.com"))  # no account was created
+        self.assertIsNone(self.store.find_by_email("ana@example.com"))
 
     def test_registration_succeeds_when_the_box_is_ticked(self):
         self.register(self.new_browser(), agree_terms="agree")
@@ -34,9 +34,8 @@ class DeactivateTests(AppTestCase):
     def test_a_person_can_deactivate_their_own_account(self):
         browser = self.signed_in()
         resp = self.post("/account/deactivate", {"password": PASSWORD}, client=browser, token_from="/account")
-        self.assertEqual(resp.status_code, 302)                       # signed out, sent to login
+        self.assertEqual(resp.status_code, 302)
         self.assertFalse(self.store.find_by_email("ana@example.com")["is_active"])
-        # the right password is now refused because the account is switched off
         self.assertEqual(self.login(self.new_browser()).status_code, 403)
 
     def test_the_wrong_password_does_not_deactivate(self):
@@ -58,13 +57,13 @@ class DeleteTests(AppTestCase):
         resp = self.post("/account/delete", {"password": PASSWORD, "confirm_delete": "delete"},
                          client=browser, token_from="/account")
         self.assertEqual(resp.status_code, 302)
-        self.assertIsNone(self.store.find_by_email("ana@example.com"))   # the account is gone
+        self.assertIsNone(self.store.find_by_email("ana@example.com"))
 
     def test_delete_needs_the_confirmation_box(self):
         browser = self.signed_in()
         resp = self.post("/account/delete", {"password": PASSWORD}, client=browser, token_from="/account")
         self.assertEqual(resp.status_code, 200)
-        self.assertIsNotNone(self.store.find_by_email("ana@example.com"))  # still there
+        self.assertIsNotNone(self.store.find_by_email("ana@example.com"))
 
     def test_delete_needs_the_right_password(self):
         browser = self.signed_in()

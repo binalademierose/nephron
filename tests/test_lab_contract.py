@@ -24,7 +24,7 @@ class CatalogTests(unittest.TestCase):
     def test_a_malformed_catalog_is_refused_in_plain_words(self):
         base = {"groups": [{"key": "kidney", "title": "Kidney"}],
                 "fields": [{"name": "Serum_Creatinine", "short": "Creatinine", "group": "kidney", "unit": "mg/dL", "min": 0.1, "max": 20, "required": True}]}
-        lab_contract.check_lab_catalog(base)  # a valid minimal catalog does not raise
+        lab_contract.check_lab_catalog(base)
         with self.assertRaisesRegex(ValueError, "no groups"):
             lab_contract.check_lab_catalog({"groups": [], "fields": base["fields"]})
         with self.assertRaisesRegex(ValueError, "listed twice"):
@@ -62,7 +62,7 @@ class ValidateLabValuesTests(unittest.TestCase):
     def test_a_value_outside_the_usual_range_is_kept_as_given_never_clamped_and_flagged_for_a_check(self):
         values, errors = lab_contract.validate_lab_values(CATALOG, {"Serum_Creatinine": "1.0", "Sodium": "999"})
         self.assertEqual(errors, {})
-        self.assertEqual(values["Sodium"], 999.0)                 # exactly what was typed - never clamped
+        self.assertEqual(values["Sodium"], 999.0)
         self.assertEqual([f["name"] for f in lab_contract.unusual_values(CATALOG, values)], ["Sodium"])
 
     def test_text_that_is_not_a_number_is_refused_with_a_clear_reason_not_guessed(self):
@@ -93,9 +93,9 @@ class ValidateLabValuesTests(unittest.TestCase):
         values, errors = lab_contract.validate_lab_values(CATALOG, {"Serum_Creatinine": "1.0", "Sodium": "-140"})
         self.assertIn("cannot be a negative number", errors["Sodium"])
         values, errors = lab_contract.validate_lab_values(CATALOG, {"Serum_Creatinine": "0"})
-        self.assertIn("must be more than 0", errors["Serum_Creatinine"])             # eGFR cannot be worked out from 0
+        self.assertIn("must be more than 0", errors["Serum_Creatinine"])
         values, errors = lab_contract.validate_lab_values(CATALOG, {"Serum_Creatinine": "1.0", "CRP": "0"})
-        self.assertEqual(errors, {})                                                     # 0 is fine where it is possible
+        self.assertEqual(errors, {})
 
     def test_unusual_values_are_listed_for_a_check_and_the_check_is_tied_to_those_exact_values(self):
         flagged = lab_contract.unusual_values(CATALOG, {"Serum_Creatinine": 1.0, "Urine_ACR": 12000.0, "Sodium": 140.0})

@@ -19,7 +19,6 @@ class ReviewAndFollowUpTestCase(AppTestCase):
         self.professional_id = self.store.find_by_email("dr.cruz@example.com")["user_id"]
         self.patient_id = self.store.find_by_email("ana@example.com")["user_id"]
         self.assessment_id = self.add_assessment()
-        # request and accept, so the professional is authorized before each test runs
         self.post("/share/request", {"consent": "1", "professional_user_id": str(self.professional_id)}, client=self.patient, token_from="/share")
         self.post(f"/patients/respond/{self.patient_id}", {"action": "accept"}, client=self.professional, token_from="/patients")
 
@@ -54,7 +53,7 @@ class ClinicalReviewTests(ReviewAndFollowUpTestCase):
 
     def test_a_blank_note_is_refused(self):
         response = self.add_note("   ")
-        self.assertEqual(response.status_code, 200)               # the form is shown again with the problem, nothing saved
+        self.assertEqual(response.status_code, 200)
         self.assertIn("Write your clinical note.", self.text(response))
 
     def test_a_professional_who_is_not_authorized_cannot_add_a_note(self):
@@ -109,11 +108,9 @@ class FollowUpEligibilityTests(ReviewAndFollowUpTestCase):
     model = "explainable"
 
     def test_an_open_follow_up_lets_the_patient_screen_again_during_the_normal_waiting_period(self):
-        # The sample result is dated 18 Sep 2026 (helpers.add_assessment). A 30-day wait made this test expire on
-        # 18 Oct 2026; a waiting period of ten years keeps "still inside the waiting period" true whatever today is.
         self.app.config["REASSESSMENT_DAYS"] = 3650
         page = self.text(self.patient.get("/screening"))
-        self.assertIn("not open yet", page)                          # normally blocked
+        self.assertIn("not open yet", page)
         self.post(f"/patients/{self.patient_id}/follow-up", {"message": ""}, client=self.professional, token_from=f"/patients/{self.patient_id}")
         page = self.text(self.patient.get("/screening"))
         self.assertNotIn("not open yet", page)
@@ -126,12 +123,10 @@ class FollowUpEligibilityTests(ReviewAndFollowUpTestCase):
         catalog = screening_contract.load_catalog()
         form = {name: (opt["options"][0]["value"] if opt["kind"] == "choice" else "0" if opt["kind"] == "yesno" else str(opt.get("min", 1)))
                for name, opt in ((q["name"], q) for q in catalog["questions"] if q["kind"] != "derived")}
-        form.update({"height_cm": "165", "weight_kg": "60", "Gender": "Female"})
+        form.update({"height_cm": "165", "weight_kg": "60", "Gender": "Female", "Single_Kidney": "0"})
         token = self.csrf(self.patient, "/screening")
         self.patient.post("/screening", data={**form, "csrf_token": token})
         page = self.text(self.patient.get("/dashboard"))
-        # The bell's own notification is a permanent record of the request and rightly still mentions it -
-        # what must actually disappear once fulfilled is the dashboard's own "still open" banner.
         self.assertNotIn('<div class="notice reveal"', page)
 
 

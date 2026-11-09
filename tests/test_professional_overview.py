@@ -64,7 +64,7 @@ class ProfessionalOverviewTests(unittest.TestCase):
     def test_only_an_accepted_shared_patient_counts_not_a_pending_request(self):
         general_id = new_general(self.users)
         self.auth_store.request(general_id, self.professional_id, NOW)
-        self.assertEqual(self._dashboard()["total_patients"], 0)          # still pending, not accepted
+        self.assertEqual(self._dashboard()["total_patients"], 0)
         self.auth_store.accept(general_id, self.professional_id, NOW)
         self.assertEqual(self._dashboard()["total_patients"], 1)
 
@@ -82,7 +82,6 @@ class ProfessionalOverviewTests(unittest.TestCase):
         assessments.record_assessment(self.assessment_store, high_user, {
             "assessment_type": "preliminary", "probability": 0.2, "classification": "high", "threshold_used": 0.6,
             "model_version": "v1", "assessed_at": NOW}, {"Age": 60})
-        # low_user re-screens and their MOST RECENT result becomes high - only the latest should count
         assessments.record_assessment(self.assessment_store, low_user, {
             "assessment_type": "preliminary", "probability": 0.8, "classification": "high", "threshold_used": 0.6,
             "model_version": "v1", "assessed_at": LATER}, {"Age": 40})
@@ -169,8 +168,8 @@ class ProfessionalOverviewTests(unittest.TestCase):
         rows = {r["label"]: r for r in self._insights()["gender"]["rows"]}
         self.assertEqual((rows["Female"]["people"], rows["Female"]["high"], rows["Female"]["high_percent"]), (2, 1, 50))
         self.assertEqual((rows["Male"]["people"], rows["Male"]["high"], rows["Male"]["high_percent"]), (1, 1, 100))
-        self.assertEqual(rows["Female"]["bar"], 100)                     # the largest group sets the scale
-        self.assertEqual(self._insights()["gender"]["hidden"], 0)         # their own patients: nothing folded away
+        self.assertEqual(rows["Female"]["bar"], 100)
+        self.assertEqual(self._insights()["gender"]["hidden"], 0)
 
     def test_a_patient_records_own_gender_is_used_not_only_male_or_female(self):
         user_id, _ = patient_records.register_patient(self.patient_records_store, self.professional_id, "A", 40, "Male", NOW,
@@ -181,7 +180,7 @@ class ProfessionalOverviewTests(unittest.TestCase):
         self._add_patient_with_result("B", 50, "Male", "low")
         self._add_patient_with_result("C", 60, "Female", "low")
         insights = self._insights()
-        self.assertEqual([r["label"] for r in insights["gender"]["rows"]], ["Male", "Female", "Gay man"])   # the form's order
+        self.assertEqual([r["label"] for r in insights["gender"]["rows"]], ["Male", "Female", "Gay man"])
         self.assertEqual((insights["philippines"]["people"], insights["philippines"]["high"]), (1, 1))
 
     def test_patients_in_the_philippines_are_counted_from_the_record_or_their_answers(self):
@@ -196,7 +195,7 @@ class ProfessionalOverviewTests(unittest.TestCase):
         assessments.record_assessment(self.assessment_store, general_id, {
             "assessment_type": "preliminary", "probability": 0.9, "classification": "high", "threshold_used": 0.6,
             "model_version": "v1", "assessed_at": NOW}, {"Age": 33, "Sex": "Female", "Gender": "Lesbian woman", "Country": "Philippines"})
-        self._add_patient_with_result("C", 60, "Male", "high")                   # no country: not counted as living in the Philippines
+        self._add_patient_with_result("C", 60, "Male", "high")
         philippines = self._insights()["philippines"]
         self.assertEqual((philippines["people"], philippines["high"], philippines["high_percent"]), (2, 1, 50))
 
@@ -266,7 +265,6 @@ class ProfessionalOverviewTests(unittest.TestCase):
 
     def test_search_by_patient_name_or_code(self):
         record_user, code = patient_records.register_patient(self.patient_records_store, self.professional_id, "Juan Dela Cruz", 52, "Male", NOW)
-        # scheduling a follow-up for a patient record: only possible through the store directly today (no UI yet)
         self.followup_store.create(record_user, self.professional_id, "Dr. Luis Cruz", "Nephrologist", LATER, "Recheck", None, NOW)
         self.assertEqual(len(self._follow_up_list(term="dela cruz")), 1)
         self.assertEqual(len(self._follow_up_list(term=code)), 1)
@@ -357,9 +355,7 @@ class ProfessionalOverviewTests(unittest.TestCase):
             self.assertEqual(len(self._shared_list(date_period="this_month")), 1)
         two_days_later = NOW + timedelta(days=2)
         with at(two_days_later):
-            self.assertEqual(self._shared_list(date_period="today"), [])          # the assessment was 2 days ago
-            # NOW (Sept 20) is a Sunday - the LAST day of its Mon-Sun week - so 2 days later has already
-            # crossed into a new calendar week; "this month" is the one that still includes it.
+            self.assertEqual(self._shared_list(date_period="today"), [])
             self.assertEqual(self._shared_list(date_period="this_week"), [])
             self.assertEqual(len(self._shared_list(date_period="this_month")), 1)
         next_month = NOW.replace(month=10, day=5)
@@ -370,7 +366,7 @@ class ProfessionalOverviewTests(unittest.TestCase):
 
     def test_this_week_still_includes_an_earlier_day_in_the_same_calendar_week(self):
         general_id = self._accept_shared_patient()
-        monday = datetime(2026, 9, 21, 9, 0, 0)                        # the Monday right after NOW's Sunday
+        monday = datetime(2026, 9, 21, 9, 0, 0)
         with at(monday):
             assessments.record_assessment(self.assessment_store, general_id, {
                 "assessment_type": "preliminary", "probability": 0.2, "classification": "low", "threshold_used": 0.6,

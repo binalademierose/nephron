@@ -55,7 +55,7 @@ class AuditTests(unittest.TestCase):
         for name in ("Gluta drip", "Gender Affirming Hormone Theraphy(hormonal pills)", "PreviousAcuteKidneyInjury", "HeavyMetalsExposure",
                      "FamilyHistoryKidneyDisease", "ClinicianImposedFluidRestriction", "DietQuality"):
             self.assertIn(name, do_not_use)
-        self.assertNotIn("eGFR", do_not_use)                                       # eGFR belongs to Stage 2 (with a warning), not to the form
+        self.assertNotIn("eGFR", do_not_use)
         self.assertIn("eGFR", self.in_section("4. Stage 2"))
 
     def test_the_target_and_its_consequences_are_never_predictors(self):

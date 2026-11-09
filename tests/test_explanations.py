@@ -35,7 +35,7 @@ class BuildTests(unittest.TestCase):
     def test_both_lists_share_one_scale_so_a_bar_means_the_same_thing_in_each_card(self):
         result = explanations.build(CATALOG, effects(Diabetes=1.9, Age=1.1, Hypertension=0.6, Physical_Activity_Level=-0.4), ANSWERS)
         self.assertEqual([i["share"] for i in result["raises"]], [100, 58, 32])
-        self.assertEqual([i["share"] for i in result["lowers"]], [21])                      # 0.4 of the overall biggest (1.9), not of its own card
+        self.assertEqual([i["share"] for i in result["lowers"]], [21])
         bigger_below = explanations.build(CATALOG, effects(Physical_Activity_Level=-2.0, Diabetes=1.0), ANSWERS)
         self.assertEqual((bigger_below["lowers"][0]["share"], bigger_below["raises"][0]["share"]), (100, 50))
 
@@ -50,10 +50,10 @@ class BuildTests(unittest.TestCase):
     def test_tiny_effects_are_left_out_measured_against_the_biggest_effect_of_either_kind(self):
         result = explanations.build(CATALOG, effects(Diabetes=2.0, Age=0.5, Hypertension=-0.05, Smoking_Status=-0.01), ANSWERS)
         self.assertEqual([i["name"] for i in result["raises"]], ["Diabetes", "Age"])
-        self.assertEqual([i["name"] for i in result["lowers"]], [])                         # 2.5% and 0.5% of the biggest
+        self.assertEqual([i["name"] for i in result["lowers"]], [])
 
     def test_a_factor_whose_answer_was_not_saved_is_never_shown_or_guessed(self):
-        result = explanations.build(CATALOG, effects(Diabetes=2.0, Statin=1.5, Age=-1.0, Diuretic=-0.9), ANSWERS)    # Statin, Diuretic not saved
+        result = explanations.build(CATALOG, effects(Diabetes=2.0, Statin=1.5, Age=-1.0, Diuretic=-0.9), ANSWERS)
         shown = [i["name"] for i in result["raises"] + result["lowers"]]
         self.assertEqual(shown, ["Diabetes", "Age"])
 
@@ -86,7 +86,7 @@ class BuildTests(unittest.TestCase):
         result = explanations.build(CATALOG, effects(Diabetes=1.0), ANSWERS)
         self.assertIn("not medical advice", result["caveat"])
         self.assertIn("does not show what caused", result["caveat"])
-        self.assertIn("in either direction", result["caveat"])                               # one scale for both cards
+        self.assertIn("in either direction", result["caveat"])
 
     def test_the_words_never_claim_a_diagnosis_a_cause_or_a_confidence(self):
         result = explanations.build(CATALOG, effects(Diabetes=1.9, Age=1.1, Physical_Activity_Level=-0.5), ANSWERS)
@@ -98,7 +98,7 @@ class BuildTests(unittest.TestCase):
         result = explanations.build(CATALOG, effects(BMI=1.0, Obesity=-0.5), ANSWERS)
         self.assertEqual(self.names(result["raises"]), [("Body mass index", "27.3 (height 160 cm, weight 70 kg)")])
         self.assertEqual(self.names(result["lowers"]), [("Obesity (from BMI)", "No")])
-        self.assertEqual(result["summary"]["raises"], ["Body mass index raised the estimate the most: your answer was 27.3."])   # brief in a sentence
+        self.assertEqual(result["summary"]["raises"], ["Body mass index raised the estimate the most: your answer was 27.3."])
 
 
 class Model:
@@ -114,7 +114,7 @@ class Model:
         self.asked.append(values)
         if self._raises:
             raise self._raises
-        if any(value is None for value in values.values()):        # a real model refuses a gap; this stub does too
+        if any(value is None for value in values.values()):
             raise ValueError("a required value is missing")
         return {"probability": self._probability, "effects": self._effects}
 
@@ -130,7 +130,7 @@ class SavedResultTests(unittest.TestCase):
         model = Model()
         result = explanations.explain_saved_result(model, CATALOG, saved())
         self.assertEqual([i["name"] for i in result["raises"]], ["Diabetes", "Age"])
-        self.assertEqual(model.asked, [{"Diabetes": 1, "Age": 78}])                 # only the model's inputs are passed on
+        self.assertEqual(model.asked, [{"Diabetes": 1, "Age": 78}])
 
     def test_every_case_where_it_would_not_be_honest_gives_nothing(self):
         cases = {

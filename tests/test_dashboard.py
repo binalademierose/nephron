@@ -23,7 +23,7 @@ from app import create_app  # noqa: E402
 from services.assessment_store import MemoryAssessmentStore  # noqa: E402
 from services.user_store import MemoryUserStore  # noqa: E402
 
-NOON_IN_MANILA = datetime(2026, 9, 20, 4, 0, 0)      # 12:00 on 20 September in Manila (UTC+8)
+NOON_IN_MANILA = datetime(2026, 9, 20, 4, 0, 0)
 
 
 def at(moment):
@@ -55,37 +55,29 @@ class EmptyDashboardTests(AppTestCase):
         for words in ("No assessments yet", "Chart appears when sufficient data exists", "No result yet",
                       "No activity yet", "No results to summarise yet"):
             self.assertIn(words, self.page)
-        self.assertRegex(self.page, r'class="stat-value"\s*>0<')            # the honest count is zero
+        self.assertRegex(self.page, r'class="stat-value"\s*>0<')
 
     def test_nothing_is_drawn_that_has_no_data_behind_it(self):
-        # "Kidney health, by the numbers" always draws its own rings - real, sourced population statistics
-        # (services/ckd_facts.py), never a claim about this person's data - so it is excluded here, not exempted
-        # from the real check (test_ckd_facts.py checks every one of its figures carries a source).
         without_ckd_facts = re.sub(r'<section class="ckd-side[^>]*aria-labelledby="ckd-facts-heading".*?</section>', "", self.page, flags=re.S)
         self.assertIn("ckd-facts-heading", self.page)
         self.assertNotIn("ckd-facts-heading", without_ckd_facts)
         for drawn in ('class="chart-line"', 'class="ring-value"', "donut-segment", "timeline-item timeline-",
                       "activity-item", 'class="sparkline"', "risk-pill", "sample-tag", "Sample data"):
             self.assertNotIn(drawn, without_ckd_facts, drawn)
-        self.assertNotIn("Preliminary Risk", self.page)                     # neither result is named without a result
-        self.assertNotIn("Moderate", self.page)                             # the model has two classes only
+        self.assertNotIn("Preliminary Risk", self.page)
+        self.assertNotIn("Moderate", self.page)
 
     def test_no_notification_count_and_no_invented_statistics(self):
-        # The bell is real now (services/notifications.py), so the word itself is expected here - what must never
-        # appear is an unread-count badge with nothing real behind it.
         self.assertNotIn("notif-badge", self.page)
-        without_axis = re.sub(r'<svg class="chart-svg".*?</svg>', "", self.page, flags=re.S)   # the empty chart's 0% to 100% scale is not data
-        # "Kidney health, by the numbers" is real, sourced, population-level statistics (services/ckd_facts.py) -
-        # not a claim about this person's own data, so it is excluded here, not exempted from the real check
-        # elsewhere (test_ckd_facts.py checks every one of its figures carries a source).
+        without_axis = re.sub(r'<svg class="chart-svg".*?</svg>', "", self.page, flags=re.S)
         without_ckd_facts = re.sub(r'<section class="ckd-side[^>]*aria-labelledby="ckd-facts-heading".*?</section>', "", without_axis, flags=re.S)
-        self.assertIn("ckd-facts-heading", without_axis)              # sanity: the section is really there to strip
-        self.assertNotIn("ckd-facts-heading", without_ckd_facts)      # sanity: the strip actually worked
-        self.assertNotRegex(without_ckd_facts, r"\b\d+(\.\d+)?\s*%")                # no OTHER percentage appears without a result
+        self.assertIn("ckd-facts-heading", without_axis)
+        self.assertNotIn("ckd-facts-heading", without_ckd_facts)
+        self.assertNotRegex(without_ckd_facts, r"\b\d+(\.\d+)?\s*%")
 
     def test_screening_is_honestly_not_available_yet(self):
         self.assertIn("Screening is not available yet", self.page)
-        self.assertNotIn("Start Assessment</a>", self.page)                 # no working-looking button that leads nowhere
+        self.assertNotIn("Start Assessment</a>", self.page)
         self.assertIn("Not available yet", self.page)
         self.assertIn("Coming soon", self.page)
 
@@ -94,7 +86,7 @@ class EmptyDashboardTests(AppTestCase):
         self.assertNotIn("is-done", self.page)
 
     def test_the_person_sees_their_own_name_and_role(self):
-        self.assertRegex(self.page, r"<span data-greeting>Welcome</span>, Ana ")       # JavaScript turns "Welcome" into Good morning/afternoon
+        self.assertRegex(self.page, r"<span data-greeting>Welcome</span>, Ana ")
         self.assertIn("Ana Reyes", self.page)
         self.assertIn("General User", self.page)
 
@@ -106,10 +98,7 @@ class EmptyDashboardTests(AppTestCase):
             self.assertNotEqual(href, "#", "a link that goes nowhere")
             if href.startswith("/"):
                 self.assertEqual(self.member.get(href).status_code, 200, f"{href} is not a real page")
-        self.assertNotIn("data-preview-link", self.page)                    # that belongs to the design previews only
-        # Only what really cannot work yet stays disabled here (screening itself, while the model is not ready);
-        # "Tips for healthy kidneys" now links to the real kidney-health checklist, so it is no longer one of them,
-        # and the quick-actions panel (which repeated the start button) has been replaced by the kidney facts.
+        self.assertNotIn("data-preview-link", self.page)
         self.assertGreaterEqual(len(links.disabled), 2)
         for tag, has_href in links.disabled:
             self.assertFalse(has_href, "an unavailable control must not carry an address")
@@ -130,7 +119,7 @@ class PopulatedDashboardTests(AppTestCase):
 
     def test_the_counts_come_from_the_saved_records(self):
         self.assertRegex(self.page, r'class="stat-value" data-count-to="3">3<')
-        self.assertIn("2 low-risk and 1 high-risk results", self.page)           # the donut
+        self.assertIn("2 low-risk and 1 high-risk results", self.page)
         self.assertIn("Most of your results are in the lower-risk group.", self.page)
         self.assertEqual(len(re.findall(r'activity-title[^>]*>Assessment completed<', self.page)), 3)
 
@@ -148,7 +137,7 @@ class PopulatedDashboardTests(AppTestCase):
         self.assertIn('class="sparkline"', self.page)
 
     def test_this_month_is_worked_out_from_the_dates(self):
-        self.assertIn("1 this month", self.page)                             # only the 18 Sep result is in September
+        self.assertIn("1 this month", self.page)
 
     def test_the_path_moves_on_once_there_is_a_result(self):
         self.assertEqual(self.page.count("path-step is-done"), 3)
@@ -185,7 +174,7 @@ class PrivacyTests(AppTestCase):
         self.assertIn("No assessments yet", ben_page)
         self.assertNotIn("31.4", ben_page)
         self.assertNotIn("High Preliminary Risk", ben_page)
-        self.assertIn("31.4", self.text(ana.get("/dashboard")))                 # the ring shows one decimal
+        self.assertIn("31.4", self.text(ana.get("/dashboard")))
 
     def test_a_professional_cannot_open_the_general_dashboard(self):
         doctor = self.signed_in(**self.professional_details())
@@ -197,7 +186,6 @@ class PrivacyTests(AppTestCase):
 
 class TimeAndConfigTests(AppTestCase):
     def test_dates_are_shown_in_the_configured_time_zone(self):
-        # 23:30 UTC on 19 Sep is 07:30 on 20 Sep in Manila, but still the 19th in UTC.
         self.register()
         self.add_assessment(assessed_at=datetime(2026, 9, 19, 23, 30, 0))
         with at(NOON_IN_MANILA):

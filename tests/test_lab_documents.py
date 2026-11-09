@@ -72,7 +72,7 @@ class SaveUploadTests(unittest.TestCase):
     def test_a_file_claiming_to_be_an_image_but_is_not_is_refused(self):
         with self.assertRaisesRegex(lab_documents.RejectedUpload, "JPEG, PNG or PDF"):
             lab_documents.save_upload(FakeUpload(b"not an image at all", "totally-a-photo.jpg"), self.directory)
-        self.assertEqual(os.listdir(self.directory), [])          # nothing was written for a refused upload
+        self.assertEqual(os.listdir(self.directory), [])
 
     def test_an_empty_file_is_refused(self):
         with self.assertRaisesRegex(lab_documents.RejectedUpload, "empty"):
@@ -89,7 +89,6 @@ class SaveUploadTests(unittest.TestCase):
         self.assertTrue(os.path.exists(os.path.join(self.directory, stored)))
 
     def test_the_claimed_extension_never_decides_the_saved_type_the_real_bytes_do(self):
-        # A real PNG's bytes, dishonestly named as if it were a PDF: it is saved as what it REALLY is.
         stored, content_type, _ = lab_documents.save_upload(FakeUpload(real_bytes(REAL_PNG), "labs.pdf"), self.directory)
         self.assertEqual(content_type, "image/png")
         self.assertTrue(stored.endswith(".png"))
@@ -99,7 +98,7 @@ class SaveUploadTests(unittest.TestCase):
         with mock.patch("os.makedirs", side_effect=PermissionError(5, "Access is denied")):
             with self.assertRaisesRegex(lab_documents.RejectedUpload, "could not be saved"):
                 lab_documents.save_upload(FakeUpload(real_bytes(REAL_PNG)), self.directory)
-        self.assertEqual(os.listdir(self.directory), [])          # nothing half-written was left behind
+        self.assertEqual(os.listdir(self.directory), [])
 
     def test_upload_dir_is_created_if_it_does_not_exist_yet(self):
         fresh = os.path.join(self.directory, "not-yet-created")

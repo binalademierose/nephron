@@ -4,13 +4,12 @@ test_review_and_labels.py - the October 27 revision:
     appointment (optionally letting the patient screen again now) - all checked before anything is saved;
   * a shared result offers both, already pointed at that result;
   * a note can only ever be attached to the shared patient's own result;
-  * every field in every form says whether it is Required or Optional.
+  * required fields carry an asterisk with words for screen readers; no Required/Optional chips are shown.
 """
 import datetime
 import os
 import re
 import sys
-from html.parser import HTMLParser
 
 sys.path.insert(0, os.path.abspath(os.path.dirname(__file__)))
 from helpers import AppTestCase  # noqa: E402
@@ -71,7 +70,7 @@ class CombinedReviewTests(SharedPatientCase):
         self.assertEqual(len(self.notes()), 1)
         (appointment,) = self.appointments()
         self.assertEqual((appointment["purpose"], appointment["notes"]), ("Repeat creatinine and ACR", "Fasting"))
-        self.assertEqual(self.rescreen_requests(), [])                  # only when asked for
+        self.assertEqual(self.rescreen_requests(), [])
 
     def test_the_follow_up_can_also_let_the_patient_screen_again_now(self):
         self.review(mode="note_follow_up", date=next_week(), time="09:30", purpose="Recheck", rescreen="1")
@@ -84,9 +83,9 @@ class CombinedReviewTests(SharedPatientCase):
             page = self.text(response)
             self.assertEqual(response.status_code, 200, missing)
             self.assertIn("Nothing was saved yet", page)
-            self.assertIn("A long careful clinical note.", page)            # the note is never lost to a date typo
+            self.assertIn("A long careful clinical note.", page)
             self.assertIn('value="note_follow_up" checked', page)
-            self.assertEqual(self.notes(), [], missing)                      # not even the note
+            self.assertEqual(self.notes(), [], missing)
             self.assertEqual(self.appointments(), [], missing)
 
     def test_an_empty_note_is_refused_either_way(self):
@@ -101,14 +100,14 @@ class CombinedReviewTests(SharedPatientCase):
         theirs = self.app.extensions["assessment_store"].list_assessments(self.store.find_by_email("stranger@example.com")["user_id"])[0]["assessment_id"]
         self.assertEqual(self.review(assessment_id=str(theirs)).status_code, 404)
         self.assertEqual(self.app.extensions["clinical_review_store"].list_for_assessment(theirs), [])
-        self.assertEqual(self.review(assessment_id="999999").status_code, 404)          # a missing result: 404, never a crash
+        self.assertEqual(self.review(assessment_id="999999").status_code, 404)
         self.assertEqual(self.review(mode="something-else").status_code, 400)
 
     def test_the_page_has_one_review_form_instead_of_three(self):
         page = self.text(self.professional.get(self.history))
         self.assertEqual(page.count('action="/patients/%d/review"' % self.patient_id), 1)
-        self.assertNotIn('action="/patients/%d/follow-up"' % self.patient_id, page)        # the separate request form is gone
-        self.assertNotIn('action="/patients/%d/appointments"' % self.patient_id, page)     # and the separate appointment form
+        self.assertNotIn('action="/patients/%d/follow-up"' % self.patient_id, page)
+        self.assertNotIn('action="/patients/%d/appointments"' % self.patient_id, page)
         self.assertIn("Clinical note only", page)
         self.assertIn("Clinical note + follow-up", page)
 
@@ -133,114 +132,31 @@ class SharedResultButtonsTests(SharedPatientCase):
         self.assertIn("Add note + follow-up", page)
 
 
-class Labels(HTMLParser):
-    """Every visible field of every POST form, with the text of its own <label>, its <fieldset>'s <legend>, or the
-    element a role="radiogroup" points at with aria-labelledby - whatever names it to a person or a screen reader."""
-
-    def __init__(self):
-        super().__init__(convert_charrefs=True)
-        self.fields, self.form, self.label_for = [], None, {}
-        self.labels = []        # open <label>s: [for_id, [markup], [fields inside]]
-        self.groups = []        # open fieldsets / radiogroups: [[fields], legend markup or None, aria-labelledby id]
-        self.named = {}         # id -> markup of that element (for aria-labelledby), recorded while it is open
-        self.recording = []     # [id, [markup], depth]
-
-    def _markup(self, text):
-        for label in self.labels:
-            label[1].append(text)
-        for group in self.groups:
-            if group[1] is not None:
-                group[1].append(text)
-        for item in self.recording:
-            item[1].append(text)
-
-    def handle_starttag(self, tag, attrs):
-        a = dict(attrs)
-        self._markup(self.get_starttag_text())
-        for item in self.recording:
-            item[2] += 1
-        if a.get("id") and tag in ("span", "p", "div", "h2", "h3"):
-            self.recording.append([a["id"], [], 1])
-        if tag == "form":
-            self.form = (a.get("method") or "get").lower()
-        if tag == "label":
-            self.labels.append([a.get("for"), [], []])
-        if tag == "fieldset" or (a.get("role") == "radiogroup" and a.get("aria-labelledby")):
-            self.groups.append([[], None, a.get("aria-labelledby"), tag, ""])     # [fields, legend being read, labelledby, tag, legend]
-        if tag == "legend" and self.groups:
-            self.groups[-1][1] = []
-        if tag in ("input", "select", "textarea") and self.form == "post":
-            kind = a.get("type", "text") if tag == "input" else tag
-            if kind in ("hidden", "submit", "button") or "readonly" in a:
-                return                                   # not something a person fills in
-            field = {"id": a.get("id"), "name": a.get("name"), "label": "", "labelledby": []}
-            self.fields.append(field)
-            for label in self.labels:
-                label[2].append(field)
-            for group in self.groups:
-                group[0].append(field)
-                if group[2]:
-                    field["labelledby"].append(group[2])
-
-    def handle_startendtag(self, tag, attrs):
-        self.handle_starttag(tag, attrs)
-        for item in self.recording:
-            item[2] -= 1
-
-    def handle_endtag(self, tag):
-        self._markup(f"</{tag}>")
-        for item in list(self.recording):
-            item[2] -= 1
-            if item[2] == 0:
-                self.named[item[0]] = "".join(item[1])
-                self.recording.remove(item)
-        if tag == "label" and self.labels:
-            for_id, html, inside = self.labels.pop()
-            for field in inside:                                  # <label><input ...> text</label>
-                field["label"] += "".join(html)
-            if for_id:                                            # <label for="id"> - the field may come later
-                self.label_for[for_id] = self.label_for.get(for_id, "") + "".join(html)
-        if tag == "legend" and self.groups and self.groups[-1][1] is not None:
-            self.groups[-1][4] += "".join(self.groups[-1][1])
-            self.groups[-1][1] = None
-        if self.groups and tag == self.groups[-1][3]:
-            fields, _, _, _, legend = self.groups.pop()
-            for field in fields:                                  # the legend comes before the fields it names
-                field["label"] += legend
-        if tag == "form":
-            self.form = None
-
-    def handle_data(self, data):
-        self._markup(data)
-
-    def unmarked(self):
-        marked = re.compile(r"chip-(required|optional)")
-        missing = set()
-        for field in self.fields:
-            text = (field["label"] + self.label_for.get(field["id"] or "", "")
-                    + "".join(self.named.get(i, "") for i in field["labelledby"]))
-            if not marked.search(text):
-                missing.add(field["name"])
-        return sorted(missing)
-
-
 class RequiredOptionalLabelTests(SharedPatientCase):
+    MARK = re.compile(r'<span class="required-mark" aria-hidden="true">\*</span>(?!<span class="visually-hidden">\(required| Required</p>)')
+
     def check(self, client, path):
         page = self.text(client.get(path))
-        parser = Labels()
-        parser.feed(page)
-        self.assertTrue(parser.fields, f"{path}: no form fields found")
-        self.assertEqual(parser.unmarked(), [], f"{path}: fields that do not say Required or Optional")
+        self.assertIn("<form", page, path)
+        self.assertNotIn("chip-required", page, f"{path}: the old Required chip is still shown")
+        self.assertNotIn("chip-optional", page, f"{path}: the old Optional chip is still shown")
+        self.assertIsNone(self.MARK.search(page), f"{path}: a required mark without words for screen readers")
+        return page
 
     def test_general_user_forms(self):
         self.check(self.client, "/login")
-        self.check(self.client, "/register")
-        self.check(self.signed_in(email="new@example.com"), "/screening")     # someone who can screen now
+        page = self.check(self.client, "/register")
+        self.assertIn("Account type", page)
+        self.assertNotIn("I am a", page)
+        page = self.check(self.signed_in(email="new@example.com"), "/screening")
+        self.assertIn('<p class="form-required-note">', page)
+        self.assertEqual(page.count("<legend>") + page.count('<label class="form-label" for="f-'),
+                         len(re.findall(r'(?:<legend>|<label class="form-label" for="f-)[^<]*<span class="required-mark"', page)))
         self.check(self.patient, "/account")
         self.check(self.patient, "/reports")
 
     def test_healthcare_professional_forms(self):
-        self.review(mode="note_follow_up", date=next_week(), time="09:30", purpose="Recheck")   # so the edit form shows too
+        self.review(mode="note_follow_up", date=next_week(), time="09:30", purpose="Recheck")
         self.check(self.professional, self.history)
         self.check(self.professional, "/patient-records/new")
         self.check(self.professional, "/account")

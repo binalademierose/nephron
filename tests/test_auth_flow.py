@@ -54,7 +54,7 @@ class RegistrationTests(AppTestCase):
         self.assertEqual((user["role"], user["profession_title"], user["institution"], user["license_number"]),
                          ("professional", "Nephrologist", "City Hospital", "PRC-12345"))
         page = self.text(self.client.get("/account"))
-        self.assertIn("not verified", page)                        # the page is honest that these are self-declared
+        self.assertIn("not verified", page)
 
     def test_bad_input_shows_a_message_beside_each_field_and_keeps_what_was_typed(self):
         response = self.register(full_name="Ana Reyes", email="not-an-email", password="password123")
@@ -62,9 +62,9 @@ class RegistrationTests(AppTestCase):
         self.assertEqual(response.status_code, 200)
         self.assertIn('id="email-error"', page)
         self.assertIn('id="password-error"', page)
-        self.assertIn('value="Ana Reyes"', page)                   # kept
-        self.assertNotIn("password123", page)                      # the password is never sent back
-        self.assertEqual(self.store._users, {})                    # nothing was created
+        self.assertIn('value="Ana Reyes"', page)
+        self.assertNotIn("password123", page)
+        self.assertEqual(self.store._users, {})
 
     def test_the_same_email_cannot_register_twice_whatever_the_letter_case(self):
         self.register()
@@ -101,7 +101,7 @@ class RegistrationTests(AppTestCase):
 class LoginTests(AppTestCase):
     def setUp(self):
         super().setUp()
-        self.register(self.new_browser())                          # Ana exists; self.client is a signed-out visitor
+        self.register(self.new_browser())
         self.register(self.new_browser(), **self.professional_details())
 
     def test_the_right_email_and_password_sign_a_person_in_and_record_it(self):
@@ -194,7 +194,7 @@ class LockoutTests(AppTestCase):
         with at(T0):
             self.fail(5, email="ghost@example.com")
             ghost = self.login(email="ghost@example.com", password="anything-at-all")
-        self.assertEqual(ghost.status_code, 429)                   # so the lock reveals nothing about which emails exist
+        self.assertEqual(ghost.status_code, 429)
 
     def test_one_person_being_locked_does_not_lock_another(self):
         with at(T0):
@@ -206,7 +206,7 @@ class LockoutTests(AppTestCase):
         with at(T0):
             self.fail(4)
             self.login(self.new_browser())
-            self.fail(4)                                           # counts from zero again
+            self.fail(4)
             self.assertEqual(self.login(self.new_browser()).status_code, 302)
 
 
@@ -248,7 +248,7 @@ class LogoutAndCsrfTests(AppTestCase):
         self.assertEqual(response.status_code, 400)
 
     def test_the_right_error_is_given_for_a_missing_page_or_a_wrong_method(self):
-        self.assertEqual(self.client.post("/no-such-page", data={}).status_code, 404)       # not "expired"
+        self.assertEqual(self.client.post("/no-such-page", data={}).status_code, 404)
         self.assertEqual(self.client.post("/about", data={}).status_code, 405)
 
     def test_reading_pages_needs_no_token(self):
@@ -287,7 +287,7 @@ class AccessControlTests(AppTestCase):
 
     def test_the_role_is_read_from_the_database_every_time(self):
         user = self.store.find_by_email("ana@example.com")
-        self.store._users[user["user_id"]]["role"] = "professional"       # changed behind the browser's back
+        self.store._users[user["user_id"]]["role"] = "professional"
         self.assertEqual(self.general.get("/dashboard").status_code, 403)
         self.assertEqual(self.general.get("/professional").status_code, 200)
 
@@ -299,7 +299,6 @@ class AccessControlTests(AppTestCase):
             self.assertNotIn("user_id", session)
 
     def test_a_forged_user_number_in_a_cookie_is_useless_without_the_server_secret(self):
-        # The cookie is signed with SECRET_KEY, so editing it makes it invalid and the visitor stays signed out.
         cookie = self.general.get_cookie("session")
         forged = self.new_browser()
         forged.set_cookie("session", cookie.value[:-3] + "abc")
@@ -317,12 +316,12 @@ class AccessControlTests(AppTestCase):
     def test_the_rail_shows_only_what_exists_and_says_so(self):
         page = self.text(self.general.get("/dashboard"))
         self.assertIn('aria-current="page"', page)
-        self.assertIn("Coming soon", page)                          # unbuilt items are honestly unavailable
-        self.assertNotIn('data-preview-link', page)                 # and nothing pretends to work
-        self.assertIn("Notifications", page)                        # the bell is real now (services/notifications.py)
+        self.assertIn("Coming soon", page)
+        self.assertNotIn('data-preview-link', page)
+        self.assertIn("Notifications", page)
         professional_rail = self.text(self.professional.get("/professional"))
         self.assertIn("Shared assessments", professional_rail)
-        self.assertNotIn('href="/screening"', professional_rail)   # a professional does not screen THEMSELVES here - "New assessment" now means assessing a patient
+        self.assertNotIn('href="/screening"', professional_rail)
 
 
 class AccountTests(AppTestCase):
@@ -335,10 +334,10 @@ class AccountTests(AppTestCase):
             response = self.post("/account/password", {"current_password": PASSWORD, "new_password": NEW_PASSWORD},
                                  client=laptop, token_from="/account")
             self.assertEqual(response.status_code, 302)
-            self.assertEqual(laptop.get("/account").status_code, 200)         # this device stays signed in
-            self.assertEqual(phone.get("/account").status_code, 302)          # the other one is signed out
-            self.assertEqual(self.login(self.new_browser(), password=PASSWORD).status_code, 200)       # the old password no longer works
-            self.assertEqual(self.login(self.new_browser(), password=NEW_PASSWORD).status_code, 302)   # the new one does
+            self.assertEqual(laptop.get("/account").status_code, 200)
+            self.assertEqual(phone.get("/account").status_code, 302)
+            self.assertEqual(self.login(self.new_browser(), password=PASSWORD).status_code, 200)
+            self.assertEqual(self.login(self.new_browser(), password=NEW_PASSWORD).status_code, 302)
 
     def test_a_wrong_current_password_changes_nothing(self):
         browser = self.signed_in()
@@ -387,11 +386,11 @@ class ResetPasswordTests(AppTestCase):
             for _ in range(5):
                 self.login(self.new_browser(), password="wrong-guess-xx")
         with at(T0 + timedelta(minutes=1)):
-            self.assertEqual(self.login(self.new_browser()).status_code, 429)                 # locked
+            self.assertEqual(self.login(self.new_browser()).status_code, 429)
             self.assertTrue(auth_service.reset_password(self.store, "ana@example.com", NEW_PASSWORD, clock_now()))
         with at(T0 + timedelta(minutes=2)):
-            self.assertEqual(self.login(self.new_browser(), password=NEW_PASSWORD).status_code, 302)   # unlocked, new password works
-            self.assertEqual(phone.get("/dashboard").status_code, 302)                               # the old session is gone
+            self.assertEqual(self.login(self.new_browser(), password=NEW_PASSWORD).status_code, 302)
+            self.assertEqual(phone.get("/dashboard").status_code, 302)
 
     def test_an_unknown_account_is_reported_not_created(self):
         from services import auth_service
@@ -557,7 +556,7 @@ class DesignPreviewIsolationTests(AppTestCase):
         page = self.text(browser.get("/design/dashboard"))
         self.assertIn("Sample User", page)
         self.assertNotIn("Real Person", page)
-        self.assertIn("data-preview-link", page)                    # previews keep their own behaviour
+        self.assertIn("data-preview-link", page)
         real = self.text(browser.get("/dashboard"))
         self.assertIn("Real", real)
         self.assertNotIn("Sample User", real)

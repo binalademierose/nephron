@@ -55,7 +55,7 @@ class NameTests(unittest.TestCase):
                                      ("Engr. Dr. Jo Lim", "Jo", "JL"), ("Prof. Kim", "Kim", "K")):
             self.assertEqual(validation.first_name(name), first, name)
             self.assertEqual(validation.initials(name), letters, name)
-        self.assertEqual(validation.first_name("Dr."), "Dr.")               # a name that is only a title is kept as it is
+        self.assertEqual(validation.first_name("Dr."), "Dr.")
 
     def test_ma_is_half_a_name_so_it_keeps_the_next_word(self):
         self.assertEqual(validation.first_name("Ma. Cristina Dela Cruz"), "Ma. Cristina")
@@ -71,8 +71,8 @@ class PasswordTests(unittest.TestCase):
     def test_length_limits(self):
         self.assertIn("at least 10", validation.check_password("short"))
         self.assertIn("no more than 128", validation.check_password("x-y" * 50))
-        self.assertIsNone(validation.check_password("ab3d5f7h9j"))                # exactly 10 characters is enough
-        self.assertIsNone(validation.check_password("pass-" * 25 + "x"))          # long is fine up to the limit
+        self.assertIsNone(validation.check_password("ab3d5f7h9j"))
+        self.assertIsNone(validation.check_password("pass-" * 25 + "x"))
 
     def test_common_and_repetitive_passwords_are_refused(self):
         for weak in ("password123", "PASSWORD123", "1234567890", "qwertyuiop", "aaaaaaaaaaaa", "ababababab"):
@@ -81,10 +81,9 @@ class PasswordTests(unittest.TestCase):
     def test_the_email_address_may_not_be_used(self):
         self.assertIn("email address", validation.check_password("ana.reyes-2026!", email="ana.reyes@example.com"))
         self.assertIn("email address", validation.check_password("ana@example.com", email="ana@example.com"))
-        self.assertIsNone(validation.check_password("ana-2026-long", email="jo@example.com"))   # a short local part is not searched for
+        self.assertIsNone(validation.check_password("ana-2026-long", email="jo@example.com"))
 
     def test_no_composition_rules_are_imposed(self):
-        # Long enough and not common is enough: no forced capital letters, digits or symbols.
         self.assertIsNone(validation.check_password("correct horse battery staple"))
 
 
@@ -198,15 +197,15 @@ class DateOfBirthTests(unittest.TestCase):
 
     def test_under_18_is_refused(self):
         from datetime import date
-        error, parsed = validation.check_date_of_birth("2010-09-27", today=date(2026, 9, 26))     # turns 16 tomorrow
+        error, parsed = validation.check_date_of_birth("2010-09-27", today=date(2026, 9, 26))
         self.assertIsNotNone(error)
         self.assertIsNone(parsed)
 
     def test_the_day_before_an_18th_birthday_is_refused_but_the_birthday_itself_is_fine(self):
         from datetime import date
-        error, _ = validation.check_date_of_birth("2008-09-27", today=date(2026, 9, 26))          # 18th birthday is tomorrow
+        error, _ = validation.check_date_of_birth("2008-09-27", today=date(2026, 9, 26))
         self.assertIsNotNone(error)
-        error, parsed = validation.check_date_of_birth("2008-09-26", today=date(2026, 9, 26))     # 18th birthday is today
+        error, parsed = validation.check_date_of_birth("2008-09-26", today=date(2026, 9, 26))
         self.assertIsNone(error)
         self.assertEqual(parsed, date(2008, 9, 26))
 

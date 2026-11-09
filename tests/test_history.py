@@ -78,14 +78,14 @@ class CompareTests(unittest.TestCase):
                               row(2, LATE, 0.4, "low", saved=inputs(Age=49, Smoking_Status="Former", Diabetes=0)))
         changed = {c["label"]: (c["earlier"], c["later"]) for c in result["changes"]}
         self.assertEqual(changed, {"Age": ("48 years", "49 years"), "Smoking": ("Never", "Used to"), "Diabetes": ("Yes", "No")})
-        self.assertEqual(result["unchanged"], 5)                    # Country, Sex, Ethnicity, BMI and Hypertension
+        self.assertEqual(result["unchanged"], 5)
         self.assertTrue(result["answers_available"])
 
     def test_a_derived_answer_is_not_listed_twice_and_a_new_bmi_shows_its_height_and_weight(self):
         result = self.compare(row(1, EARLY, 0.3, "low", saved=inputs()),
                               row(2, LATE, 0.4, "low", saved=inputs(BMI=30.5, Obesity=1, weight_kg=78.1)))
         labels = [c["label"] for c in result["changes"]]
-        self.assertEqual(labels, ["Body mass index"])                                # Obesity follows the BMI; it is not a separate answer
+        self.assertEqual(labels, ["Body mass index"])
         self.assertEqual(result["changes"][0]["later"], "30.5 (height 160 cm, weight 78.1 kg)")
 
     def test_when_no_answer_changed_it_says_so_with_an_empty_list(self):
@@ -97,7 +97,7 @@ class CompareTests(unittest.TestCase):
         for first, second in ((None, inputs()), (inputs(), None), (None, None), ({}, inputs())):
             result = self.compare(row(1, EARLY, 0.3, "low", saved=first), row(2, LATE, 0.4, "low", saved=second))
             self.assertFalse(result["answers_available"])
-            self.assertEqual((result["changes"], result["unchanged"]), ([], 0))            # nothing is guessed
+            self.assertEqual((result["changes"], result["unchanged"]), ([], 0))
 
     def test_a_question_only_one_of_them_answered_is_not_compared(self):
         partial = {k: v for k, v in inputs().items() if k != "Smoking_Status"}

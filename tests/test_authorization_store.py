@@ -69,8 +69,8 @@ class AuthorizationStoreContract:
         self.store.decline(self.patient, self.professional, LATER)
         self.assertFalse(self.store.accept(self.patient, self.professional, EVEN_LATER))
         row = self.store.get(self.patient, self.professional)
-        self.assertEqual(row["status"], "declined")                # unchanged
-        self.assertEqual(row["responded_at"], LATER)                # unchanged
+        self.assertEqual(row["status"], "declined")
+        self.assertEqual(row["responded_at"], LATER)
 
     def test_revoking_an_accepted_authorization_succeeds(self):
         self.store.request(self.patient, self.professional, NOW)

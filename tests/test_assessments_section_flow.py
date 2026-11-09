@@ -46,17 +46,11 @@ class AssessmentsSectionTests(AppTestCase):
         self.assertIn("Juan Dela Cruz", page)
 
     def test_risk_filter_excludes_a_non_matching_result(self):
-        # "Juan Dela Cruz" and the patient code also appear in the search box's own placeholder text, so a real
-        # result is confirmed by the table itself existing (only rendered inside {% if records %}), not by
-        # searching the page for those strings.
         high = self.text(self.professional.get("/assessments?risk=high"))
         low = self.text(self.professional.get("/assessments?risk=low"))
-        # exactly one of the two risk filters matches this one real assessment
         self.assertNotEqual("<tbody>" in high, "<tbody>" in low)
 
     def test_a_30_day_old_assessment_is_excluded_by_the_7_day_tab(self):
-        # the placeholder text in the search box also contains "Juan Dela Cruz" and the patient code, so a real
-        # row is confirmed by the empty-state message's absence/presence, not by searching for those strings.
         with at(NOW + timedelta(days=10)):
             page = self.text(self.professional.get("/assessments?period=7_days"))
         self.assertIn("No assessment matches these filters", page)

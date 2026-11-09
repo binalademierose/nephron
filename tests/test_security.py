@@ -20,7 +20,7 @@ class PasswordHashTests(unittest.TestCase):
         stored = security.hash_password("a-long-enough-phrase")
         self.assertNotIn("a-long-enough-phrase", stored)
         self.assertTrue(stored.startswith(("scrypt:", "pbkdf2:")))
-        self.assertLess(len(stored), 255)                                   # it must fit the password_hash column
+        self.assertLess(len(stored), 255)
         self.assertTrue(security.verify_password(stored, "a-long-enough-phrase"))
         self.assertFalse(security.verify_password(stored, "a-long-enough-phrasE"))
 

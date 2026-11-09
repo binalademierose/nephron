@@ -17,7 +17,6 @@ class LibraryAliasTests(unittest.TestCase):
         self._with_installed({"xgboost": "3.1.3"}, lambda: self.assertEqual(_installed_version("xgboost"), "3.1.3"))
 
     def test_cpu_only_xgboost_is_found_under_its_own_name(self):
-        # Only xgboost-cpu is installed (the full 'xgboost' distribution is absent): it must still be found.
         self._with_installed({"xgboost-cpu": "3.1.3"}, lambda: self.assertEqual(_installed_version("xgboost"), "3.1.3"))
 
     def test_neither_installed_returns_none(self):

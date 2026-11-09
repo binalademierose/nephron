@@ -11,7 +11,6 @@ sys.path.insert(0, os.path.dirname(os.path.dirname(os.path.abspath(__file__))))
 
 from services import screening_contract as contract  # noqa: E402
 
-# The project's Stage 1 predictors (preliminary, no laboratory). If this list changes, it must be a decision, not an accident.
 STAGE_1 = {
     "Country", "Sex", "Ethnicity", "Age", "BMI",
     "Smoking_Status", "Alcohol_Consumption", "Physical_Activity_Level", "Exercise_Hours_Per_Week", "Water_Intake_L",
@@ -31,7 +30,8 @@ def good_form(**changes):
             "ACE_Inhibitor": "0", "ARB": "1", "Diabetes_Medication": "1", "Diuretic": "0", "Statin": "1", "NSAID_Usage": "0",
             "Smoking_Status": "Never", "Alcohol_Consumption": "None", "Physical_Activity_Level": "Light",
             "Exercise_Hours_Per_Week": "2.5", "Water_Intake_L": "1.8", "Fast_Food_Frequency_Per_Week": "2", "Sleep_Duration_Hours": "6.8",
-            "SugaryDrinksAddedSugar": "None", "UltraProcessedFoodFrequency": "Never", "SaturatedFatDairyIntake": "Low"}
+            "SugaryDrinksAddedSugar": "None", "UltraProcessedFoodFrequency": "Never", "SaturatedFatDairyIntake": "Low",
+            "Single_Kidney": "0"}
     form.update(changes)
     return form
 
@@ -44,7 +44,7 @@ class CatalogTests(unittest.TestCase):
         names = set(contract.feature_names(self.catalog))
         self.assertEqual(names, STAGE_1)
         self.assertEqual(len(contract.feature_names(self.catalog)), 31)
-        self.assertFalse(names & LABORATORY)                                   # a preliminary screening asks for no lab value
+        self.assertFalse(names & LABORATORY)
 
     def test_obesity_is_worked_out_and_not_asked(self):
         obesity = contract.question_for(self.catalog, "Obesity")
@@ -61,14 +61,13 @@ class CatalogTests(unittest.TestCase):
     def test_the_answers_offered_are_the_ones_seen_in_the_data(self):
         countries = {o["value"] for o in contract.question_for(self.catalog, "Country")["options"]}
         self.assertEqual(countries, {"USA", "UK", "India", "Canada", "Australia", "Philippines", "Other"})
-        # ...but what the MODEL receives is only ever a country it saw: Philippines is given to it as Other.
         self.assertEqual(contract.model_values(contract.question_for(self.catalog, "Country")), {"USA", "UK", "India", "Canada", "Australia", "Other"})
         self.assertEqual({o["value"] for o in contract.question_for(self.catalog, "Alcohol_Consumption")["options"]}, {"None", "Moderate", "Heavy"})
         self.assertEqual({o["value"] for o in contract.question_for(self.catalog, "Physical_Activity_Level")["options"]}, {"Sedentary", "Light", "Moderate", "Active"})
 
     def test_a_malformed_catalog_is_refused_with_a_plain_message(self):
         broken = copy.deepcopy(self.catalog)
-        broken["questions"].append(dict(broken["questions"][0]))                # a duplicate name
+        broken["questions"].append(dict(broken["questions"][0]))
         with self.assertRaisesRegex(ValueError, "twice"):
             contract.check_catalog(broken)
         broken = copy.deepcopy(self.catalog)
@@ -100,10 +99,10 @@ class ValidAnswerTests(unittest.TestCase):
         self.assertEqual({k: inputs[k] for k in values}, values)
 
     def test_obesity_switches_on_exactly_at_a_bmi_of_30(self):
-        low = contract.validate_answers(self.catalog, good_form(height_cm="200", weight_kg="119.6"))[0]      # BMI 29.9
-        high = contract.validate_answers(self.catalog, good_form(height_cm="200", weight_kg="120"))[0]       # BMI 30.0
+        low = contract.validate_answers(self.catalog, good_form(height_cm="200", weight_kg="119.6"))[0]
+        high = contract.validate_answers(self.catalog, good_form(height_cm="200", weight_kg="120"))[0]
         self.assertEqual((low["BMI"], low["Obesity"], high["BMI"], high["Obesity"]), (29.9, 0, 30.0, 1))
-        for weight in ("55", "60", "90", "110"):                                                              # it always follows the BMI
+        for weight in ("55", "60", "90", "110"):
             values = contract.validate_answers(self.catalog, good_form(weight_kg=weight))[0]
             self.assertEqual(values["Obesity"], 1 if values["BMI"] >= 30 else 0, weight)
 
@@ -120,7 +119,7 @@ class ValidAnswerTests(unittest.TestCase):
         self.assertEqual(shown["Health history"]["Diabetes"], "Yes")
         self.assertIn("height 160 cm", shown["About you"]["Body mass index"])
         self.assertEqual(shown["Lifestyle"]["Alcohol"], "None")
-        self.assertEqual(contract.describe_inputs(self.catalog, {}), [])                  # nothing is invented
+        self.assertEqual(contract.describe_inputs(self.catalog, {}), [])
 
     def test_the_reference_row_is_valid(self):
         row = contract.reference_row(self.catalog)
@@ -137,22 +136,22 @@ class InvalidAnswerTests(unittest.TestCase):
 
     def test_an_empty_form_reports_every_missing_answer_and_fills_none_in(self):
         values, _, errors = contract.validate_answers(self.catalog, {})
-        self.assertEqual(len(errors), 30)                                                 # 29 askable questions (activity level is worked out), height and weight count as two
-        self.assertEqual(values, {})                                                      # nothing is guessed
+        self.assertEqual(len(errors), 31)
+        self.assertEqual(values, {})
 
     def test_each_single_missing_answer_is_named(self):
         for field in good_form():
             if field in ("Sex", "Physical_Activity_Level"):
-                continue                  # Gender tells the sex; the exercise hours tell the activity level - see their own tests
+                continue
             form = good_form()
             del form[field]
             errors = contract.validate_answers(self.catalog, form)[2]
             self.assertIn(field, errors, field)
 
     def test_a_choice_must_be_one_of_the_offered_answers(self):
-        self.assertIn("Country", self.errors(Country="Atlantis"))                         # not an answer the form offers
-        self.assertNotIn("Country", self.errors(Country="Philippines"))                   # offered, given to the model as Other
-        self.assertIn("Country", self.errors(Country="usa"))                              # exact, not approximately
+        self.assertIn("Country", self.errors(Country="Atlantis"))
+        self.assertNotIn("Country", self.errors(Country="Philippines"))
+        self.assertIn("Country", self.errors(Country="usa"))
         self.assertIn("Sex", self.errors(Gender="Non-binary", Sex="Other"))
         self.assertIn("Gender", self.errors(Gender="Martian"))
         self.assertIn("Alcohol_Consumption", self.errors(Alcohol_Consumption="none"))
@@ -163,7 +162,6 @@ class InvalidAnswerTests(unittest.TestCase):
             self.assertIn("Diabetes", self.errors(Diabetes=bad), bad)
 
     def test_numbers_must_be_plain_and_inside_the_range_the_model_was_built_for(self):
-        # Unrealistic or malformed answers are refused; answers merely outside the TRAINING range are not.
         for field, bad in (("Age", "0"), ("Age", "121"), ("Age", "48.5"), ("Age", "abc"), ("Age", "-3"), ("Age", "1e2"), ("Age", "4 8"),
                            ("Water_Intake_L", "-0.1"), ("Water_Intake_L", "10.5"), ("Water_Intake_L", "1,8"),
                            ("Exercise_Hours_Per_Week", "113"), ("Sleep_Duration_Hours", "24.5"), ("Sleep_Duration_Hours", "nan"),
@@ -175,9 +173,9 @@ class InvalidAnswerTests(unittest.TestCase):
             self.assertNotIn(field, self.errors(**{field: fine}), f"{field}={fine}")
 
     def test_height_and_weight_must_make_a_bmi_the_model_supports(self):
-        self.assertIn("BMI", self.errors(height_cm="200", weight_kg="15"))                # BMI 3.8 - not a realistic body
-        self.assertIn("BMI", self.errors(height_cm="140", weight_kg="200"))               # BMI 102
-        self.assertNotIn("BMI", self.errors(height_cm="140", weight_kg="120"))            # BMI 61: outside training, still realistic
+        self.assertIn("BMI", self.errors(height_cm="200", weight_kg="15"))
+        self.assertIn("BMI", self.errors(height_cm="140", weight_kg="200"))
+        self.assertNotIn("BMI", self.errors(height_cm="140", weight_kg="120"))
         self.assertIn("height_cm", self.errors(height_cm="44"))
         self.assertIn("weight_kg", self.errors(weight_kg="651"))
         self.assertIn("height_cm", self.errors(height_cm="tall"))
@@ -208,7 +206,7 @@ class GenderTests(unittest.TestCase):
             values, inputs, errors = self.check(Gender=gender, Sex="")
             self.assertEqual(errors, {}, gender)
             self.assertEqual((values["Sex"], inputs["Sex"], inputs["Gender"]), (sex, sex, gender), gender)
-            self.assertNotIn("Gender", values)                     # the model never sees Gender
+            self.assertNotIn("Gender", values)
 
     def test_what_the_page_sent_for_sex_cannot_override_a_gender_that_tells(self):
         values, _, errors = self.check(Gender="Gay man", Sex="Female")
@@ -224,7 +222,7 @@ class GenderTests(unittest.TestCase):
         values, _, errors = self.check(Gender="")
         self.assertIn("Gender", errors)
         self.assertNotIn("Sex", values)
-        self.assertIn("Gender", self.check(Gender="gay man")[2])         # exact, not approximately
+        self.assertIn("Gender", self.check(Gender="gay man")[2])
 
     def test_a_gender_that_contradicts_a_kept_sex_is_refused(self):
         errors = self.check(fixed={"Sex": {"value": "Female"}}, Gender="Gay man", Sex="Female")[2]
