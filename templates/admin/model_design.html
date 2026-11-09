@@ -1,6 +1,3 @@
-{# How the models work: each installed model's pipeline step by step (read from the saved model itself), where its
-   inputs and weight come from, how its scores are spread for people with and without CKD, and what moving its
-   threshold would do. The charts come from model_report.py's measurements on labelled data - none is typed in. #}
 {% extends "layouts/app_base.html" %}
 {% from "partials/_macros.html" import icon %}
 {% from "partials/_visuals.html" import icon_chip %}
@@ -37,7 +34,6 @@
   </div>
   {% endif %}
 
-  {# ---------------- the pipeline ---------------- #}
   <section class="card" aria-labelledby="flow-{{ m.key }}">
     <div class="card-header"><h3 class="card-title" id="flow-{{ m.key }}">{{ icon_chip('layers', 'lavender') }}From answers to a result</h3></div>
     {% if m.steps %}
@@ -64,7 +60,6 @@
   </section>
 
   <div class="dash-row model-row">
-    {# ---------------- where the inputs and the weight come from ---------------- #}
     <section class="card" aria-labelledby="groups-{{ m.key }}">
       <div class="card-header"><h3 class="card-title" id="groups-{{ m.key }}">{{ icon_chip('clipboard-list', 'lavender') }}Where its inputs and weight come from</h3></div>
       {% if m.groups %}
@@ -81,7 +76,6 @@
       {% else %}<p class="empty-inline">{{ icon('info') }}Shown once the model is installed and ready.</p>{% endif %}
     </section>
 
-    {# ---------------- score distribution ---------------- #}
     <section class="card" aria-labelledby="hist-{{ m.key }}">
       <div class="card-header"><h3 class="card-title" id="hist-{{ m.key }}">{{ icon_chip('bar-chart', 'lavender') }}How it separates people</h3></div>
       {% set h = m.histogram %}
@@ -118,7 +112,6 @@
     </section>
   </div>
 
-  {# ---------------- threshold trade-off ---------------- #}
   <section class="card" aria-labelledby="trade-{{ m.key }}">
     <div class="card-header"><h3 class="card-title" id="trade-{{ m.key }}">{{ icon_chip('trending-up', 'lavender') }}Why the threshold sits where it does</h3></div>
     {% set t = m.tradeoff %}

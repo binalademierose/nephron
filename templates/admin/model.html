@@ -1,5 +1,3 @@
-{# Model performance: measured metrics (model_report.py), what drives each model overall, and its model card.
-   Every number shown is either measured on labelled data or recorded in model_metadata.json - none is typed in. #}
 {% extends "layouts/app_base.html" %}
 {% from "partials/_macros.html" import icon %}
 {% from "partials/_visuals.html" import icon_chip %}
@@ -35,7 +33,6 @@
   </div>
   {% endif %}
 
-  {# ---------------- measured performance ---------------- #}
   <section class="card" aria-labelledby="perf-{{ m.key }}">
     <div class="card-header"><h3 class="card-title" id="perf-{{ m.key }}">{{ icon_chip('gauge', 'lavender') }}Measured performance</h3>
       {% if m.metrics %}<span class="text-muted text-small">{{ m.metrics.rows }} rows from {{ m.metrics.source }} &middot; {{ m.metrics.computed_at }}</span>{% endif %}</div>
@@ -89,7 +86,6 @@
     {% endif %}
   </section>
 
-  {# ---------------- what drives the model ---------------- #}
   <div class="dash-row model-row">
     <section class="card" aria-labelledby="imp-{{ m.key }}">
       <div class="card-header"><h3 class="card-title" id="imp-{{ m.key }}">{{ icon_chip('bar-chart', 'lavender') }}Feature importance</h3></div>

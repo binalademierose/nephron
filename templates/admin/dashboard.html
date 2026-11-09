@@ -1,4 +1,3 @@
-{# Administrator overview: accounts and how much the system is used - counts only, never anyone's health data. #}
 {% extends "layouts/app_base.html" %}
 {% from "partials/_macros.html" import icon %}
 {% from "partials/_visuals.html" import icon_chip, community_risk_card, gender_count_plot %}
@@ -47,9 +46,6 @@
   {% else %}<p class="empty-inline">{{ icon('info') }}No one has been screened yet.</p>{% endif %}
 </section>
 
-{# People who answered that they live in the Philippines: how many are at higher risk, and how that compares by
-   the gender they chose. Counts only (services/community_stats.py) - a gender with fewer than 3 people is folded
-   into "Other answers" or left out, so no one's result can be picked out. #}
 {% set own = "Nephron's own anonymous count: each person's latest result, for everyone who answered that they live in the Philippines." %}
 <section class="card reveal admin-philippines" style="--i: 1.5;" aria-labelledby="philippines-heading">
   <div class="card-header"><h2 class="card-title" id="philippines-heading">{{ icon_chip('map-pin', 'lavender') }}People living in the Philippines</h2></div>
