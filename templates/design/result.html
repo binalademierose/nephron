@@ -7,7 +7,6 @@
 {% block header_title %}Screening result{% endblock %}
 {% block header_subtitle %}Preliminary screening, {{ format_date(summary.latest.date) }}{% endblock %}
 
-{# What to notice first: the ring and the classification. Second: what it means. Third: the next step. #}
 {% block content %}
 {% set current = summary.latest %}
 {% set change = summary.change %}

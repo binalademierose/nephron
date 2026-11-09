@@ -15,7 +15,7 @@
 
 {% block content %}
 <h1>Create your account</h1>
-<p class="text-muted">It takes a minute. Fields marked <span class="chip chip-required">Required</span> must be filled in.</p>
+<p class="text-muted">It takes a minute. Fields marked <span class="required-mark" aria-hidden="true">*</span><span class="visually-hidden">(required)</span> must be filled in.</p>
 
 <form novalidate data-preview-form>
   <fieldset class="role-grid">
@@ -31,16 +31,16 @@
   </fieldset>
 
   <div class="form-group">
-    <label class="form-label" for="name">Full name <span class="chip chip-required">Required</span></label>
+    <label class="form-label" for="name">Full name <span class="required-mark" aria-hidden="true">*</span><span class="visually-hidden">(required)</span></label>
     <div class="input-wrap has-icon">{{ icon('user', 'input-icon') }}<input class="form-control" id="name" type="text" autocomplete="name"></div>
   </div>
   <div class="form-group">
-    <label class="form-label" for="email">Email address <span class="chip chip-required">Required</span></label>
+    <label class="form-label" for="email">Email address <span class="required-mark" aria-hidden="true">*</span><span class="visually-hidden">(required)</span></label>
     <div class="input-wrap has-icon">{{ icon('mail', 'input-icon') }}<input class="form-control" id="email" type="email" autocomplete="email" placeholder="name@example.com" aria-describedby="email-error"></div>
     <p class="form-error" id="email-error" hidden>{{ icon('alert-circle') }}<span>Enter a complete email address, such as name@example.com.</span></p>
   </div>
   <div class="form-group">
-    <label class="form-label" for="password">Password <span class="chip chip-required">Required</span></label>
+    <label class="form-label" for="password">Password <span class="required-mark" aria-hidden="true">*</span><span class="visually-hidden">(required)</span></label>
     <div class="input-wrap has-icon has-action">
       {{ icon('lock', 'input-icon') }}
       <input class="form-control" id="password" type="password" autocomplete="new-password" aria-describedby="password-error">

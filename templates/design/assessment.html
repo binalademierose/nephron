@@ -32,7 +32,7 @@
         <h2 id="step-1-title" tabindex="-1">About you</h2>
         <p class="text-muted">Two quick questions to start.</p>
         <div class="card form-card">
-          <div class="card-header"><h3 class="card-title">{{ icon_chip('user', 'blue', 'icon-chip-sm') }}Personal information</h3><span class="chip chip-required">Required</span></div>
+          <div class="card-header"><h3 class="card-title">{{ icon_chip('user', 'blue', 'icon-chip-sm') }}Personal information</h3><span class="required-mark" aria-hidden="true">*</span><span class="visually-hidden">(required)</span></div>
           <div class="question-group">
             <div class="form-group">
               <label class="form-label" for="age">Age</label>
@@ -59,7 +59,7 @@
         <h2 id="step-2-title" tabindex="-1">Health information</h2>
         <p class="text-muted">Choose the answer that fits best.</p>
         <div class="card form-card">
-          <div class="card-header"><h3 class="card-title">{{ icon_chip('heart', 'teal', 'icon-chip-sm') }}Health history</h3><span class="chip chip-required">Required</span></div>
+          <div class="card-header"><h3 class="card-title">{{ icon_chip('heart', 'teal', 'icon-chip-sm') }}Health history</h3><span class="required-mark" aria-hidden="true">*</span><span class="visually-hidden">(required)</span></div>
           <div class="question-group">
             <fieldset class="form-fieldset">
               <legend>Have you been told you have diabetes?</legend>
@@ -86,7 +86,7 @@
         <h2 id="step-3-title" tabindex="-1">Lifestyle</h2>
         <p class="text-muted">There are no right or wrong answers.</p>
         <div class="card form-card">
-          <div class="card-header"><h3 class="card-title">{{ icon_chip('activity', 'green', 'icon-chip-sm') }}Daily habits</h3><span class="chip chip-required">Required</span></div>
+          <div class="card-header"><h3 class="card-title">{{ icon_chip('activity', 'green', 'icon-chip-sm') }}Daily habits</h3><span class="required-mark" aria-hidden="true">*</span><span class="visually-hidden">(required)</span></div>
           <div class="question-group">
             <div class="form-group">
               <label class="form-label" for="activity">Physical activity</label>
@@ -113,7 +113,7 @@
         <h2 id="step-4-title" tabindex="-1">Laboratory information</h2>
         <p class="text-muted">Add values if you have a recent laboratory result.</p>
         <div class="card form-card">
-          <div class="card-header"><h3 class="card-title">{{ icon_chip('flask', 'amber', 'icon-chip-sm') }}Clinical and laboratory</h3><span class="chip chip-optional">Optional</span></div>
+          <div class="card-header"><h3 class="card-title">{{ icon_chip('flask', 'amber', 'icon-chip-sm') }}Clinical and laboratory</h3><span class="optional-mark">(optional)</span></div>
           <div class="question-group">
             <div class="dropzone">
               {{ icon('upload') }}
