@@ -1,7 +1,3 @@
--- Migration 003: sign-in attempts, used to slow down password guessing.
--- Attempts are recorded by email text (not by user_id) so that an email address with no account
--- behaves exactly like one with an account, and nothing reveals which addresses are registered.
--- There is deliberately no foreign key here for the same reason.
 CREATE TABLE IF NOT EXISTS login_attempts (
     attempt_id BIGINT UNSIGNED NOT NULL AUTO_INCREMENT,
     email VARCHAR(254) NOT NULL,

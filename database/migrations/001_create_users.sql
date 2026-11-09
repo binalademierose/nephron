@@ -1,7 +1,3 @@
--- Migration 001: user accounts.
--- One row for every person who can sign in. A password is never stored, only its salted hash.
--- All times are stored in UTC and are written by the application, not by MySQL.
--- role is fixed to two values on purpose: there is no administrator in this version.
 CREATE TABLE IF NOT EXISTS users (
     user_id INT UNSIGNED NOT NULL AUTO_INCREMENT,
     email VARCHAR(254) NOT NULL,

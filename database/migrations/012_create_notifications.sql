@@ -1,7 +1,3 @@
--- Migration 012: notifications - one row per notification, always for a real event that already happened
--- (routes/authorization_routes.py is the only place that creates one, right where the real event itself is
--- saved: a follow-up request, a clinical review, a share request, or a share response). Nothing here is
--- generated just to make the notification bell look busier.
 CREATE TABLE IF NOT EXISTS notifications (
     notification_id INT UNSIGNED NOT NULL AUTO_INCREMENT,
     user_id INT UNSIGNED NOT NULL,

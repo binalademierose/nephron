@@ -1,6 +1,3 @@
--- Migration 017: the kidney-health checklist resets every day. checklist_completions (migration 013) allowed one
--- completion per tip, ever (UNIQUE user_id + tip_id). This keeps one row per tip PER DAY, so today's list starts
--- fresh and yesterday's progress can still be shown ("you finished 5 of 14 yesterday").
 CREATE TABLE IF NOT EXISTS checklist_daily (
     checklist_daily_id INT UNSIGNED NOT NULL AUTO_INCREMENT,
     user_id INT UNSIGNED NOT NULL,

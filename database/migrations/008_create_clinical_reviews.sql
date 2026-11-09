@@ -1,10 +1,3 @@
--- Migration 008: clinical_reviews - a note a professional writes about ONE specific assessment they were
--- authorized to see. Append-only, like assessments themselves: a professional who wants to say something new
--- adds another row, never edits or deletes an earlier one - the patient's permanent record of what was said.
---
--- professional_name and profession_title are a SNAPSHOT taken when the note was written, not a live join to
--- professionals: if the professional's account is later deleted (ON DELETE SET NULL, professional_user_id only),
--- or they change their name or title, the patient's record of what was said and by whom at the time is unaffected.
 CREATE TABLE IF NOT EXISTS clinical_reviews (
     review_id INT UNSIGNED NOT NULL AUTO_INCREMENT,
     assessment_id INT UNSIGNED NOT NULL,
