@@ -1,6 +1,3 @@
-{# The month-view calendar shared by the patient's Follow-up page and the professional's Follow-up section.
-   weeks come from services/followup_calendar.py. show_patient adds the patient's name to each event (the
-   professional's calendar spans many patients; the patient's own calendar is only ever theirs). #}
 {% from "partials/_macros.html" import icon %}
 {% macro month_calendar(weeks, month_label, previous_url, today_url, next_url, show_patient=False) %}
 <div class="calendar-header">

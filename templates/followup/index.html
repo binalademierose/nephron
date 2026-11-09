@@ -1,6 +1,3 @@
-{# Deliberately not another dashboard: a calendar is the primary thing on this screen. Every appointment shown
-   here was scheduled by an authorized professional (routes/authorization_routes.py) - nothing here is invented
-   or editable by the patient, except the checklist's own checked state below the calendar. #}
 {% extends "layouts/app_base.html" %}
 {% from "followup/_calendar.html" import month_calendar with context %}
 {% from "partials/_macros.html" import icon, csrf_field %}
