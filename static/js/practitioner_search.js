@@ -1,10 +1,3 @@
-/*
-  practitioner_search.js - upgrades the "Find a professional" search box into a live, debounced search.
-
-  The form works with no JavaScript at all (a plain GET, server-rendered results - see
-  routes/authorization_routes.py and templates/authorizations/share.html). This file only replaces that round
-  trip with a faster one once it can.
-*/
 (function () {
   "use strict";
   const form = document.querySelector("[data-practitioner-search]");
@@ -20,7 +13,7 @@
   function escapeHtml(text) {
     const div = document.createElement("div");
     div.textContent = text || "";
-    return div.innerHTML.replace(/"/g, "&quot;").replace(/'/g, "&#39;");      // safe inside an attribute too
+    return div.innerHTML.replace(/"/g, "&quot;").replace(/'/g, "&#39;");
   }
 
   function renderResults(data, term) {
@@ -30,7 +23,6 @@
         : "";
       return;
     }
-    // The administrator's licence check, so a person can see whether a professional has been verified.
     function verifyBadge(status) {
       const text = status === "verified" ? "Licence verified" : status === "rejected" ? "Licence not verified" : "Licence not yet verified";
       return '<span class="badge verify-badge ' + (status === "verified" ? "risk-badge-low" : "badge-neutral") + '">' + text + "</span>";
@@ -83,13 +75,8 @@
     debounceTimer = setTimeout(search, 400);
   });
 
-  // A "Request" button rendered by search() is a brand-new form the page did not have at load time, so its
-  // click has to be caught here (event delegation), not on the form itself.
   resultsBox.addEventListener("submit", function (event) {
     const submitForm = event.target;
     if (submitForm.tagName !== "FORM") { return; }
-    // A brand-new form the page did not have at load time - the browser's own plain submit works perfectly well
-    // here (a real navigation, the server's own success message included), so this is left alone rather than
-    // reimplemented over fetch: the only thing this file needs to own is the search box itself.
   });
 })();

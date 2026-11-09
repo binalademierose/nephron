@@ -1,11 +1,6 @@
-/*
-  preview.js - makes the design previews (and the style guide) interactive.
-  Development only: this file is loaded by the preview pages, never by real pages.
-*/
 (function () {
   "use strict";
 
-  // Buttons with data-toast-message show a toast.
   document.addEventListener("click", function (event) {
     const trigger = event.target.closest("[data-toast-message]");
     if (!trigger) { return; }
@@ -16,7 +11,6 @@
     });
   });
 
-  // Links to pages that are built in later phases explain themselves instead of pretending.
   document.addEventListener("click", function (event) {
     const link = event.target.closest("[data-preview-link]");
     if (!link) { return; }
@@ -24,7 +18,6 @@
     window.Nephron.toast({ type: "info", title: "Preview only", message: "This page is built in a later phase." });
   });
 
-  // Buttons with data-busy-demo show the busy screen for a moment.
   document.addEventListener("click", function (event) {
     const trigger = event.target.closest("[data-busy-demo]");
     if (!trigger) { return; }
@@ -32,7 +25,6 @@
     window.setTimeout(window.Nephron.hideBusy, 2400);
   });
 
-  // Loading and success button demos in the style guide.
   document.querySelectorAll("[data-demo-loading]").forEach(function (button) {
     button.addEventListener("click", function () {
       window.Nephron.startLoading(button);
@@ -43,7 +35,6 @@
     button.addEventListener("click", function () { window.Nephron.flashSuccess(button, "Saved"); });
   });
 
-  // ----- Sign-in preview: show the validation states without sending anything -----
   const loginForm = document.querySelector("[data-preview-form]");
   if (loginForm) {
     const email = loginForm.querySelector("#email");
@@ -69,7 +60,6 @@
         (emailOk ? password : email).focus();
         return;
       }
-      // Valid: show the loading state, as a real sign-in would while it waits for the server.
       loginForm.dataset.submitting = "true";
       window.Nephron.startLoading(button);
       window.setTimeout(function () {
@@ -80,7 +70,6 @@
     });
   }
 
-  // ----- Guided screening preview: steps, progress and the review list -----
   const assessment = document.querySelector("[data-assessment]");
   if (assessment) {
     const steps = Array.from(assessment.querySelectorAll(".stepper-step"));
@@ -139,7 +128,6 @@
       const last = current === steps.length - 1;
       nextButton.textContent = last ? "Analyze assessment" : "Continue";
       if (last) { buildReview(); }
-      // Move focus to the new step's heading (but not when the page first opens).
       if (moveFocus) {
         const heading = panels[current].querySelector("h2");
         if (heading) { heading.focus({ preventScroll: true }); }

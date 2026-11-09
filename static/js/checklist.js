@@ -1,12 +1,3 @@
-/*
-  checklist.js - ticks the daily kidney-health checklist without reloading the page.
-
-  Every row in templates/partials/_checklist.html is a real form that works on its own (it posts and the server
-  sends the page back). This only upgrades it: the same form is sent in the background, and when the server says it
-  was saved, the row, its category card, the progress ring and the dashboard's "Today" tile are updated to match the
-  numbers the server sent back - the page never guesses a count. If anything goes wrong, the form is submitted the
-  ordinary way, so a tick is never lost.
-*/
 (function () {
   "use strict";
 
@@ -38,7 +29,6 @@
     setText("[data-checklist-status]", message(done, total), card);
     card.classList.toggle("is-complete", total > 0 && done === total);
 
-    // The dashboard's "Daily kidney-health checklist" card above shows today's count too.
     setText("[data-today-done]", done);
     setText("[data-today-total]", total);
     document.querySelectorAll("[data-today-progress]").forEach(function (bar) {
@@ -81,12 +71,12 @@
         const isDone = Boolean(data.is_complete);
         button.classList.toggle("is-done", isDone);
         button.setAttribute("aria-pressed", String(isDone));
-        state.value = isDone ? "0" : "1";              // the next press undoes this one
+        state.value = isDone ? "0" : "1";
         applyGroup(form.closest("[data-checklist-group]"));
         applyTotals(Number(data.done) || 0, Number(data.total) || 0);
       })
       .catch(function () {
-        form.submit();                                   // fall back to the ordinary round trip
+        form.submit();
       })
       .finally(function () {
         delete form.dataset.sending;

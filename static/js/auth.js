@@ -1,7 +1,3 @@
-/*
-  auth.js - the register page: show the professional details only while "Healthcare professional" is chosen.
-  Without JavaScript the details simply stay visible, so nothing is lost.
-*/
 (function () {
   "use strict";
   const details = document.querySelector("[data-professional-fields]");

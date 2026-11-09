@@ -1,9 +1,3 @@
-/*
-  screening.js - the guided screening form: steps, progress, friendly checks, the BMI readout and the review list.
-
-  The SERVER checks every answer again (services/screening_contract.py), so this file only makes the form pleasant:
-  it never decides anything. Without it the form could not be used, which the page says.
-*/
 (function () {
   "use strict";
   const root = document.querySelector("[data-assessment]");
@@ -23,7 +17,6 @@
   const draftSaveUrl = root.dataset.draftSaveUrl;
   let current = 0;
 
-  // ---------- small helpers ----------
   const WHOLE = /^\d{1,4}$/;
   const DECIMAL = /^\d{1,4}(\.\d{1,3})?$/;
   function fmt(number) { return String(Number(number)); }
@@ -55,7 +48,6 @@
     return "";
   }
 
-  // ---------- one question ----------
   function checkQuestion(group) {
     const kind = group.dataset.kind;
     const name = group.dataset.name;
@@ -101,15 +93,13 @@
   function checkPanel(panel) {
     let firstBad = null;
     panel.querySelectorAll("[data-question]").forEach(function (group) {
-      if (group.hidden) { return; }                 // e.g. "Sex assigned at birth" when the gender answer already tells
+      if (group.hidden) { return; }
       const result = checkQuestion(group);
       if (!result.ok && !firstBad) { firstBad = result.first; }
     });
     return firstBad;
   }
 
-  // ---------- Activity level, worked out from exercise hours ----------
-  // The server works it out again from the hours (services/screening_contract.py); this only shows it as they type.
   root.querySelectorAll("[data-derived-from]").forEach(function (group) {
     const source = form.querySelector("[name='" + group.dataset.derivedFrom + "']");
     const readout = group.querySelector("[data-derived-readout]");
@@ -132,9 +122,6 @@
     update();
   });
 
-  // ---------- Gender -> Sex assigned at birth ----------
-  // A gender answer that tells the sex (Gay man -> Male) fills in the hidden "Sex assigned at birth" itself; one that
-  // does not (Non-binary, Prefer not to say...) shows that question. The server works it out again regardless.
   root.querySelectorAll("[data-gender-question]").forEach(function (group) {
     const followUp = root.querySelector("[data-sex-follow-up]");
     if (!followUp) { return; }
@@ -146,7 +133,7 @@
       followUp.hidden = !chosen || !!implied;
       sexRadios.forEach(function (radio) {
         if (implied) { radio.checked = radio.value === implied; }
-        else if (fromUser && wasHidden) { radio.checked = false; }     // never keep a sex the page guessed
+        else if (fromUser && wasHidden) { radio.checked = false; }
       });
       if (fromUser && chosen && !implied && wasHidden) { showError(followUp.querySelector("fieldset"), followUp.dataset.name + "-error", ""); }
     }
@@ -154,7 +141,6 @@
     sync(false);
   });
 
-  // ---------- BMI ----------
   function currentBmi(block) {
     const height = Number((block.querySelector("[data-bmi-input=height_cm]").value || "").trim());
     const weight = Number((block.querySelector("[data-bmi-input=weight_kg]").value || "").trim());
@@ -172,10 +158,7 @@
     updateBmi(block);
   });
 
-  // ---------- review ----------
   function buildReview() {
-    // One group per step (About you, Health history, ...), each with its own "Edit" button that jumps straight
-    // back to that step - easier to check than one long list, and nothing has to be retyped to change an answer.
     reviewList.textContent = "";
     const seen = {};
     panels.forEach(function (panel, panelIndex) {
@@ -240,7 +223,6 @@
     reviewList.appendChild(group);
   }
 
-  // ---------- steps ----------
   function render(direction, moveFocus) {
     root.dataset.direction = direction;
     steps.forEach(function (step, index) {
@@ -275,9 +257,6 @@
     if (current < steps.length - 1) { current += 1; render("forward", true); saveDraft(); }
   });
 
-  // ---------- autosave the draft, so a refresh or a closed tab never loses progress ----------
-  // Never on every keystroke (see routes/screening_routes.py's own note on this): a short pause after the person
-  // stops typing, or the moment they move to another step, whichever comes first.
   let saveTimer = null;
   function saveDraft() {
     if (!draftSaveUrl) { return; }
@@ -298,7 +277,6 @@
     form.addEventListener("change", scheduleSaveDraft);
   }
 
-  // Pressing Enter in a field goes to the next step; it must not send an unfinished form.
   form.addEventListener("keydown", function (event) {
     if (event.key === "Enter" && event.target.tagName === "INPUT" && event.target.type !== "submit" && event.target.type !== "radio") {
       event.preventDefault();
@@ -307,7 +285,6 @@
   });
 
   form.addEventListener("submit", function (event) {
-    // Check every step once more. If something is wrong, go to that step instead of sending.
     for (let index = 0; index < panels.length - 1; index += 1) {
       const bad = checkPanel(panels[index]);
       if (bad) {
@@ -318,7 +295,6 @@
         return;
       }
     }
-    // Every step passed: ask the calm "are your answers true?" confirmation before anything is analysed.
     if (form.dataset.confirm && form.dataset.confirmed !== "1" && window.NephronConfirm) {
       event.preventDefault();
       window.NephronConfirm(form);
@@ -327,7 +303,6 @@
     if (window.Nephron && window.Nephron.showBusy) { window.Nephron.showBusy("Analysing your answers...", "This usually takes a few seconds."); }
   });
 
-  // A page that came back from the server with errors opens on the first step that has one.
   const firstError = parseInt(root.dataset.firstErrorStep, 10);
   if (firstError >= 0) { current = firstError; }
   render("forward", false);

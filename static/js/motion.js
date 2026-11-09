@@ -1,21 +1,8 @@
-/*
-  motion.js - Nephron's animation system (the JavaScript half; static/css/motion.css has the rules and the
-  reasoning). Small on purpose: it only ever ADDS a class (is-in) or moves a number, so a page is finished and
-  readable even if this file never loads.
-
-    [data-animate]      reveal once when scrolled into view (an element already scrolled past is shown at once)
-    [data-stagger]      children get --d = 0,1,2...
-    [data-walk]         the scroll-driven "How it works" walkthrough (sticky scene follows the active step)
-    [data-parallax]     tiny pointer-driven depth on the home hero (mouse only)
-
-  People who ask for less motion get finished states straight away and no parallax.
-*/
 (function () {
   "use strict";
   const reduce = window.matchMedia("(prefers-reduced-motion: reduce)").matches;
   const hasObserver = "IntersectionObserver" in window;
 
-  // ----- reveal on scroll -----
   document.querySelectorAll("[data-stagger]").forEach(function (parent) {
     Array.prototype.forEach.call(parent.children, function (child, index) { child.style.setProperty("--d", index); });
   });
@@ -30,11 +17,10 @@
       });
     }, { threshold: 0.12, rootMargin: "0px 0px -6% 0px" });
     reveal.forEach(function (el) {
-      if (el.getBoundingClientRect().bottom < 0) { show(el); } else { seen.observe(el); }   // already scrolled past
+      if (el.getBoundingClientRect().bottom < 0) { show(el); } else { seen.observe(el); }
     });
   }
 
-  // ----- the walkthrough on How it works -----
   const walk = document.querySelector("[data-walk]");
   if (walk) {
     const steps = Array.prototype.slice.call(walk.querySelectorAll("[data-walk-step]"));
@@ -55,7 +41,7 @@
       scenes.forEach(function (scene, i) {
         const on = i === index;
         scene.classList.toggle("is-active", on);
-        scene.classList.toggle("is-in", on);         // replays that scene's own animation each time it returns
+        scene.classList.toggle("is-in", on);
       });
       dots.forEach(function (dot, i) { dot.classList.toggle("is-active", i === index); });
       if (counter) { counter.textContent = "Step " + (index + 1) + " of " + steps.length; }
@@ -83,7 +69,6 @@
     update();
   }
 
-  // ----- a little depth on the home hero (mouse only, never for people who want less motion) -----
   const parallax = document.querySelector("[data-parallax]");
   if (parallax && !reduce && window.matchMedia("(hover: hover) and (pointer: fine)").matches) {
     let frame = null;

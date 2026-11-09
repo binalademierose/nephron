@@ -1,8 +1,3 @@
-/*
-  history.js - the "Compare selected" form on the history page.
-  It only makes the form easier to use: two boxes at most, and the button waits for exactly two.
-  The SERVER checks the choice again (exactly two different assessments of this person), so nothing depends on this file.
-*/
 (function () {
   "use strict";
   const form = document.querySelector("[data-compare-form]");

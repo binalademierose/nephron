@@ -1,10 +1,3 @@
-/*
-  facility_search.js - upgrades the PhilHealth centers search form into a live, debounced search.
-
-  The form works with no JavaScript at all (a plain GET, server-rendered results - see routes/resource_routes.py
-  and templates/resources/philhealth_centers.html). This file only replaces that round trip with a faster one
-  once it can: the server is asked again, the same way, just without a full page reload.
-*/
 (function () {
   "use strict";
   const form = document.querySelector("[data-facility-search]");
@@ -56,7 +49,7 @@
     if (countBox) { countBox.textContent = "Searching..."; }
     fetch(searchUrl + "?" + params.toString(), { credentials: "same-origin" })
       .then(function (response) {
-        if (token !== requestToken) { return null; }         // a newer search already started; drop this answer
+        if (token !== requestToken) { return null; }
         if (!response.ok) { throw new Error("search failed"); }
         return response.json();
       })
