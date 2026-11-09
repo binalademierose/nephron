@@ -86,9 +86,6 @@ def upload():
         found = lab_ocr.extract_candidate_values(text, _catalog())
     except lab_ocr.UnreadableDocument as error:
         text = ""
-        # Never fatal: the upload still succeeds, just with nothing suggested - the person fills the form in by
-        # hand instead, exactly as if no lab report had been uploaded at all. This is the ONLY place OCR is asked
-        # to do anything, so a broken tesseract install shows up here and nowhere else.
         current_app.logger.warning("Lab document could not be read (user_id=%s, lab_document_id=%s): %s", g.user["user_id"], lab_document_id, error)
         found = {}
     store.set_ocr_values(g.user["user_id"], lab_document_id, found)
@@ -114,7 +111,7 @@ def confirm(lab_document_id):
         return blocked
     document = get_lab_document_store().get_document(g.user["user_id"], lab_document_id)
     if document is None:
-        abort(404)                                     # not yours, or it does not exist: the same answer
+        abort(404)
     if document["status"] == "confirmed":
         return redirect(url_for("screening.result", assessment_id=document["assessment_id"]))
     if document["status"] == "discarded":
@@ -140,18 +137,16 @@ def _confirm_form(values, errors, document=None, unusual=()):
 
 def _submit(ocr_values, form, document):
     values, errors = lab_contract.validate_lab_values(_catalog(), form)
-    if document is not None and form.get("attest") != "1":           # an uploaded report: the person vouches for it
+    if document is not None and form.get("attest") != "1":
         errors["attest"] = "Please confirm that this report is yours and that the values match it."
     if errors:
         return _confirm_form({**(ocr_values or {}), **{k: v for k, v in form.items() if v}}, errors, document=document)
-    # Any real value is accepted, but one far outside the usual range is shown back once to be checked (a unit or a
-    # decimal point is easy to get wrong). Ticking "these are correct" for exactly these values lets it through.
     unusual = lab_contract.unusual_values(_catalog(), values)
     if unusual and form.get("confirm_unusual") != lab_contract.unusual_signature(unusual):
         return _confirm_form({**(ocr_values or {}), **{k: v for k, v in form.items() if v}}, lab_contract.unusual_errors(unusual, form),
                              document=document, unusual=unusual)
 
-    source = _latest_preliminary()                  # re-read: it must still be there, even though _blocked() just checked
+    source = _latest_preliminary()
     row = dict(source["inputs"])
     row.update(values)
     try:
@@ -161,10 +156,6 @@ def _submit(ocr_values, form, document):
         return render_template("lab/unavailable.html", page_title="Enhanced Screening", kind="unavailable",
                                title="We could not analyse these values"), 200
 
-    # The 27 pulled Stage 1 answers (plus BMI's own height/weight), the given labs, and eGFR: computed once here and
-    # stored explicitly (unlike Stage 1's Obesity, which is also always stored) so that opening this result again -
-    # to explain it, or just to read it - never needs to recompute it from a possibly-changed formula or a
-    # possibly-changed Preliminary answer. It is still never asked for, and never anything other than this computation.
     saved_inputs = dict(row)
     saved_inputs["eGFR"] = estimate_gfr(row["Serum_Creatinine"], row["Age"], row["Sex"])
     store, now = get_assessment_store(), clock.now_utc()

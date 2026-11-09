@@ -25,7 +25,7 @@ from services.screening_draft_store import get_screening_draft_store
 
 screening_bp = Blueprint("screening", __name__)
 
-DUPLICATE_WINDOW = timedelta(seconds=60)      # the same answers sent again within this time are the same submission
+DUPLICATE_WINDOW = timedelta(seconds=60)
 
 
 def _model():
@@ -108,14 +108,14 @@ def screening():
         start_step = screening_drafts.resume_step_index(draft_store, g.user["user_id"], "preliminary", step_keys)
         return _form(catalog, answers, {}, start_step=start_step, fixed=fixed)
 
-    form = fixed_answers.apply(request.form, fixed)          # the server decides the fixed answers, not the page
+    form = fixed_answers.apply(request.form, fixed)
     values, inputs, errors = screening_contract.validate_answers(catalog, form, fixed=fixed)
     if errors:
         return _form(catalog, form, errors, fixed=fixed)
 
     try:
         answer = model.predict(values)
-    except Exception as error:                            # the model failed for any reason: say so, save nothing
+    except Exception as error:
         current_app.logger.error("Screening could not be analysed: %s: %s", type(error).__name__, error)
         return _unavailable("We could not analyse your answers")
 
@@ -183,7 +183,7 @@ def result(assessment_id):
     config = current_app.config
     row = get_assessment_store().get_assessment(g.user["user_id"], assessment_id)
     if row is None:
-        abort(404)                                     # not yours, or it does not exist: the same answer
+        abort(404)
 
     record = assessments.to_record(row, config["APP_TIMEZONE"])
     older = [r for r in _records() if r["assessment_id"] != assessment_id and (r["date"], r["assessment_id"]) <= (record["date"], assessment_id)]
@@ -201,8 +201,6 @@ def result(assessment_id):
         model, describer = _model(), _catalog()
         answers = screening_contract.describe_inputs(_catalog(), row["inputs"]) if row["inputs"] else []
 
-    # What affected THIS result most: worked out again from the answers saved with it, and shown only when the model that is running
-    # now is the model that made it and its contributions add up to the saved probability. Otherwise nothing is shown.
     explanation = explanations.explain_saved_result(model, describer, row)
     reviews = [dict(r, date=clock.to_local_date(r["created_at"], config["APP_TIMEZONE"])) for r in clinical_reviews.for_assessment(get_clinical_review_store(), assessment_id)]
     tips = kidney_tips.personalized_tips(row["inputs"], record["level"])
@@ -211,4 +209,5 @@ def result(assessment_id):
         outside += lab_contract.outside_usual_range(lab_contract.load_lab_catalog(), row["inputs"])
     return render_template("screening/result.html", page_title="Screening result", record=record, previous=previous, change=change, outside=outside,
                            explanation=explanation, explanation_unavailable=explanations.UNAVAILABLE, answers=answers, level=record["level"],
-                           threshold=record["threshold"], source_id=row.get("source_assessment_id"), reviews=reviews, tips=tips)
+                           threshold=record["threshold"], source_id=row.get("source_assessment_id"), reviews=reviews, tips=tips,
+                           single_kidney=screening_contract.has_single_kidney(row["inputs"]))

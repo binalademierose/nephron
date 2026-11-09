@@ -25,10 +25,9 @@ from services import ckd_facts
 
 design_bp = Blueprint("design", __name__, url_prefix="/design")
 
-# ----- Design-review sample data (never shown outside these previews) -----
-SAMPLE_THRESHOLD = 21          # sample. The real threshold comes from the model artifact.
-SAMPLE_REASSESSMENT_DAYS = 30  # sample. Nephron has not fixed a real waiting time yet.
-SAMPLE_EFFECTS = [                # sample. In the real result these come from the loaded model, for one person's own answers.
+SAMPLE_THRESHOLD = 21
+SAMPLE_REASSESSMENT_DAYS = 30
+SAMPLE_EFFECTS = [
     {"name": "Diabetes", "effect": 1.9},
     {"name": "Age", "effect": 1.1},
     {"name": "Hypertension", "effect": 0.6},
@@ -68,14 +67,13 @@ def dashboard():
     today = date.today()
     use_sample = request.args.get("data") == "sample"
     assessments = sample_assessments(today) if use_sample else []
-    # ?locked=1 shows the state where the waiting period between screenings has not passed yet
     locked = use_sample and request.args.get("locked") == "1"
     summary = visuals.summarize_assessments(
         assessments, today=today,
         reassessment_days=SAMPLE_REASSESSMENT_DAYS if locked else None,
     )
     trend = visuals.trend_geometry(summary["oldest_first"], SAMPLE_THRESHOLD) if summary["has_trend"] else None
-    follow_up_count = 0    # follow-up records arrive in a later phase
+    follow_up_count = 0
     return render_template(
         "design/dashboard.html",
         page_title="Overview (preview)",
@@ -90,8 +88,6 @@ def dashboard():
         result_urls={},
         ckd_facts=ckd_facts.all_facts(),
         profile={"initials": "SU", "full_name": "Sample User", "role_label": "General User"},
-        # In the preview every link works or says it is a preview. In the real dashboard, links to things that are
-        # not built yet are None (shown as "Coming soon").
         links={"start": url_for("design.assessment"), "history": "preview", "activity": "preview", "upload": "preview",
                "reports": "preview", "share": "preview", "profile": "preview", "about_ckd": "preview", "philhealth": "preview",
                "model_info": url_for("main.about"), "tips": "preview"},
@@ -126,7 +122,6 @@ def result():
 
 @design_bp.route("/states")
 def states():
-    # The responsive-table demo needs some rows. They are the same made-up sample records as the dashboard.
     return render_template(
         "design/states.html",
         page_title="Empty, loading and error states (preview)",

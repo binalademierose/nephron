@@ -21,9 +21,8 @@ def login_required(view):
     @wraps(view)
     def guarded(*args, **kwargs):
         if g.get("user_lookup_failed"):
-            abort(503)                      # the database is down, so we cannot tell who this is
+            abort(503)
         if g.get("user") is None:
-            # Send them to sign in and, afterwards, back to the page they wanted.
             return redirect(url_for("auth.login", next=request.full_path.rstrip("?")))
         return view(*args, **kwargs)
     return guarded
@@ -35,7 +34,7 @@ def role_required(*roles):
         @wraps(view)
         def guarded(*args, **kwargs):
             if g.user["role"] not in roles:
-                abort(403)                  # signed in, but this page is for another role
+                abort(403)
             return view(*args, **kwargs)
         return guarded
     return decorator

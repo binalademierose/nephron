@@ -67,7 +67,7 @@ def _set_active(user_id, active):
     current_app.logger.info("Account %s by administrator (user_id=%s, admin_user_id=%s)",
                             "reactivated" if active else "deactivated", account["user_id"], g.user["user_id"])
     flash(f"{account['full_name']}'s account is {'active again' if active else 'switched off'}.", "success")
-    return redirect(security.safe_next_url(request.form.get("next"), url_for("admin.users")))   # never an off-site redirect
+    return redirect(security.safe_next_url(request.form.get("next"), url_for("admin.users")))
 
 
 @admin_bp.route("/users/<int:user_id>/deactivate", methods=["POST"])
@@ -119,7 +119,6 @@ def verify(user_id):
 @role_required("admin")
 def reject(user_id):
     return _set_verification(user_id, "rejected")
-
 
 
 @admin_bp.route("/reassessment")
@@ -191,15 +190,15 @@ def reset_password(user_id):
     if account["user_id"] == g.user["user_id"]:
         flash("Change your own password on your account page.", "error")
         return redirect(url_for("admin.users"))
-    temporary = "-".join(secrets.token_urlsafe(6) for _ in range(2))         # e.g. "q7Kd9_Lm-Xp2aZ0w": ~96 bits
+    temporary = "-".join(secrets.token_urlsafe(6) for _ in range(2))
     store = get_user_store()
-    store.update_password(account["user_id"], security.hash_password(temporary), clock.now_utc())   # ends every session
+    store.update_password(account["user_id"], security.hash_password(temporary), clock.now_utc())
     store.set_must_change(account["user_id"], True)
     activity.record("password_reset", g.user["user_id"], account["user_id"])
     current_app.logger.info("Password reset by administrator (user_id=%s, admin_user_id=%s)", account["user_id"], g.user["user_id"])
     response = current_app.make_response(render_template("admin/reset_done.html", page_title="Temporary password",
                                                          account=account, temporary=temporary))
-    response.headers["Cache-Control"] = "no-store"                            # the password is never kept by the browser
+    response.headers["Cache-Control"] = "no-store"
     return response
 
 
@@ -213,12 +212,10 @@ def activity_log():
                            group=group, query=term, groups=activity.GROUPS)
 
 
-
 @admin_bp.route("/guide")
 @role_required("admin")
 def guide():
     return render_template("admin/guide.html", page_title="Administrator guide")
-
 
 
 def _input_labels():
@@ -238,7 +235,7 @@ def _models(labels):
     for key, title, service, folder, stage in (
             ("preliminary", "Preliminary Screening", current_app.extensions.get("model_service"), config["MODEL_DIR"], "1"),
             ("enhanced", "Enhanced Screening", current_app.extensions.get("model_service_stage2"), config["MODEL_STAGE2_DIR"], "2")):
-        folder = getattr(service, "model_dir", None) or folder          # the folder of the model actually loaded
+        folder = getattr(service, "model_dir", None) or folder
         metrics = model_insights.load_metrics(folder)
         meta = getattr(service, "metadata", None) or {}
         models.append({

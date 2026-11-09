@@ -34,7 +34,7 @@ def philhealth_search():
     try:
         params = _params()
         matches, total = philhealth_centers.search(term=params["term"], region=params["region"], sector=params["sector"])
-    except Exception as error:                              # a search box must never surface a raw error
+    except Exception as error:
         current_app.logger.error("PhilHealth centers search failed: %s: %s", type(error).__name__, error)
         return {"error": "Search is temporarily unavailable."}, 503
     return {"results": matches, "total": total, "shown": len(matches)}

@@ -26,7 +26,6 @@ def _pdf_response(pdf_bytes, filename):
     return Response(pdf_bytes, mimetype="application/pdf", headers={"Content-Disposition": f'attachment; filename="{filename}"'})
 
 
-# ------------------------------------------------------------------ patient side
 @reports_bp.route("/reports")
 @role_required("general")
 def patient_reports():
@@ -57,14 +56,13 @@ def download_patient_report():
     return _pdf_response(build_assessment_report(data), f"nephron-report-{data['record']['date_text'].replace(' ', '-').replace(',', '')}.pdf")
 
 
-# ------------------------------------------------------------------ professional side, for their own patient records
 @reports_bp.route("/patient-records/<patient_code>/reports/download", methods=["POST"])
 @role_required("professional")
 def download_patient_record_report(patient_code):
     from services.patient_records_store import get_patient_records_store
     record = get_patient_records_store().get_by_code(patient_code)
     if record is None or record["professional_user_id"] != g.user["user_id"]:
-        abort(404)                                       # not this professional's own patient: answered like it does not exist
+        abort(404)
     patient_user_id = record["user_id"]
     zone = current_app.config["APP_TIMEZONE"]
     include_reviews = request.form.get("include_reviews") == "on"

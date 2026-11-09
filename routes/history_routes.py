@@ -25,7 +25,7 @@ ID_PATTERN = re.compile(r"^\d{1,9}$", re.ASCII)
 def index():
     config = current_app.config
     zone = config["APP_TIMEZONE"]
-    records = assessments.load_records(get_assessment_store(), g.user["user_id"], zone)        # newest first
+    records = assessments.load_records(get_assessment_store(), g.user["user_id"], zone)
     today = clock.local_today(zone)
     period = reassessment.current_period()
     follow_up_open = followups.open_request(get_followup_store(), g.user["user_id"]) is not None
@@ -33,10 +33,7 @@ def index():
     status = eligibility.screening_status(records[0]["date"] if records else None, today, period,
                                           current_app.extensions["model_service"].ready, follow_up_open)
     latest = summary["latest"]
-    # The History card shows the chart about twice as wide as the dashboard does: draw it at that size so its
-    # text matches the page instead of being scaled up to double size.
     trend = visuals.trend_geometry(summary["oldest_first"], latest["threshold"], width=620, height=250) if summary["has_trend"] else None
-    # For every row, the assessment just before it (used by "Compare with previous").
     previous_of = {records[i]["assessment_id"]: records[i + 1]["assessment_id"] for i in range(len(records) - 1)}
     return render_template(
         "history/index.html", page_title="Assessment history", summary=summary, status=status, trend=trend,
@@ -63,7 +60,7 @@ def compare():
     store = get_assessment_store()
     rows = [store.get_assessment(g.user["user_id"], assessment_id) for assessment_id in ids]
     if any(row is None for row in rows):
-        abort(404)                                    # not yours, or it does not exist: the same answer
+        abort(404)
     comparison = history.compare(current_app.extensions["catalog"], rows[0], rows[1], current_app.config["APP_TIMEZONE"])
     return render_template("history/compare.html", page_title="Compare assessments", comparison=comparison)
 

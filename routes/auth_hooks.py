@@ -15,7 +15,7 @@ from flask import abort, current_app, flash, g, redirect, request, session, url_
 from services import auth_service, security
 from services.user_store import get_user_store
 
-SAFE_METHODS = ("GET", "HEAD", "OPTIONS")      # these only READ, so they need no CSRF token
+SAFE_METHODS = ("GET", "HEAD", "OPTIONS")
 PRIVATE_BLUEPRINTS = ("auth", "account")
 
 
@@ -34,7 +34,7 @@ def start_session(user_id, now):
     session.clear()
     session["user_id"] = user_id
     session["issued_at"] = now.isoformat()
-    session.permanent = True                   # expires after SESSION_LIFETIME_MINUTES without activity
+    session.permanent = True
 
 
 def _session_is_current(user):
@@ -60,13 +60,10 @@ def register_auth_hooks(app):
         try:
             user = get_user_store().find_by_id(user_id)
         except mysql.connector.Error as error:
-            # Public pages keep working; pages that need a signed-in person show the "unavailable" page.
             current_app.logger.error("Could not look up the signed-in user: %s", error)
             g.user_lookup_failed = True
             return
         if user is None or user["is_patient_record"] or not user.get("is_active", True) or not _session_is_current(user):
-            # A patient_record shadow account (services/patient_records.py) can never be "signed in" as anybody -
-            # its session is treated exactly like one that does not exist, before anything else even runs.
             session.clear()
             return
         g.user = auth_service.describe(user)
@@ -89,7 +86,7 @@ def register_auth_hooks(app):
         if request.method in SAFE_METHODS or request.endpoint == "static":
             return
         if request.routing_exception is not None:
-            return          # no such page, or the wrong method: let Flask answer 404 / 405 instead of a misleading "expired"
+            return
         if not security.csrf_is_valid(request.form.get("csrf_token")):
             current_app.logger.warning("Rejected %s %s: missing or wrong CSRF token", request.method, request.path)
             abort(400)

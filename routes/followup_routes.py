@@ -21,10 +21,10 @@ def _latest_inputs_and_classification(user_id):
     """The person's most recent assessment's own saved inputs and classification - the same two things a
     checklist and the result page's own tips panel are both built from. (None, None) if they have none yet."""
     store = get_assessment_store()
-    rows = store.list_assessments(user_id)              # a summary only - no "inputs" column, by design
+    rows = store.list_assessments(user_id)
     if not rows:
         return None, None
-    latest = store.get_assessment(user_id, rows[0]["assessment_id"])   # the one call that also joins the saved answers
+    latest = store.get_assessment(user_id, rows[0]["assessment_id"])
     return latest["inputs"], latest["classification"]
 
 
@@ -56,7 +56,7 @@ def toggle_checklist_item(tip_id):
     script (static/js/checklist.js) asks for JSON instead and gets today's real totals back to show."""
     is_complete = request.form.get("is_complete") == "1"
     today = clock.local_today(current_app.config["APP_TIMEZONE"])
-    checklist.toggle(get_checklist_store(), g.user["user_id"], tip_id, is_complete, clock.now_utc(), today)   # today's own list
+    checklist.toggle(get_checklist_store(), g.user["user_id"], tip_id, is_complete, clock.now_utc(), today)
     if request.headers.get("X-Requested-With") == "fetch":
         inputs, level = _latest_inputs_and_classification(g.user["user_id"])
         grouped = checklist.for_user(get_checklist_store(), inputs, level, g.user["user_id"], today) if inputs is not None else []

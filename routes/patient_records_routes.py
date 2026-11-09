@@ -26,7 +26,7 @@ from services.user_store import get_user_store
 
 patient_records_bp = Blueprint("patient_records", __name__)
 
-DUPLICATE_WINDOW = timedelta(seconds=60)      # the same answers sent again within this time are the same submission
+DUPLICATE_WINDOW = timedelta(seconds=60)
 
 
 def _catalog():
@@ -75,8 +75,6 @@ def index():
                         professional_overview.CATEGORY_REVIEWED, professional_overview.CATEGORY_FOLLOW_UP):
         category = professional_overview.CATEGORY_ALL
 
-    # The search term and risk filter narrow the pool the category TABS themselves count from, so a tab's number
-    # always matches what choosing it would show - only the category itself is applied twice (once per tab).
     matching = professional_overview.patient_list(
         get_patient_records_store(), get_authorization_store(), get_user_store(), get_assessment_store(),
         get_clinical_review_store(), get_followup_appointment_store(), g.user["user_id"],
@@ -200,7 +198,7 @@ def _fixed_for(record):
                                     fixed_answers.earliest_preliminary_inputs(get_assessment_store(), record["user_id"]), today)
     fixed.setdefault("Age", {"value": record["age"], "reason": "From the patient record."})
     fixed.setdefault("Sex", {"value": record["sex"], "reason": "From the patient record."})
-    if record.get("gender"):          # a record made before Gender was asked has none: it is asked in the screening
+    if record.get("gender"):
         fixed.setdefault("Gender", {"value": record["gender"], "reason": "From the patient record."})
     return fixed
 
@@ -226,20 +224,18 @@ def screening(patient_code):
     fixed = _fixed_for(record)
     draft_store = get_screening_draft_store()
     if request.method == "GET":
-        # Like a General User's own screening: a refresh, a Back, or a closed tab picks up where the professional left
-        # off - the draft belongs to the patient record's own account, so it is this patient's, not the professional's.
         answers = fixed_answers.apply(screening_drafts.resume_values(draft_store, record["user_id"], "preliminary") or {}, fixed)
         start = screening_drafts.resume_step_index(draft_store, record["user_id"], "preliminary", [step["key"] for step in catalog["steps"]])
         return _screening_form(catalog, answers, {}, patient_code, record, start_step=start)
 
-    form = fixed_answers.apply(request.form, fixed)          # the server decides the fixed answers, not the page
+    form = fixed_answers.apply(request.form, fixed)
     values, inputs, errors = screening_contract.validate_answers(catalog, form, fixed=fixed)
     if errors:
         return _screening_form(catalog, form, errors, patient_code, record)
 
     try:
         answer = model.predict(values)
-    except Exception as error:                            # the model failed for any reason: say so, save nothing
+    except Exception as error:
         current_app.logger.error("Screening could not be analysed: %s: %s", type(error).__name__, error)
         return render_template("screening/unavailable.html", page_title="Screening", kind="unavailable",
                                title="We could not analyse these answers"), 503
@@ -268,14 +264,14 @@ def risk_analysis(patient_code, assessment_id):
     store = get_assessment_store()
     row = store.get_assessment(record["user_id"], assessment_id)
     if row is None:
-        abort(404)                                        # not this patient's, or it does not exist: the same answer
+        abort(404)
 
     result_record = assessments.to_record(row, config["APP_TIMEZONE"])
     all_rows = assessments.load_records(store, record["user_id"], config["APP_TIMEZONE"])
     older = [r for r in all_rows if r["assessment_id"] != assessment_id and (r["date"], r["assessment_id"]) <= (result_record["date"], assessment_id)]
     previous = older[0] if older else None
     details = result_details.describe(row, _catalog(), _model(), current_app.extensions["model_service_stage2"])
-    return render_template("patients/risk_analysis.html", page_title="Risk analysis", record=record, result=result_record, outside=details["outside"],
+    return render_template("patients/risk_analysis.html", page_title="Risk analysis", record=record, result=result_record, outside=details["outside"], single_kidney=details["single_kidney"],
                            previous=previous, explanation=details["explanation"], explanation_unavailable=explanations.UNAVAILABLE,
                            answers=details["answers"], level=result_record["level"], threshold=result_record["threshold"],
                            explain_for_professional=True)
@@ -310,7 +306,6 @@ def reports():
                            query=term, risk=risk, review_status=review_status)
 
 
-
 def _latest_preliminary_for(user_id):
     """This patient record's most recent Preliminary screening, with its saved answers, or None."""
     store = get_assessment_store()
@@ -328,7 +323,7 @@ def _patient_document(record, lab_document_id):
         document = get_lab_document_store().get_document(record["user_id"], int(lab_document_id))
     except (TypeError, ValueError):
         return None
-    return document if document and document["status"] not in ("confirmed", "discarded") else None   # same rule as lab_routes.confirm
+    return document if document and document["status"] not in ("confirmed", "discarded") else None
 
 
 def _enhanced_form(record, values, errors, document=None, unusual=()):
@@ -363,11 +358,11 @@ def enhanced(patient_code):
         return _enhanced_form(record, found, {}, document, lab_contract.unusual_values(current_app.extensions["lab_catalog"], found))
 
     values, errors = lab_contract.validate_lab_values(current_app.extensions["lab_catalog"], request.form)
-    if document is not None and request.form.get("attest") != "1":    # an uploaded report: the professional vouches for it
+    if document is not None and request.form.get("attest") != "1":
         errors["attest"] = "Please confirm that this report is the patient's and that the values match it."
     if errors:
         return _enhanced_form(record, {k: v for k, v in request.form.items() if v}, errors, document)
-    unusual = lab_contract.unusual_values(current_app.extensions["lab_catalog"], values)   # checked once, never refused
+    unusual = lab_contract.unusual_values(current_app.extensions["lab_catalog"], values)
     if unusual and request.form.get("confirm_unusual") != lab_contract.unusual_signature(unusual):
         return _enhanced_form(record, {k: v for k, v in request.form.items() if v}, lab_contract.unusual_errors(unusual, request.form),
                               document, unusual)
@@ -375,7 +370,7 @@ def enhanced(patient_code):
     row.update(values)
     try:
         answer = model.predict(row)
-    except Exception as error:                            # the model failed for any reason: say so, save nothing
+    except Exception as error:
         current_app.logger.error("Enhanced assessment could not be analysed (patient user_id=%s): %s: %s", record["user_id"], type(error).__name__, error)
         return render_template("lab/unavailable.html", page_title="Enhanced assessment", kind="unavailable",
                                title="We could not analyse these values"), 503
@@ -392,7 +387,6 @@ def enhanced(patient_code):
                             record["user_id"], assessment_id, g.user["user_id"])
     flash("The Enhanced assessment is ready and saved to this patient's history.", "success")
     return redirect(url_for("patient_records.risk_analysis", patient_code=patient_code, assessment_id=assessment_id))
-
 
 
 @patient_records_bp.route("/patient-records/<patient_code>/enhanced/upload", methods=["POST"])

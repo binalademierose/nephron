@@ -36,7 +36,6 @@ from services.user_store import get_user_store
 authorization_bp = Blueprint("authorization", __name__)
 
 
-# ------------------------------------------------------------------ patient side
 @authorization_bp.route("/share")
 @role_required("general")
 def share():
@@ -52,7 +51,6 @@ def share():
 def _search_professionals(user_store, term):
     """Never lets a patient find their own account this way - searching for oneself to "share with" makes no sense."""
     results = user_store.search_professionals(term) if term else []
-    # A switched-off account cannot be shared with (it cannot sign in to see anything).
     return [r for r in results if r["user_id"] != g.user["user_id"] and r.get("is_active", True)]
 
 
@@ -65,7 +63,7 @@ def share_search():
     try:
         term = request.args.get("q", "").strip()
         results = _search_professionals(user_store, term)
-    except Exception as error:                              # a search box must never surface a raw error
+    except Exception as error:
         current_app.logger.error("Practitioner search failed: %s: %s", type(error).__name__, error)
         return {"error": "Search is temporarily unavailable."}, 503
     return {"results": [{"user_id": r["user_id"], "full_name": r["full_name"], "profession_title": r.get("profession_title"),
@@ -82,7 +80,6 @@ def request_share():
     except ValueError:
         abort(400)
     if not consents.given(request.form):
-        # Sharing health information needs an active yes, checked here on the server and not only on the page.
         flash("Please confirm what you are sharing before sending a request. Nothing was sent.", "error")
         return redirect(url_for("authorization.share"))
     try:
@@ -111,7 +108,6 @@ def revoke_share(professional_id):
     return redirect(url_for("authorization.share"))
 
 
-# ------------------------------------------------------------------ professional side
 @authorization_bp.route("/patients")
 @role_required("professional")
 def patients():
@@ -170,7 +166,7 @@ def _history_page(patient_id, review_form=None, review_errors=None):
     back with everything that was typed (a long clinical note is never lost to a mistyped appointment date)."""
     auth_store, user_store = get_authorization_store(), get_user_store()
     if not authorizations.is_authorized(auth_store, patient_id, g.user["user_id"]):
-        abort(404)                                     # not authorized, or no such patient: the same answer
+        abort(404)
     patient = user_store.find_by_id(patient_id)
     if patient is None:
         abort(404)
@@ -185,8 +181,6 @@ def _history_page(patient_id, review_form=None, review_errors=None):
     if open_follow_up:
         open_follow_up["date"] = clock.to_local_date(open_follow_up["requested_at"], zone)
     appointments = followup_appointments.for_professional_patient(get_followup_appointment_store(), g.user["user_id"], patient_id, zone)
-    # Which result the review form starts on: the one being fixed, else the one asked for (?assessment=), else the
-    # newest result still awaiting a note, else the newest result.
     review_form = review_form or {}
     try:
         asked = int(review_form.get("assessment_id") or request.args.get("assessment", ""))
@@ -194,8 +188,6 @@ def _history_page(patient_id, review_form=None, review_errors=None):
         asked = None
     ids = [r["assessment_id"] for r in records]
     selected_assessment_id = asked if asked in ids else next((r["assessment_id"] for r in records if not reviews_by_assessment.get(r["assessment_id"])), ids[0] if ids else None)
-    # "Clinical note only" or "Clinical note + follow-up": what was chosen, else what the link asked for (?with=follow-up,
-    # from a shared result's "Add note + follow-up" button), else a note only.
     review_mode = review_form.get("mode") or (REVIEW_WITH_FOLLOW_UP if request.args.get("with") == "follow-up" else REVIEW_NOTE_ONLY)
     return render_template("authorizations/patient_history.html", selected_assessment_id=selected_assessment_id, page_title=f"{patient['full_name']}'s history",
                            patient=patient, records=records, reviews_by_assessment=reviews_by_assessment, open_follow_up=open_follow_up,
@@ -210,13 +202,13 @@ def shared_result(patient_id, assessment_id):
     agreed to share ("the answers and lab values behind it", templates/authorizations/_consent_template.html).
     The same detail a professional sees for a patient they recorded themselves (services/result_details.py)."""
     if not authorizations.is_authorized(get_authorization_store(), patient_id, g.user["user_id"]):
-        abort(404)                                     # not authorized, or no such patient: the same answer
+        abort(404)
     patient = get_user_store().find_by_id(patient_id)
     if patient is None:
         abort(404)
     zone = current_app.config["APP_TIMEZONE"]
     store = get_assessment_store()
-    row = store.get_assessment(patient_id, assessment_id)   # looked up within THIS patient only: another person's id is a 404
+    row = store.get_assessment(patient_id, assessment_id)
     if row is None:
         abort(404)
     result = assessments.to_record(row, zone)
@@ -230,7 +222,7 @@ def shared_result(patient_id, assessment_id):
     return render_template("authorizations/shared_result.html", page_title=f"{patient['full_name']}'s result",
                            patient=patient, result=result, level=result["level"], threshold=result["threshold"],
                            previous=older[0] if older else None, reviews=reviews,
-                           answers=details["answers"], explanation=details["explanation"], outside=details["outside"],
+                           answers=details["answers"], explanation=details["explanation"], outside=details["outside"], single_kidney=details["single_kidney"],
                            explanation_unavailable=explanations.UNAVAILABLE, explain_for_professional=True)
 
 
@@ -342,7 +334,6 @@ def add_review(patient_id):
         assessment_id = int(form.get("assessment_id", ""))
     except ValueError:
         abort(400)
-    # The result must be THIS patient's: a note is never attached to anyone else's result by changing the number.
     if get_assessment_store().get_assessment(patient_id, assessment_id) is None:
         abort(404)
     mode = form.get("mode") or REVIEW_NOTE_ONLY
@@ -387,7 +378,7 @@ def add_review(patient_id):
                 followups.request_followup(get_followup_store(), get_authorization_store(), g.user, patient_id, purpose, now)
                 message = "Your note was added, the follow-up appointment was scheduled, and they can screen again now."
     except (clinical_reviews.NotAuthorizedError, followup_appointments.NotAuthorizedError, followups.NotAuthorizedError):
-        abort(404)                                     # the patient ended the sharing a moment ago
+        abort(404)
     flash(message, "success")
     current_app.logger.info("Clinical review added (patient_user_id=%s, professional_user_id=%s, assessment_id=%s, with_follow_up=%s)",
                             patient_id, g.user["user_id"], assessment_id, mode == REVIEW_WITH_FOLLOW_UP)
@@ -428,8 +419,6 @@ def follow_up_cases():
               g.user["user_id"], zone, clock.now_utc())
     rows = professional_overview.follow_up_list(*stores, term=term, status=status, date_period=date_period)
 
-    # The calendar shows every one of this professional's appointments for the viewed month (not narrowed by the
-    # table's filters - it is the whole schedule), each labelled with its own patient.
     today = clock.local_today(zone)
     year, month = followup_calendar.viewed_month(request.args, today)
     previous_month, next_month = followup_calendar.neighbours(year, month)
@@ -446,7 +435,7 @@ def manage_connection(patient_id):
     control that manages it (ending access) - separate from the history page's own inline button."""
     auth_store, user_store = get_authorization_store(), get_user_store()
     if not authorizations.is_authorized(auth_store, patient_id, g.user["user_id"]):
-        abort(404)                                     # not authorized, or no such patient: the same answer
+        abort(404)
     patient = user_store.find_by_id(patient_id)
     if patient is None:
         abort(404)
@@ -457,7 +446,6 @@ def manage_connection(patient_id):
     accepted_date = clock.to_local_date(row["responded_at"], zone) if row["responded_at"] else None
     return render_template("authorizations/manage_connection.html", page_title=f"Manage connection with {patient['full_name']}",
                            patient=patient, requested_date=requested_date, accepted_date=accepted_date)
-
 
 
 @authorization_bp.route("/review-queue")

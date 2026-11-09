@@ -45,7 +45,6 @@ def dashboard():
     )
     latest = summary["latest"]
     trend = visuals.trend_geometry(summary["oldest_first"], latest["threshold"]) if summary["has_trend"] else None
-    # The kidney-health checklist resets every day: show how yesterday went and how today is going.
     checklist_days, checklist_groups = None, []
     if records:
         store = get_assessment_store()
@@ -55,7 +54,6 @@ def dashboard():
             args = (get_checklist_store(), newest["inputs"], newest["classification"], g.user["user_id"])
             checklist_days = {"yesterday": checklist.day_summary(*args, today - timedelta(days=1)),
                               "today": checklist.day_summary(*args, today)}
-            # Today's list itself, shown right under that summary card (templates/partials/_checklist.html).
             checklist_groups = checklist.for_user(*args, today)
     checklist_done, checklist_total = checklist.progress(checklist_groups)
     return render_template(
@@ -76,7 +74,6 @@ def dashboard():
         drafts=screening_drafts.describe_for_dashboard(get_screening_draft_store(), g.user["user_id"], config["APP_TIMEZONE"],
                                                        {"preliminary": [step["key"] for step in screening_contract.load_catalog()["steps"]]}),
         profile=g.user,
-        # None = not built yet (shown as "Coming soon"). Each of these becomes a real address in the phase that builds it.
         result_urls={r["assessment_id"]: url_for("screening.result", assessment_id=r["assessment_id"]) for r in records},
         links={"start": url_for("screening.screening") if current_app.extensions["model_service"].ready else None, "history": url_for("history.index"), "activity": url_for("history.index"), "upload": url_for("lab.start"), "reports": url_for("reports.patient_reports"), "share": url_for("authorization.share"),
                "profile": url_for("account.settings"), "about_ckd": None, "philhealth": url_for("resources.philhealth_directory"), "model_info": url_for("main.about"), "tips": url_for("followup.index") + "#checklist-heading", "follow_up": url_for("followup.index")},
@@ -146,10 +143,9 @@ def change_password():
             config["LOGIN_MAX_FAILURES"], config["LOGIN_LOCK_MINUTES"],
         )
         if status == auth_service.CHANGE_OK:
-            # Every session made before now stops working; this one is renewed so the person stays signed in.
             start_session(g.user["user_id"], now)
             current_app.logger.info("Password changed (user_id=%s)", g.user["user_id"])
-            store.set_must_change(g.user["user_id"], False)          # a temporary password from an administrator is now replaced
+            store.set_must_change(g.user["user_id"], False)
             activity.record("password_changed", g.user["user_id"], g.user["user_id"])
             flash("Your password was changed. Any other device that was signed in has been signed out.", "success")
             return redirect(url_for("account.settings"))
@@ -193,7 +189,6 @@ def delete_account():
         return render_template("account/settings.html", page_title="Your account", errors={},
                                danger_error="delete", danger_message="Tick the box to confirm you want to permanently delete your account."), 200
     user_id = g.user["user_id"]
-    # Record the audit entry before the row is gone (the log keeps it, with the person's id set to NULL afterwards).
     activity.record("account_self_deleted", user_id, user_id)
     current_app.logger.info("Account self-deleted (user_id=%s)", user_id)
     get_user_store().delete_user(user_id)

@@ -38,7 +38,6 @@ def register():
             activity.record("registered", user_id, user_id, "Healthcare Professional" if values["role"] == "professional" else "General User")
             flash("Your account is ready. Welcome to Nephron.", "success")
             return redirect(landing_url(values))
-    # Show the form again with what they typed (never the password) and a message beside each problem.
     return _show_register(errors, {field: request.form.get(field, "") for field in REGISTER_FIELDS})
 
 
