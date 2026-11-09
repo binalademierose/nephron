@@ -1,10 +1,5 @@
-{# The one, single-page confirmation form: every value is shown editable (never applied silently), grouped the way
-   a lab report usually is. Only Serum_Creatinine is required. The SERVER checks every value again on submit
-   (services/lab_contract.py), so nothing here needs to be trusted on its own. #}
 {% extends "layouts/app_base.html" %}
 {% from "partials/_macros.html" import icon, alert_box, csrf_field, field_error, need %}
-{# Values far outside the usual range (services/lab_contract.unusual_values): accepted, but shown back once to be
-   checked - an abnormal result is real, a wrong unit or decimal point is a typo. #}
 {% set unusual = unusual|default([]) %}
 {% set unusual_by_name = {} %}{% for item in unusual %}{% set _ = unusual_by_name.update({item.name: item}) %}{% endfor %}
 {% set active_nav = nav_key or 'laboratory' %}
@@ -75,6 +70,7 @@
 {% endif %}
 <form class="lab-confirm-form" method="post" action="{{ form_action or (url_for('lab.confirm', lab_document_id=document.lab_document_id) if document else url_for('lab.confirm_manual')) }}" novalidate data-busy-text="Analysing the lab values..." data-confirm="default" data-confirm-title="Analyse these lab values?" data-confirm-message="Please check every value against the lab report itself - the estimate can only be as accurate as the values behind it. Results can vary between tests, and this is a screening estimate, not a diagnosis." data-confirm-accept="Yes, analyse" data-confirm-dismiss="Check again">
   {{ csrf_field() }}
+  <p class="form-required-note"><span class="required-mark" aria-hidden="true">*</span> Required</p>
   {% for group in catalog.groups %}
   {% set fields = catalog.fields|selectattr('group', 'equalto', group.key)|list %}
   <section class="card reveal" style="--i: {{ loop.index }};" aria-labelledby="group-{{ group.key }}-heading">
@@ -85,7 +81,7 @@
       {% set value = values.get(name, '') %}
       {% set was_suggested = document and document.ocr_values and name in document.ocr_values %}
       <div class="form-group">
-        <label class="form-label" for="f-{{ name }}">{{ f.label }} {{ need(f.required) }}{% if f.get('explain') %} <button type="button" class="field-help-button" data-field-help="{{ f.explain }}" aria-label="What is {{ f.short }}?">?</button>{% endif %}</label>
+        <label class="form-label" for="f-{{ name }}">{{ f.label }}{% if f.required %} {{ need(true) }}{% endif %}{% if f.get('explain') %} <button type="button" class="field-help-button" data-field-help="{{ f.explain }}" aria-label="What is {{ f.short }}?">?</button>{% endif %}</label>
         <div class="input-wrap has-suffix">
           <input class="form-control{{ ' is-invalid' if errors.get(name) }}{{ ' is-suggested' if was_suggested }}{{ ' is-unusual' if name in unusual_by_name }}" id="f-{{ name }}" name="{{ name }}"
                 type="text" inputmode="decimal" autocomplete="off" value="{{ value }}"

@@ -1,5 +1,3 @@
-{# The start of Enhanced Screening. Uploading is optional: "Enter values by hand" skips straight to the same
-   confirmation form, blank, since every lab value except Serum_Creatinine is optional anyway. #}
 {% extends "layouts/app_base.html" %}
 {% from "partials/_macros.html" import icon, csrf_field %}
 {% from "partials/_visuals.html" import icon_chip %}
@@ -16,7 +14,7 @@
       check and correct before anything is analysed - nothing from the file is used without your confirmation.</p>
     <form method="post" action="{{ url_for('lab.upload') }}" enctype="multipart/form-data" class="upload-form">
       {{ csrf_field() }}
-      <label class="form-label" for="document">Lab report <span class="chip chip-required">Required</span></label>
+      <label class="form-label" for="document">Lab report <span class="required-mark" aria-hidden="true">*</span><span class="visually-hidden">(required)</span></label>
       <input class="form-control" type="file" id="document" name="document" accept="{% if ocr_pdf_available %}image/jpeg,image/png,application/pdf{% else %}image/jpeg,image/png{% endif %}" required>
       <button class="button button-primary" type="submit">{{ icon('upload') }}Upload and read</button>
     </form>
@@ -31,8 +29,6 @@
   </section>
 </div>
 {% else %}
-{# Reading values from a photo/PDF needs the Tesseract program, which is not available on this server, so the
-   honest path is to enter the values directly. #}
 <div class="result-frame">
   <section class="card card-hero reveal" style="--i: 1;" aria-labelledby="manual-heading">
     <div class="card-header"><h2 class="card-title" id="manual-heading">{{ icon_chip('flask', 'lavender') }}Enter your lab values</h2></div>
