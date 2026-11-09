@@ -1,6 +1,3 @@
-{# A Preliminary screening the PROFESSIONAL fills in on the patient's behalf. Same catalog, same questions, same
-   server-side checks as templates/screening/form.html (its own "question" macro is reused directly, unchanged) -
-   just posted to a different route, and with the same draft autosave as a person's own screening, saved under the patient record's own account. #}
 {% extends "layouts/app_base.html" %}
 {% from "partials/_macros.html" import icon, alert_box, csrf_field, field_error %}
 {% from "partials/_visuals.html" import icon_chip %}
@@ -34,6 +31,7 @@
       <span class="step-progress-text" data-step-progress-text>0% complete</span>
       <span class="draft-save-status" data-draft-status aria-live="polite"></span>
     </div>
+    <p class="form-required-note"><span class="required-mark" aria-hidden="true">*</span> Required</p>
 
     {% if errors %}{{ alert_box('error', 'Some answers need attention. They are marked below, and nothing has been saved.', dismissible=False, title='Please check the answers') }}{% endif %}
 
@@ -44,8 +42,11 @@
         <h2 id="step-{{ loop.index }}-title" tabindex="-1">{{ step.title }}</h2>
         <p class="text-muted">{{ step.intro }}</p>
         <div class="card form-card">
-          <div class="card-header"><h3 class="card-title">{{ icon_chip(step.icon, 'lavender', 'icon-chip-sm') }}{{ step.title }}</h3><span class="chip chip-required">Required</span></div>
+          <div class="card-header"><h3 class="card-title">{{ icon_chip(step.icon, 'lavender', 'icon-chip-sm') }}{{ step.title }}</h3></div>
           {% for q in catalog.questions if q.step == step.key and q.kind != 'derived' %}
+            {{ question(q, answers, errors, fixed) }}
+          {% endfor %}
+          {% for q in extra_questions if q.step == step.key %}
             {{ question(q, answers, errors, fixed) }}
           {% endfor %}
         </div>

@@ -1,6 +1,3 @@
-{# A saved assessment, for the professional who performed it. Reuses the SAME explanation partial as the patient's
-   own result page (templates/screening/_explanation.html) - the risk ring, classification, and factor cards mean
-   exactly the same thing here as they do there. #}
 {% extends "layouts/app_base.html" %}
 {% from "partials/_macros.html" import icon %}
 {% from "partials/_visuals.html" import icon_chip, ring %}
@@ -36,6 +33,7 @@
   </div>
 </section>
 
+{% include "screening/_single_kidney.html" %}
 {% include "screening/_outside_training.html" %}
 {% include "screening/_explanation.html" %}
 
