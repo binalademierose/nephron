@@ -1,7 +1,3 @@
-{# An authorized patient's history, one card per assessment, each with its own clinical review notes (oldest
-   first, a running conversation) and a small form to add another one. Each card opens that result's answers and
-   factors on the professional's own page (authorization.shared_result), never the patient's own result page
-   (screening.result), which stays scoped to the signed-in patient themselves - see README.md. #}
 {% extends "layouts/app_base.html" %}
 {% from "partials/_macros.html" import icon, csrf_field, risk_badge, need, field_error, alert_box %}
 {% set active_nav = 'shared' %}
@@ -15,8 +11,6 @@
 </div>
 
 {% if records %}
-{# ONE place to review a result: a clinical note only, or a clinical note + a follow-up appointment (and, optionally,
-   letting the patient screen again now). Replaces the separate follow-up request, appointment and review forms. #}
 {% set f = review_form %}
 {% set e = review_errors %}
 {% set with_follow_up = review_mode == 'note_follow_up' %}
@@ -218,21 +212,21 @@
     <form method="post" action="{{ url_for('reports.download_patient_report_for_professional', patient_id=patient.user_id) }}">
       {{ csrf_field() }}
       <fieldset class="form-group">
-        <legend class="form-label">What should the report cover? <span class="chip chip-required">Required</span></legend>
+        <legend class="form-label">What should the report cover?</legend>
         <div class="choice-group">
           <label class="choice"><input type="radio" name="report_type" value="single" checked><span class="choice-tile">One result</span></label>
           <label class="choice"><input type="radio" name="report_type" value="history"><span class="choice-tile">{{ patient.full_name }}'s whole history ({{ records|length }})</span></label>
         </div>
       </fieldset>
       <div class="form-group">
-        <label class="form-label" for="ph-assessment_id">Which result? <span class="chip chip-required">Required for one result</span></label>
+        <label class="form-label" for="ph-assessment_id">Which result?</label>
         <select class="form-control" id="ph-assessment_id" name="assessment_id">
           {% for record in records %}
           <option value="{{ record.assessment_id }}">{{ format_date(record.date) }} &middot; {{ record.type }} &middot; {{ percent_text(record.probability) }}%</option>
           {% endfor %}
         </select>
       </div>
-      <label class="form-check"><input class="pick" type="checkbox" name="include_reviews" checked><span>Include clinical review notes, if any <span class="chip chip-optional">Optional</span></span></label>
+      <label class="form-check"><input class="pick" type="checkbox" name="include_reviews" checked><span>Include clinical review notes, if any</span></label>
       <button class="button button-primary" type="submit" style="margin-top: var(--space-4);">{{ icon('download') }}Download PDF</button>
     </form>
   </section>

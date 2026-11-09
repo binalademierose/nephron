@@ -1,6 +1,3 @@
-{# The plain-language consent a patient reads before sharing. Kept in ONE place - both the server-rendered forms and
-   the live-search results point their confirmation dialog at this template. If what it PROMISES changes, change
-   services/consents.py CURRENT_VERSION too, so an earlier agreement still names the wording it was given under. #}
 {% from "partials/_macros.html" import icon %}
 <template id="share-consent-template">
   <ul class="confirm-points">
