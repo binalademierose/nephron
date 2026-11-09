@@ -533,22 +533,14 @@ class RealisticRangeTests(AppTestCase):
     def _submit(self, **changes):
         return self.post("/screening", answers(**changes), client=self.browser, token_from="/screening")
 
-    def test_an_age_below_the_training_range_is_accepted_and_flagged_on_the_result(self):
+    def test_an_age_below_the_training_range_is_accepted_without_a_notice(self):
         pro = self.signed_in(**self.professional_details())
         code = self.post("/patient-records/new", {"full_name": "Teen Patient", "date_of_birth": "2010-01-15", "country": "Other", "gender": "Female", "sex": "Female"},
                          client=pro, token_from="/patient-records/new").headers["Location"].split("/")[-2]
         response = self.post(f"/patient-records/{code}/screening", answers(), client=pro, token_from=f"/patient-records/{code}/screening")
         self.assertEqual(response.status_code, 302)
         page = self.text(pro.get(response.headers["Location"]))
-        self.assertIn("Some answers are outside the usual range", page)
-        self.assertIn("Age: 16 years", page)
-
-    def _unused_age_override(self):
-        response = self._submit(Age="16")
-        self.assertEqual(response.status_code, 302)
-        page = self.text(self.browser.get(response.headers["Location"]))
-        self.assertIn("Some answers are outside the usual range", page)
-        self.assertIn("Age: 16 years", page)
+        self.assertNotIn("Some answers are outside the usual range", page)
 
     def test_lifestyle_numbers_outside_training_are_accepted(self):
         response = self._submit(Sleep_Duration_Hours="13", Water_Intake_L="5", Exercise_Hours_Per_Week="20", Fast_Food_Frequency_Per_Week="14")
@@ -560,7 +552,7 @@ class RealisticRangeTests(AppTestCase):
             self.assertIn(f'id="{field}-error"', page, field)
         self.assertEqual(self.app.extensions["assessment_store"].list_assessments(self.user_id), [])
 
-    def test_philippines_is_offered_saved_as_itself_and_flagged_as_unknown_to_the_model(self):
+    def test_philippines_is_offered_and_saved_as_itself_without_a_notice(self):
         self.assertIn('<option value="Philippines"', self.text(self.new_browser().get("/register")))
         self.browser = self.signed_in(email="ph@example.com", country="Philippines", province_code="1300000000")
         self.user_id = self.store.find_by_email("ph@example.com")["user_id"]
@@ -570,7 +562,8 @@ class RealisticRangeTests(AppTestCase):
         saved = self.app.extensions["assessment_store"].get_assessment(self.user_id, rows[0]["assessment_id"])
         self.assertEqual(saved["inputs"]["Country"], "Philippines")
         page = self.text(self.browser.get(response.headers["Location"]))
-        self.assertIn("the model knows it only as &#34;Other&#34;", page)
+        self.assertNotIn("the model knows it only as", page)
+        self.assertNotIn("Some answers are outside the usual range", page)
 
     def test_an_ordinary_answer_shows_no_flag(self):
         response = self._submit()

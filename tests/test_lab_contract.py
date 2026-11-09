@@ -104,7 +104,6 @@ class ValidateLabValuesTests(unittest.TestCase):
         changed = lab_contract.unusual_values(CATALOG, {"Serum_Creatinine": 1.0, "Urine_ACR": 13000.0})
         self.assertNotEqual(lab_contract.unusual_signature(flagged), lab_contract.unusual_signature(changed))
         self.assertEqual(lab_contract.unusual_values(CATALOG, {"Serum_Creatinine": 1.0}), [])
-        self.assertEqual(lab_contract.outside_usual_range(CATALOG, {"Urine_ACR": 12000.0, "eGFR": 7})[0][:2], ("Urine ACR", "12,000 mg/g"))
 
     def test_boundary_values_are_accepted(self):
         field = lab_contract.field_for(CATALOG, "Serum_Creatinine")

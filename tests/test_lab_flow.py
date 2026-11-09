@@ -139,8 +139,7 @@ class ManualEntryTests(EnhancedScreeningTestCase):
         self.assertEqual(response.status_code, 302)
         self.assertEqual(self._count(), before + 1)
         result = self.text(self.member.get(response.headers["Location"]))
-        self.assertIn("Some answers are outside the usual range", result)
-        self.assertIn("Urine ACR: 12,000 mg/g", result)
+        self.assertNotIn("Some answers are outside the usual range", result)
 
     def test_a_confirmation_never_carries_over_to_a_value_that_was_not_on_the_screen(self):
         before = self._count()
