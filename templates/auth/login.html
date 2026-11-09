@@ -1,4 +1,3 @@
-{# The real sign-in page. The design preview of this page is templates/design/login.html. #}
 {% extends "layouts/auth_base.html" %}
 {% from "partials/_macros.html" import icon, alert_box, csrf_field, field_error %}
 {% from "partials/_visuals.html" import icon_chip %}
@@ -17,7 +16,6 @@
 <h1>Welcome back</h1>
 <p class="text-muted">Sign in to see your assessments and shared results.</p>
 
-{# The same wording for a wrong password and for an email with no account, so it never reveals which is which. #}
 {% if notice == 'failed' %}
   {{ alert_box('error', 'Check your email address and password, then try again.', dismissible=False, title="We couldn't sign you in") }}
 {% elif notice == 'inactive' %}
@@ -31,7 +29,7 @@
   <input type="hidden" name="next" value="{{ next_url }}">
 
   <div class="form-group">
-    <label class="form-label" for="email">Email address <span class="chip chip-required">Required</span></label>
+    <label class="form-label" for="email">Email address</label>
     <div class="input-wrap has-icon">
       {{ icon('mail', 'input-icon') }}
       <input class="form-control{{ ' is-invalid' if errors.get('email') }}" id="email" name="email" type="email" value="{{ email }}" autocomplete="email" autocapitalize="none" spellcheck="false" placeholder="name@example.com" required aria-describedby="email-error"{{ ' aria-invalid="true" autofocus'|safe if errors.get('email') }}{{ ' autofocus'|safe if not errors and not notice and not email }}>
@@ -40,7 +38,7 @@
   </div>
 
   <div class="form-group">
-    <label class="form-label" for="password">Password <span class="chip chip-required">Required</span></label>
+    <label class="form-label" for="password">Password</label>
     <div class="input-wrap has-icon has-action">
       {{ icon('lock', 'input-icon') }}
       <input class="form-control{{ ' is-invalid' if errors.get('password') }}" id="password" name="password" type="password" autocomplete="current-password" required aria-describedby="password-error"{{ ' aria-invalid="true" autofocus'|safe if errors.get('password') or (notice and email) }}>

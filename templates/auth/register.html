@@ -1,4 +1,3 @@
-{# The real register page. The design preview of this page is templates/design/register.html. #}
 {% extends "layouts/auth_base.html" %}
 {% from "partials/_location_fields.html" import location_fields %}
 {% from "partials/_macros.html" import icon, csrf_field, field_error %}
@@ -21,12 +20,12 @@
 {% set failing = field_order | select('in', errors) | list %}
 {% set first_error = failing[0] if failing else '' %}
 <h1>Create your account</h1>
-<p class="text-muted">It takes a minute. Fields marked <span class="chip chip-required">Required</span> must be filled in.</p>
+<p class="text-muted">It takes a minute. Fields marked with <span class="required-mark">*</span> are required.</p>
 
 <form method="post" action="{{ url_for('auth.register') }}" novalidate>
   {{ csrf_field() }}
   <fieldset class="role-grid" aria-describedby="role-error">
-    <legend class="form-label">I am a <span class="chip chip-required">Required</span></legend>
+    <legend class="form-label">Account type <span class="required-mark" aria-hidden="true">*</span><span class="visually-hidden">(required)</span></legend>
     <label class="role-card">
       <input type="radio" name="role" value="general" {{ 'checked' if form.get('role') != 'professional' }}>
       <span class="role-tile">{{ icon_chip('user', 'blue') }}<strong>General user</strong><span class="role-note">Screen yourself</span></span>
@@ -39,7 +38,7 @@
   {{ field_error(errors, 'role') }}
 
   <div class="form-group">
-    <label class="form-label" for="full_name">Full name <span class="chip chip-required">Required</span></label>
+    <label class="form-label" for="full_name">Full name <span class="required-mark" aria-hidden="true">*</span><span class="visually-hidden">(required)</span></label>
     <div class="input-wrap has-icon">
       {{ icon('user', 'input-icon') }}
       <input class="form-control{{ ' is-invalid' if errors.get('full_name') }}" id="full_name" name="full_name" type="text" value="{{ form.get('full_name', '') }}" autocomplete="name" maxlength="120" required aria-describedby="full_name-error"{{ ' aria-invalid="true"'|safe if errors.get('full_name') }}{{ ' autofocus'|safe if first_error == 'full_name' }}>
@@ -48,7 +47,7 @@
   </div>
 
   <div class="form-group">
-    <label class="form-label" for="email">Email address <span class="chip chip-required">Required</span></label>
+    <label class="form-label" for="email">Email address <span class="required-mark" aria-hidden="true">*</span><span class="visually-hidden">(required)</span></label>
     <div class="input-wrap has-icon">
       {{ icon('mail', 'input-icon') }}
       <input class="form-control{{ ' is-invalid' if errors.get('email') }}" id="email" name="email" type="email" value="{{ form.get('email', '') }}" autocomplete="email" autocapitalize="none" spellcheck="false" placeholder="name@example.com" maxlength="254" required aria-describedby="email-error"{{ ' aria-invalid="true"'|safe if errors.get('email') }}{{ ' autofocus'|safe if first_error == 'email' }}>
@@ -58,7 +57,7 @@
 
   <div class="form-row">
     <div class="form-group">
-      <label class="form-label" for="username">Username <span class="chip chip-required">Required</span></label>
+      <label class="form-label" for="username">Username <span class="required-mark" aria-hidden="true">*</span><span class="visually-hidden">(required)</span></label>
       <div class="input-wrap has-icon">
         {{ icon('at-sign', 'input-icon') }}
         <input class="form-control{{ ' is-invalid' if errors.get('username') }}" id="username" name="username" type="text" value="{{ form.get('username', '') }}" autocomplete="username" autocapitalize="none" spellcheck="false" maxlength="32" required aria-describedby="username-hint username-error"{{ ' aria-invalid="true"'|safe if errors.get('username') }}{{ ' autofocus'|safe if first_error == 'username' }}>
@@ -68,7 +67,7 @@
     </div>
 
     <div class="form-group">
-      <label class="form-label" for="date_of_birth">Date of birth <span class="chip chip-required">Required</span></label>
+      <label class="form-label" for="date_of_birth">Date of birth <span class="required-mark" aria-hidden="true">*</span><span class="visually-hidden">(required)</span></label>
       <div class="input-wrap has-icon">
         {{ icon('calendar', 'input-icon') }}
         <input class="form-control{{ ' is-invalid' if errors.get('date_of_birth') }}" id="date_of_birth" name="date_of_birth" type="date" value="{{ form.get('date_of_birth', '') }}" autocomplete="bday" required aria-describedby="date_of_birth-error"{{ ' aria-invalid="true"'|safe if errors.get('date_of_birth') }}{{ ' autofocus'|safe if first_error == 'date_of_birth' }}>
@@ -78,19 +77,19 @@
   </div>
 
   <div class="form-group">
-    <label class="form-label" for="country">Country you live in <span class="chip chip-required">Required for General Users</span></label>
+    <label class="form-label" for="country">Country you live in <span class="required-mark" aria-hidden="true">*</span><span class="visually-hidden">(required)</span></label>
     <select class="form-control{{ ' is-invalid' if errors.get('country') }}" id="country" name="country" aria-describedby="country-hint country-error"{{ ' aria-invalid="true"'|safe if errors.get('country') }}{{ ' autofocus'|safe if first_error == 'country' }}>
       <option value="">Choose one</option>
       {% for value, label in country_options %}<option value="{{ value }}" {{ 'selected' if form.get('country') == value }}>{{ label }}</option>{% endfor %}
     </select>
-    <p class="form-helper" id="country-hint">Used for your screenings, so you will not be asked again each time.</p>
+    <p class="form-helper" id="country-hint">Required for general users. Used for your screenings, so you will not be asked again each time.</p>
     {{ field_error(errors, 'country') }}
   </div>
 
   {{ location_fields(form, errors, country_field='country', country=form.get('country')) }}
 
   <div class="form-group">
-    <label class="form-label" for="address">Address <span class="chip chip-optional">Optional</span></label>
+    <label class="form-label" for="address">Address <span class="optional-mark">(optional)</span></label>
     <div class="input-wrap has-icon">
       {{ icon('map-pin', 'input-icon') }}
       <input class="form-control{{ ' is-invalid' if errors.get('address') }}" id="address" name="address" type="text" value="{{ form.get('address', '') }}" autocomplete="street-address" maxlength="255" aria-describedby="address-error"{{ ' aria-invalid="true"'|safe if errors.get('address') }}>
@@ -100,7 +99,7 @@
 
   <div class="form-row">
     <div class="form-group">
-      <label class="form-label" for="password">Password <span class="chip chip-required">Required</span></label>
+      <label class="form-label" for="password">Password <span class="required-mark" aria-hidden="true">*</span><span class="visually-hidden">(required)</span></label>
       <div class="input-wrap has-icon has-action">
         {{ icon('lock', 'input-icon') }}
         <input class="form-control{{ ' is-invalid' if errors.get('password') }}" id="password" name="password" type="password" autocomplete="new-password" maxlength="128" required aria-describedby="password-hint password-error"{{ ' aria-invalid="true"'|safe if errors.get('password') }}{{ ' autofocus'|safe if first_error == 'password' }}>
@@ -111,7 +110,7 @@
     </div>
 
     <div class="form-group">
-      <label class="form-label" for="confirm_password">Confirm password <span class="chip chip-required">Required</span></label>
+      <label class="form-label" for="confirm_password">Confirm password <span class="required-mark" aria-hidden="true">*</span><span class="visually-hidden">(required)</span></label>
       <div class="input-wrap has-icon has-action">
         {{ icon('lock', 'input-icon') }}
         <input class="form-control{{ ' is-invalid' if errors.get('confirm_password') }}" id="confirm_password" name="confirm_password" type="password" autocomplete="new-password" maxlength="128" required aria-describedby="confirm_password-error"{{ ' aria-invalid="true"'|safe if errors.get('confirm_password') }}{{ ' autofocus'|safe if first_error == 'confirm_password' }}>
@@ -122,7 +121,7 @@
   </div>
 
   <fieldset class="form-group avatar-fieldset" aria-describedby="avatar-error">
-    <legend class="form-label">Profile picture <span class="chip chip-required">Required</span></legend>
+    <legend class="form-label">Profile picture <span class="required-mark" aria-hidden="true">*</span><span class="visually-hidden">(required)</span></legend>
     <div class="avatar-grid">
       {% for n in range(1, 9) %}
       {% set value = "avatar-" ~ n %}
@@ -135,11 +134,10 @@
     {{ field_error(errors, 'avatar') }}
   </fieldset>
 
-  {# Only for healthcare professionals. auth.js hides this block while "General user" is selected. #}
   <div class="professional-fields" data-professional-fields>
     <p class="form-helper professional-note">{{ icon('info') }}<span>Professional details are typed in by you. Nephron does not verify them in this version.</span></p>
     <div class="form-group">
-      <label class="form-label" for="profession_title">Profession <span class="chip chip-required">Required</span></label>
+      <label class="form-label" for="profession_title">Profession <span class="required-mark" aria-hidden="true">*</span><span class="visually-hidden">(required)</span></label>
       <select class="form-control{{ ' is-invalid' if errors.get('profession_title') }}" id="profession_title" name="profession_title" aria-describedby="profession_title-error"{{ ' aria-invalid="true"'|safe if errors.get('profession_title') }}{{ ' autofocus'|safe if first_error == 'profession_title' }}>
         <option value="">Choose your profession</option>
         {% for name in professions %}<option value="{{ name }}" {{ 'selected' if form.get('profession_title') == name }}>{{ name }}</option>{% endfor %}
@@ -147,12 +145,12 @@
       {{ field_error(errors, 'profession_title') }}
     </div>
     <div class="form-group">
-      <label class="form-label" for="institution">Hospital or clinic <span class="chip chip-optional">Optional</span></label>
+      <label class="form-label" for="institution">Hospital or clinic <span class="optional-mark">(optional)</span></label>
       <input class="form-control{{ ' is-invalid' if errors.get('institution') }}" id="institution" name="institution" type="text" value="{{ form.get('institution', '') }}" maxlength="120" autocomplete="organization" aria-describedby="institution-error"{{ ' aria-invalid="true"'|safe if errors.get('institution') }}>
       {{ field_error(errors, 'institution') }}
     </div>
     <div class="form-group">
-      <label class="form-label" for="license_number">License number <span class="chip chip-optional">Optional</span></label>
+      <label class="form-label" for="license_number">License number <span class="optional-mark">(optional)</span></label>
       <input class="form-control{{ ' is-invalid' if errors.get('license_number') }}" id="license_number" name="license_number" type="text" value="{{ form.get('license_number', '') }}" maxlength="50" autocomplete="off" aria-describedby="license_number-error"{{ ' aria-invalid="true"'|safe if errors.get('license_number') }}>
       {{ field_error(errors, 'license_number') }}
     </div>
@@ -163,7 +161,7 @@
   <div class="form-group agree-group">
     <label class="agree-check" for="agree_terms">
       <input type="checkbox" id="agree_terms" name="agree_terms" value="agree" {{ 'checked' if form.get('agree_terms') }} required aria-describedby="agree_terms-error"{{ ' aria-invalid="true"'|safe if errors.get('agree_terms') }}>
-      <span>I have read and agree to the <a href="{{ url_for('main.terms') }}" target="_blank" rel="noopener">Terms &amp; Conditions</a> <span class="chip chip-required">Required</span></span>
+      <span>I have read and agree to the <a href="{{ url_for('main.terms') }}" target="_blank" rel="noopener">Terms &amp; Conditions</a> <span class="required-mark" aria-hidden="true">*</span><span class="visually-hidden">(required)</span></span>
     </label>
     {{ field_error(errors, 'agree_terms') }}
   </div>
