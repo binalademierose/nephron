@@ -1,4 +1,3 @@
-{# The account details, shown on the home page and on the account page. Needs current_user. #}
 {% from "partials/_macros.html" import icon, avatar_face %}
 <div class="account-person">
   <span class="profile-avatar{{ ' has-image' if current_user.get('avatar') }}" aria-hidden="true">{{ avatar_face(current_user) }}</span>
