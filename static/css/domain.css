@@ -902,10 +902,6 @@ body:not(.app-body) .toast-region { top: var(--space-4); }
 .card .term-list > .term-row:first-child { border-top: 0; padding-top: var(--space-1); }
 .card .term-list > .term-row:last-child { border-bottom: 0; padding-bottom: var(--space-1); }
 .card .card-header + .term-list > .term-row:first-child { padding-top: var(--space-2); }
-.outside-training { margin-bottom: var(--gap); }
-.outside-training h2 { margin: 0 0 var(--space-1); font-size: var(--text-body); }
-.outside-training ul { margin: var(--space-2) 0 0; padding-left: 1.1rem; }
-.outside-training li { margin-top: var(--space-1); }
 
 .question-fixed .fixed-answer { display: flex; align-items: center; gap: var(--space-2); padding: 0.7rem 0.9rem; border-radius: var(--radius-md); background: var(--surface-soft); border: 1px dashed var(--border); color: var(--muted-color); }
 .question-fixed .fixed-answer .icon { width: 1rem; height: 1rem; color: var(--indigo); flex: none; }
