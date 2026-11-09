@@ -1,17 +1,5 @@
-{# The personalized daily kidney-health checklist (services/checklist.py): a progress ring, then one coloured card per
-   category, each task a big tappable row. Used on the General User dashboard (under the checklist-days card) and on
-   the Follow-up page, so both look and behave the same.
-
-   Each row is a real form (works with no JavaScript: it posts and comes back to `return_to`). static/js/checklist.js
-   upgrades it to tick without reloading the page and keeps every counter on the page in step.
-
-   kidney_checklist(groups, done, total, return_to, heading_id)
-     groups     - checklist.for_user(...): [{category, category_label, done_count, total_count, tips: [{id, text, is_complete}]}]
-     done/total - checklist.progress(groups)
-     return_to  - the page to come back to after a tick when JavaScript is off (a path on this site) #}
 {% from "partials/_macros.html" import icon, csrf_field %}
 
-{# icon and colour for each category in services/kidney_tips.py CATEGORY_LABELS #}
 {% set CATEGORY_LOOK = {
   'diet': ('apple', 'green'), 'hydration': ('droplet', 'sky'), 'activity': ('activity', 'amber'),
   'lifestyle': ('moon', 'violet'), 'medication': ('pill', 'rose'), 'follow_up': ('stethoscope', 'indigo'),

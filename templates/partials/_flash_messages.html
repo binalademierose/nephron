@@ -1,5 +1,3 @@
-{# Good news slides in as a toast and leaves by itself. Anything the person still has to READ AND ACT ON (an error, a
-   warning, a notice) stays a banner in the page until they dismiss it - it must never vanish before it is read. #}
 {% from "partials/_macros.html" import alert_box, toast_item %}
 {% with messages = get_flashed_messages(with_categories=true) %}
   {% if messages %}

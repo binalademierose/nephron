@@ -1,7 +1,3 @@
-{# One dialog for every "are you sure" - consent to share health information, ending access, discarding a draft.
-   It is filled in by static/js/main.js from data-confirm-* attributes on the FORM that asked for it (see
-   templates/authorizations/_macros.html for the consent form). Without JavaScript the forms simply submit; the
-   one that needs a real yes (sharing) carries a plain checkbox instead, and the server refuses it without one. #}
 {% from "partials/_macros.html" import icon %}
 <dialog class="dialog confirm-dialog" id="nephron-confirm" aria-labelledby="nephron-confirm-title" aria-describedby="nephron-confirm-lead">
   <div class="confirm-hero">

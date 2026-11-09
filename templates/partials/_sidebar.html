@@ -1,9 +1,4 @@
-{# The signed-in navigation: a curved white rail with icons. Its two curved ends are drawn as SVG (traced from the approved design).
-   Set active_nav in the page to highlight the current item. Items whose pages do not exist yet are marked
-   data-preview-link so they explain themselves instead of pretending to work.
-   On small screens this becomes a drawer, and every icon shows its name. #}
 {% from "partials/_macros.html" import icon %}
-{# Each item: key, name, icon, where it goes (None = not built yet). #}
 {% set preview = request.blueprint == 'design' %}
 {% if preview %}
   {% set rail_items = [
@@ -85,7 +80,6 @@
           {{ icon(icon_name) }}<span class="rail-label">{{ label }}</span>
         </a>
         {% else %}
-        {# Not built yet: shown so the navigation matches the design, but honestly unavailable. #}
         <a class="rail-link is-disabled" role="link" aria-disabled="true">
           {{ icon(icon_name) }}<span class="rail-label">{{ label }}<small>Coming soon</small></span>
         </a>
