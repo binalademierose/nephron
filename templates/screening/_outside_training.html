@@ -1,6 +1,3 @@
-{# Answers the model never saw in training: shown, never hidden, so an estimate built partly on an extrapolation is
-   never presented as if it were not one (services/screening_contract.py outside_training), and lab values far outside
-   the range Nephron usually expects (services/lab_contract.py outside_usual_range). #}
 {% if outside %}
 <div class="notice notice-info outside-training reveal" role="note">
   {{ icon('info') }}

@@ -1,6 +1,3 @@
-{# A real saved result. Everything here comes from the saved assessment (probability, classification, threshold, answers)
-   and, for "What affected your result most", from the saved answers run through the loaded model, but only when it is the same
-   model that produced this result. #}
 {% extends "layouts/app_base.html" %}
 {% from "partials/_macros.html" import icon, csrf_field, alert_box %}
 {% from "partials/_visuals.html" import icon_chip, ring, mini_meter, source_note %}
@@ -8,7 +5,6 @@
 {% block header_title %}Screening result{% endblock %}
 {% block header_subtitle %}{{ record.type }}, {{ format_date(record.date) }}{% endblock %}
 
-{# What to notice first: the ring and the classification. Second: what it means. Third: the next step. #}
 {% block content %}
 <div class="page-actions reveal">
   <p>Saved as a permanent record. It is never changed by a later screening.</p>
@@ -64,6 +60,7 @@
 {% endif %}
 
 {% set is_sample = False %}
+{% include "screening/_single_kidney.html" %}
 {% include "screening/_outside_training.html" %}
 {% include "screening/_explanation.html" %}
 
@@ -130,8 +127,6 @@
     </div>
   </div>
 </div>
-{# ^ that /div closes "section-tight-inline"; this next one closes "result-frame" itself, opened way above -
-   everything from the hero through here is the LEFT column, and .result-tips below is the right one #}
 </div>
 
 {% if tips %}

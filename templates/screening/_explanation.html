@@ -1,10 +1,5 @@
-{# What affected THIS person's result: one card for the answers that RAISED the estimate, one for those that LOWERED it.
-   Both cards use the same scale, so bars can be compared. Used by the real result page and by the design preview (is_sample = True).
-   explanation is None when there is nothing honest to show.
-   Note: use explanation["raises"], because explanation.items would be the dictionary's own method. #}
 {% from "partials/_macros.html" import icon %}
 {% from "partials/_visuals.html" import icon_chip, sample_tag %}
-{# explain_for_professional: set by the professional pages, so the headings speak about the patient, not to them. #}
 {% set for_professional = explain_for_professional|default(false) %}
 {% set whose = 'the' if for_professional else 'your' %}
 {% set answer_label = 'Answer' if for_professional else 'Your answer' %}

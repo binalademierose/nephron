@@ -1,6 +1,3 @@
-{# The real guided screening. Every question comes from ml/feature_catalog.json, so the form, the checks and the
-   summary can never disagree with each other or with the model. Progress and step buttons are in static/js/screening.js;
-   the SERVER checks every answer again, so nothing depends on the JavaScript. #}
 {% extends "layouts/app_base.html" %}
 {% from "partials/_macros.html" import icon, alert_box, csrf_field, field_error %}
 {% from "partials/_visuals.html" import icon_chip %}
@@ -9,8 +6,6 @@
 {% block header_title %}Preliminary screening{% endblock %}
 {% block header_subtitle %}Answer every question. You will review everything before it is analysed.{% endblock %}
 
-{# The question renderer lives in its own file, shared with the professional's own screening form - see that
-   file's comment for why it cannot simply be imported from here. #}
 {% from "screening/_question_macro.html" import question %}
 
 
@@ -39,6 +34,7 @@
       <span class="step-progress-text" data-step-progress-text>0% complete</span>
       <span class="draft-save-status" data-draft-status aria-live="polite"></span>
     </div>
+    <p class="form-required-note"><span class="required-mark" aria-hidden="true">*</span> Required</p>
 
     {% if errors %}{{ alert_box('error', 'Some answers need attention. They are marked below, and nothing has been saved.', dismissible=False, title='Please check your answers') }}{% endif %}
 
@@ -49,8 +45,11 @@
         <h2 id="step-{{ loop.index }}-title" tabindex="-1">{{ step.title }}</h2>
         <p class="text-muted">{{ step.intro }}</p>
         <div class="card form-card">
-          <div class="card-header"><h3 class="card-title">{{ icon_chip(step.icon, 'lavender', 'icon-chip-sm') }}{{ step.title }}</h3><span class="chip chip-required">Required</span></div>
+          <div class="card-header"><h3 class="card-title">{{ icon_chip(step.icon, 'lavender', 'icon-chip-sm') }}{{ step.title }}</h3></div>
           {% for q in catalog.questions if q.step == step.key and q.kind != 'derived' %}
+            {{ question(q, answers, errors, fixed) }}
+          {% endfor %}
+          {% for q in extra_questions if q.step == step.key %}
             {{ question(q, answers, errors, fixed) }}
           {% endfor %}
         </div>

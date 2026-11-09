@@ -1,0 +1,11 @@
+{% if single_kidney %}
+<div class="notice notice-warning single-kidney-notice reveal" role="note">
+  {{ icon('alert-triangle') }}
+  <div>
+    <h2>{{ single_kidney_notice.title }}: higher chance of CKD</h2>
+    <p>{{ single_kidney_notice.risk }}</p>
+    <p><strong>Recommendation: {{ single_kidney_notice.recommendation }}</strong></p>
+    <p class="text-small text-muted">{{ single_kidney_notice.scope }}</p>
+  </div>
+</div>
+{% endif %}

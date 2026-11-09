@@ -1,4 +1,3 @@
-{# Shown instead of the screening form when it cannot honestly be used. Nothing is analysed and nothing is saved. #}
 {% extends "layouts/app_base.html" %}
 {% from "partials/_macros.html" import icon, csrf_field %}
 {% set active_nav = 'assessment' %}
@@ -30,7 +29,7 @@
     <form method="post" action="{{ url_for('screening.ask_admin') }}" novalidate>
       {{ csrf_field() }}
       <div class="form-group">
-        <label class="form-label" for="reason">Why do you need to screen again early? <span class="chip chip-optional">Optional</span></label>
+        <label class="form-label" for="reason">Why do you need to screen again early? <span class="optional-mark">(optional)</span></label>
         <textarea class="form-control{{ ' is-invalid' if error }}" id="reason" name="reason" maxlength="{{ max_reason }}" aria-describedby="reason-help{{ ' reason-error' if error }}">{{ form_reason }}</textarea>
         <p class="form-helper" id="reason-help">Up to {{ max_reason }} characters. The administrator reads this, so keep health details out of it.</p>
         {% if error %}<p class="form-error" id="reason-error">{{ error }}</p>{% endif %}

@@ -1,18 +1,6 @@
-{# The single "one question" renderer, shared by every screening form: templates/screening/form.html (a person
-   screening themselves) and templates/patients/screening_form.html (a professional screening a patient on their
-   behalf). Kept in its own file, with no {% extends %}, on purpose - importing a macro from a template that
-   itself extends a layout can trigger evaluation of THAT template's own block content as a side effect, which
-   breaks a totally unrelated render (Jinja resolves it against ITS OWN context, not the importer's). A plain,
-   extends-free partial like this one has no such side effect. #}
 {% from "partials/_macros.html" import icon, field_error, need %}
-{# Every question here is required (services/screening_contract.validate_answers refuses a blank one), and each
-   one says so with need(true). Answers fixed from the account are shown locked, not asked, so they carry none. #}
 {% from "partials/_visuals.html" import icon_chip %}
 
-{# Sex is asked THROUGH Gender (ml/feature_catalog.json, "asked_through"): the person's own gender answer is saved
-   and shown, and the model gets the sex it implies (Gay man -> Male). Only when the gender answer does not tell
-   (Non-binary, Prefer not to say...) is "Sex assigned at birth" asked as well - screening.js shows or hides it;
-   the server works the sex out again either way (services/screening_contract.py). #}
 {% macro gender_question(q, answers, errors, fixed={}) %}
 {% set spec = q.asked_through %}
 {% set field = spec.field %}
@@ -71,8 +59,6 @@
 {% endif %}
 {% endmacro %}
 
-{# A choice worked out from a number (activity level from weekly exercise hours): shown locked, filled in as the
-   hours are typed (screening.js), and worked out again by the server - so the person is never asked twice. #}
 {% macro derived_choice(q, answers) %}
 {% set spec = q.derived_from %}
 {% set current = answers.get(q.name, '') %}
