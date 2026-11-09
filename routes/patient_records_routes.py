@@ -271,7 +271,7 @@ def risk_analysis(patient_code, assessment_id):
     older = [r for r in all_rows if r["assessment_id"] != assessment_id and (r["date"], r["assessment_id"]) <= (result_record["date"], assessment_id)]
     previous = older[0] if older else None
     details = result_details.describe(row, _catalog(), _model(), current_app.extensions["model_service_stage2"])
-    return render_template("patients/risk_analysis.html", page_title="Risk analysis", record=record, result=result_record, outside=details["outside"], single_kidney=details["single_kidney"],
+    return render_template("patients/risk_analysis.html", page_title="Risk analysis", record=record, result=result_record, single_kidney=details["single_kidney"],
                            previous=previous, explanation=details["explanation"], explanation_unavailable=explanations.UNAVAILABLE,
                            answers=details["answers"], level=result_record["level"], threshold=result_record["threshold"],
                            explain_for_professional=True)

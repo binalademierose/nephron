@@ -222,7 +222,7 @@ def shared_result(patient_id, assessment_id):
     return render_template("authorizations/shared_result.html", page_title=f"{patient['full_name']}'s result",
                            patient=patient, result=result, level=result["level"], threshold=result["threshold"],
                            previous=older[0] if older else None, reviews=reviews,
-                           answers=details["answers"], explanation=details["explanation"], outside=details["outside"], single_kidney=details["single_kidney"],
+                           answers=details["answers"], explanation=details["explanation"], single_kidney=details["single_kidney"],
                            explanation_unavailable=explanations.UNAVAILABLE, explain_for_professional=True)
 
 
