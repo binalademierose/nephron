@@ -90,7 +90,7 @@ def _check_website_path(service, rows=200):
 
         try:
             answer = service.predict(row)
-            complete = service._check_row(row, service.metadata["features"])       # the same, fully-filled row predict() used
+            complete = service._check_row(row, service.metadata["features"])
         except ModelInputError:
             continue
         compared += 1

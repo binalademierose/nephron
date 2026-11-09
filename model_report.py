@@ -39,7 +39,7 @@ def main(argv=None):
         print(f"The model in {os.path.abspath(folder)} is not ready: {service.reason}")
         return 1
 
-    frame = pd.read_csv(args.csv, keep_default_na=False, na_values=[""])   # "None" is a real answer, not a blank
+    frame = pd.read_csv(args.csv, keep_default_na=False, na_values=[""])
     features = service.metadata["features"]
     missing = [column for column in features + [args.target] if column not in frame.columns]
     if missing:

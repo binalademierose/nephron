@@ -64,7 +64,6 @@ def create_database_if_missing(database=None):
     database = database or Config.DB_NAME
     connection = mysql.connector.connect(**connection_settings(include_database=False))
     cursor = connection.cursor()
-    # The name was checked (letters, digits, underscores only), because a database name cannot be a %s parameter.
     cursor.execute(
         f"CREATE DATABASE IF NOT EXISTS `{database}` "
         "CHARACTER SET utf8mb4 COLLATE utf8mb4_unicode_ci"
@@ -111,10 +110,7 @@ def main():
         apply_migrations()
     except mysql.connector.Error as error:
         print(f"\nCould not finish: {error}")
-        if error.errno == 1932:                                   # "Table '...' doesn't exist in engine"
-            # Not a connection problem: MySQL's own records say a table exists here, but its storage engine (InnoDB)
-            # has no matching data for it - a leftover, inconsistent data folder, most often left behind by
-            # reinstalling MySQL/XAMPP without removing the OLD data directory first.
+        if error.errno == 1932:
             print(f"MySQL's own records say a table exists, but its storage engine cannot find it - this is not a "
                  f"connection problem. It usually means the '{Config.DB_NAME}' folder in MySQL's data directory is "
                  f"left over from a previous install (common after reinstalling XAMPP without removing the old data "

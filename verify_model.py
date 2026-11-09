@@ -68,7 +68,6 @@ def _check_threshold(service, path, target):
     import pandas as pd
     from sklearn.metrics import roc_auc_score, roc_curve
 
-    # 'None' is a real answer (for example alcohol), so it must NOT be read as a missing value.
     frame = pd.read_csv(path, keep_default_na=False, na_values=[""])
     missing = [c for c in service.metadata["features"] + [target] if c not in frame.columns]
     if missing:
@@ -112,12 +111,12 @@ def _check_website_path(service, frame, rows=500):
 
     features = service.metadata["features"]
     sample = frame.sample(min(rows, len(frame)), random_state=0).reset_index(drop=True)
-    direct = service.high_risk_probabilities(sample)                      # the pipeline used directly, all rows at once
+    direct = service.high_risk_probabilities(sample)
     compared, refused, worst, class_differences = 0, {}, 0.0, 0
     for index in range(len(sample)):
         values = {name: (sample.at[index, name].item() if hasattr(sample.at[index, name], "item") else sample.at[index, name]) for name in features}
         try:
-            answer = service.predict(values)                              # the website's path
+            answer = service.predict(values)
         except ModelInputError as error:
             reason = str(error).split(":")[0]
             refused[reason] = refused.get(reason, 0) + 1
