@@ -78,7 +78,6 @@ def answer_text(field, value):
     return f"{_fmt(value)} {field['unit']}" if field.get("unit") else _fmt(value)
 
 
-# "1000", "1000.5", ".5", and with thousands separators "1,000" / "1 000" / "12,500.75". Not "1e5", "nan" or "inf".
 _PLAIN_NUMBER = re.compile(r"[+-]?(?:\d+(?:\.\d*)?|\.\d+)")
 _GROUPED_NUMBER = re.compile(r"[+-]?\d{1,3}(?:[, ]\d{3})+(?:\.\d*)?")
 

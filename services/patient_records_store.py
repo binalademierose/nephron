@@ -74,7 +74,7 @@ class MemoryPatientRecordsStore:
 
     def __init__(self, user_store):
         self._user_store = user_store
-        self._records = {}          # user_id -> record dict
+        self._records = {}
         self._next_id = 1
 
     def create(self, professional_user_id, full_name, age, sex, shadow_email, password_hash, now, date_of_birth=None, country=None, gender=None, location=None):

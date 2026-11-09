@@ -17,7 +17,6 @@ from flask import request, session
 from werkzeug.security import check_password_hash, generate_password_hash
 
 
-# ---------------------------------------------------------------- passwords
 def hash_password(password):
     """Return the salted hash to store. scrypt is the default; older Python builds fall back to PBKDF2."""
     try:
@@ -30,13 +29,9 @@ def verify_password(stored_hash, password):
     return check_password_hash(stored_hash, password)
 
 
-# A hash of a random password nobody knows. When someone signs in with an email that has no account, we still
-# check the password against this, so that answering takes about as long as for a real account and the
-# time it takes cannot be used to discover which emails are registered.
 DUMMY_HASH = hash_password(secrets.token_hex(16))
 
 
-# ---------------------------------------------------------------- CSRF
 def csrf_token():
     """The token for this session (created the first time it is needed)."""
     token = session.get("csrf_token")
@@ -51,12 +46,11 @@ def csrf_is_valid(submitted):
     return bool(expected) and bool(submitted) and hmac.compare_digest(expected, submitted)
 
 
-# ---------------------------------------------------------------- redirects
 def safe_next_url(target, fallback):
     """Return `target` if it points inside this site, otherwise `fallback`."""
     if not target or not isinstance(target, str):
         return fallback
-    if any(ord(character) < 32 for character in target):          # control characters, line breaks
+    if any(ord(character) < 32 for character in target):
         return fallback
     if not target.startswith("/") or target.startswith("//") or target.startswith("/\\"):
         return fallback

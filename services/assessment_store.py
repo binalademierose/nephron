@@ -15,8 +15,8 @@ from flask import current_app
 
 import db
 
-MYSQL_FOREIGN_KEY_FAILED = 1452     # MySQL's error number for "that user does not exist"
-PRECISION = 6                       # the column keeps six decimals, so both stores round to six
+MYSQL_FOREIGN_KEY_FAILED = 1452
+PRECISION = 6
 
 
 class UnknownUserError(Exception):

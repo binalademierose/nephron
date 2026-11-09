@@ -17,14 +17,13 @@ MIN_REGISTRATION_AGE = 18
 MAX_REGISTRATION_AGE = 120
 ADDRESS_MAX_LENGTH = 255
 
-ROLES = ("general", "professional")          # there is no administrator role in this version
+ROLES = ("general", "professional")
 ROLE_LABELS = {"general": "General User", "professional": "Healthcare Professional", "admin": "Administrator"}
 PROFESSIONS = ("Nephrologist", "Physician", "Nurse", "Other health professional")
 
 PASSWORD_MIN_LENGTH = 10
 PASSWORD_MAX_LENGTH = 128
 
-# Passwords that are guessed first. Only ones of 10+ characters matter, because shorter ones are refused anyway.
 COMMON_PASSWORDS = frozenset({
     "1234567890", "0123456789", "12345678910", "123456789012", "1234567890123",
     "password123", "password1234", "passw0rd123", "password12345", "qwertyuiop", "qwerty12345", "qwerty123456",
@@ -184,8 +183,6 @@ def validate_registration(form):
 
     if role not in ROLES:
         errors["role"] = "Choose how you will use Nephron."
-    # The person must tick the box agreeing to the Terms & Conditions. A browser checkbox only sends a value
-    # when it is ticked, so a missing/empty value means it was not agreed to - never trust the page to enforce it.
     if (form.get("agree_terms") or "").strip().lower() not in ("on", "yes", "true", "1", "agree"):
         errors["agree_terms"] = "Please agree to the Terms & Conditions to create an account."
     for field, message in (("email", check_email(email)), ("full_name", check_full_name(full_name)),
@@ -239,7 +236,6 @@ def validate_password_change(current_password, new_password, email, full_name):
     return errors
 
 
-# Titles at the front of a name. They are not part of the name a person is greeted by or the letters on their avatar.
 TITLES = frozenset({"dr", "dra", "mr", "mrs", "ms", "mx", "miss", "engr", "atty", "prof", "sir", "madam", "nurse", "rn", "fr", "rev"})
 
 

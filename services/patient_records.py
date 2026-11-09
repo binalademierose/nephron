@@ -59,8 +59,6 @@ def validate_new_patient(form, today=None):
             errors["date_of_birth"] = "The date of birth cannot be in the future."
         elif not 1 <= age <= 120:
             errors["date_of_birth"] = "Check the date of birth - it gives an age outside 1 to 120."
-    # Gender is saved as chosen; the sex the model needs comes from it (Gay man -> Male), and is asked as "sex
-    # assigned at birth" only when it does not tell - the same rule as the screening (services/screening_contract.py).
     gender = (form.get("gender") or "").strip()
     sex = (form.get("sex") or "").strip()
     if gender not in GENDER_SEX:

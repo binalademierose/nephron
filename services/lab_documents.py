@@ -53,9 +53,6 @@ def save_upload(file_storage, upload_dir):
         with open(os.path.join(upload_dir, stored_filename), "wb") as handle:
             handle.write(data)
     except OSError as error:
-        # A real, environment-specific problem (no permission to write there, the disk is full, the folder is
-        # locked by another program) - never a raw crash. UPLOAD_DIR and its cause are only in the server log,
-        # never shown to the person, since the exact path is not something they can act on.
         raise RejectedUpload(f"the file could not be saved on the server ({type(error).__name__}). "
                              f"The team has been told through the server log.") from error
     original_filename = getattr(file_storage, "filename", None) or "upload"

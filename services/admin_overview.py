@@ -98,7 +98,7 @@ def risk_by_age(latest_results):
     peak = max((g["high"] for g in rows), default=0)
     for g in rows:
         g["high_percent"] = round(g["high"] / g["people"] * 100) if g["people"] else 0
-        g["bar"] = round(g["high"] / peak * 100) if peak else 0          # bar length, relative to the largest group
+        g["bar"] = round(g["high"] / peak * 100) if peak else 0
     people = len(latest_results)
     return {"people": people, "high": high_total, "high_percent": round(high_total / people * 100) if people else 0,
             "groups": rows, "most_high": max(rows, key=lambda g: g["high"])["label"] if high_total else None}

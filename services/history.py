@@ -49,7 +49,7 @@ def compare(catalog, first_row, second_row, timezone_name):
         for question in catalog["questions"]:
             name = question["name"]
             if question["kind"] == "derived" or name not in before or name not in after:
-                continue                                    # Obesity follows the BMI; only real answers are compared
+                continue
             if before[name] == after[name]:
                 unchanged += 1
             else:

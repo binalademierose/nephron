@@ -65,7 +65,7 @@ class MySQLScreeningDraftStore:
 
 class MemoryScreeningDraftStore:
     def __init__(self):
-        self._rows = {}          # (user_id, assessment_type) -> row
+        self._rows = {}
         self._next_id = 1
 
     def save_draft(self, user_id, assessment_type, answers, current_step, now):

@@ -11,7 +11,7 @@ person must still confirm that the report is theirs (or their patient's) before 
 import re
 from datetime import date
 
-RECENT_DAYS = 180          # a report older than about six months is flagged as old (still accepted)
+RECENT_DAYS = 180
 
 NAME_LABELS = re.compile(r"(?:patient(?:'s)?\s*name|patient|name)\s*[:\-]\s*([A-Za-z][A-Za-z .,'\-]{1,60}?)(?=\s{2,}|\s+(?:date|age|sex|gender|dob|id|no\.?)\b|$)",
                          re.I | re.M)
@@ -40,7 +40,6 @@ def _check_name(text, expected_name):
     if labelled:
         found = labelled.group(1).strip(" .,")
         overlap = expected & set(_words(found))
-        # Same person if at least two name words match (first + last), or the only word given matches.
         status = "match" if len(overlap) >= min(2, len(expected)) else "mismatch"
         return {"status": status, "found": found}
     if expected and expected <= set(_words(text)):

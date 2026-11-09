@@ -12,7 +12,7 @@ def viewed_month(args, today):
     try:
         year = int(args.get("year", today.year))
         month = int(args.get("month", today.month))
-        date(year, month, 1)                                  # raises ValueError for anything nonsensical
+        date(year, month, 1)
     except (TypeError, ValueError):
         return today.year, today.month
     return year, month

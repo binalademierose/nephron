@@ -23,17 +23,14 @@ LEVELS = ("low", "high")
 LEVEL_LABELS = {("preliminary", "low"): "Low Preliminary Risk", ("preliminary", "high"): "High Preliminary Risk",
                ("enhanced", "low"): "Low Enhanced Screening", ("enhanced", "high"): "High Enhanced Screening"}
 
-# The four steps of "Your path to better kidney health", in order.
 PATH_STEPS = ("Screening", "Analysis", "Results", "Follow-up")
 
-# Chart sizes. The pages scale the SVGs, so these are only drawing units.
 RING_BOX = 100
-TREND_WIDTH, TREND_HEIGHT = 340, 196          # about the size the chart is shown at, so its text stays readable
-TREND_MARGINS = (40, 18, 10, 28)              # left, right, top, bottom (room for the axis labels)
-MIN_LABEL_GAP = 60   # drawing units between two date labels, so they never overlap
+TREND_WIDTH, TREND_HEIGHT = 340, 196
+TREND_MARGINS = (40, 18, 10, 28)
+MIN_LABEL_GAP = 60
 
 
-# ---------------------------------------------------------------- words and dates
 def level_label(level, assessment_type="preliminary"):
     """('low', 'preliminary') -> 'Low Preliminary Risk'; ('high', 'enhanced') -> 'High Enhanced Screening'.
     The only place these words are spelled out."""
@@ -82,7 +79,6 @@ def _check_record(record):
         raise ValueError(f"threshold must be between 0 and 100, not {threshold!r}")
 
 
-# ---------------------------------------------------------------- the summary
 def summarize_assessments(assessments, today=None, reassessment_days=None, follow_up_open=False):
     """
     Everything the dashboard needs, worked out from real records.
@@ -103,10 +99,8 @@ def summarize_assessments(assessments, today=None, reassessment_days=None, follo
     high_count = sum(1 for record in newest_first if record["level"] == "high")
     month_count = sum(1 for record in newest_first if (record["date"].year, record["date"].month) == (today.year, today.month))
 
-    # Next screening: available now unless a waiting time is set and has not passed yet (the rule lives in services/eligibility.py).
     next_screening = eligibility.wait_status(latest["date"] if latest is not None else None, today, reassessment_days, follow_up_open)
 
-    # Change since the previous assessment, in neutral words (never "better" or "worse").
     change = None
     if previous is not None:
         points = round(latest["probability"] - previous["probability"], 1)
@@ -127,9 +121,8 @@ def summarize_assessments(assessments, today=None, reassessment_days=None, follo
         "oldest_first": list(reversed(newest_first)),
         "next_screening": next_screening,
         "change": change,
-        # A chart is only drawn when there is enough real data to answer its question.
-        "has_distribution": total >= 1,   # "How have my results been classified?"
-        "has_trend": total >= 2,          # "How has my probability changed?" needs two points
+        "has_distribution": total >= 1,
+        "has_trend": total >= 2,
     }
 
 
@@ -169,7 +162,6 @@ def screening_path(total, follow_up_count=0):
     return 4 if follow_up_count > 0 else 3
 
 
-# ---------------------------------------------------------------- shapes
 def ring_geometry(percent, radius=42, stroke=9, threshold=None):
     """
     A full ring that fills clockwise from the top. `threshold` (optional) adds a tick across the ring
@@ -228,7 +220,7 @@ def _smooth_path(points):
     dx = [points[i + 1][0] - points[i][0] for i in range(n - 1)]
     slope = [(points[i + 1][1] - points[i][1]) / dx[i] if dx[i] else 0.0 for i in range(n - 1)]
     tangent = [slope[0]] + [0.0 if slope[i - 1] * slope[i] <= 0 else (slope[i - 1] + slope[i]) / 2 for i in range(1, n - 1)] + [slope[-1]]
-    for i in range(n - 1):                      # Fritsch-Carlson: keep each segment monotone
+    for i in range(n - 1):
         if slope[i] == 0:
             tangent[i] = tangent[i + 1] = 0.0
             continue
@@ -240,7 +232,7 @@ def _smooth_path(points):
     path = f"M{points[0][0]:.1f} {points[0][1]:.1f}"
     for i in range(n - 1):
         (x0, y0), (x1, y1) = points[i], points[i + 1]
-        if dx[i] == 0:                          # two records on one day: a straight step, never a curve
+        if dx[i] == 0:
             path += f" L{x1:.1f} {y1:.1f}"
             continue
         third = dx[i] / 3
@@ -293,7 +285,6 @@ def trend_geometry(points_oldest_first, threshold=None, width=TREND_WIDTH, heigh
             "date_full": format_date(record["date"]), "date_short": short_date(record["date"]),
             "probability": record["probability"], "level": record["level"], "assessment_type": record.get("assessment_type", "preliminary"),
         })
-    # The first and last dates are always labelled. A middle date is labelled only if there is room on both sides.
     shown = [0]
     for index in range(1, len(points) - 1):
         if points[index]["x"] - points[shown[-1]]["x"] >= MIN_LABEL_GAP and points[-1]["x"] - points[index]["x"] >= MIN_LABEL_GAP:

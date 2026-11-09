@@ -38,15 +38,8 @@ BINARY_FIELDS = tuple(name for name in STAGE1_LIKE_FIELDS if name not in
                       "Physical_Activity_Level", "Exercise_Hours_Per_Week", "Water_Intake_L", "Fast_Food_Frequency_Per_Week",
                       "Sleep_Duration_Hours"))
 
-# Stage 1's Alcohol_Consumption has a third answer, "None" (does not drink), that this model has never seen (its own
-# training data recorded only Moderate/Heavy, with a blank kept as its own "Not_Reported" category - see
-# ml/model_stage2/README.md). "None" is translated to a genuine missing value here, for this one field only, and the
-# model's own trained imputer fills it in exactly the way it was trained to for a blank answer. This is the ONE
-# Stage-1-like field allowed to be missing; the other 26 always come from a real, completed Preliminary assessment.
 STAGE1_VOCABULARY_GAPS = {"Alcohol_Consumption": {"None": None},
-                          "Country": {"Philippines": "Other"}}     # a country the model knows only as Other (see feature_catalog.json)
-# Only a field whose translation is "missing" may legitimately be absent (Alcohol "None") - a translated Country is
-# still required. Listing every translated field here would quietly let a missing Country through.
+                          "Country": {"Philippines": "Other"}}
 STAGE1_MAY_BE_MISSING = {name for name, gaps in STAGE1_VOCABULARY_GAPS.items() if None in gaps.values()}
 
 
@@ -66,7 +59,6 @@ class Stage2ModelService:
         self._importance = {}
         self.can_explain = False
 
-    # ------------------------------------------------------------------ loading and verification
     def load(self):
         self.checks, self.ready, self._pipeline = [], False, None
         try:
@@ -211,7 +203,6 @@ class Stage2ModelService:
         self.can_explain = ok
         self._add("Each result can be explained (contributions add up to the model's probability)", ok, detail, fatal=False)
 
-    # ------------------------------------------------------------------ using the model
     @property
     def version(self):
         return self.metadata.get("model_version")
@@ -274,8 +265,6 @@ class Stage2ModelService:
             if value is None:
                 complete[name] = None
                 continue
-            # Any real, non-negative number is a possible lab value - a failing kidney gives abnormal ones - so there is
-            # no upper limit here (services/lab_contract.py). Only what cannot be a lab value at all is refused.
             if isinstance(value, bool) or not isinstance(value, (int, float)) or not math.isfinite(value) or value < 0:
                 raise ModelInputError(f"{name}: {value!r} is not a lab value (it must be a real number, 0 or more)")
             complete[name] = float(value)

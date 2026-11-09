@@ -20,11 +20,11 @@ METRICS = {
     "high": {"label": "People at higher risk", "ramp": "risk"},
     "share": {"label": "Share at higher risk", "ramp": "risk"},
 }
-RAMPS = {   # validated sequential ramps (dataviz validator, ordinal mode: one hue, light to dark, light end >= 2:1)
+RAMPS = {
     "count": ["#ABA4F2", "#8D84EC", "#6E64DF", "#5047C4", "#30298F"],
     "risk": ["#EC93A5", "#E06C86", "#CF4767", "#AF2A4C", "#7A1430"],
 }
-NONE_FILL = "#ECEEF5"          # nobody screened there yet
+NONE_FILL = "#ECEEF5"
 NUMBER = re.compile(r"-?\d+(?:\.\d+)?")
 
 
@@ -56,7 +56,7 @@ def _bins(metric, values):
     top = max(values, default=0)
     if top <= 0:
         return []
-    step = max(1, -(-top // 5))                             # ceil(top / 5)
+    step = max(1, -(-top // 5))
     return [(1 + i * step if i else 1, (i + 1) * step + 1) for i in range(5)]
 
 
@@ -101,7 +101,7 @@ def view(entries, metric="share", level="municipality", town=None):
         tally = _tally(by_area.get(shape["code"], []))
         areas.append({**tally, "code": shape["code"], "name": shape["name"], "path": shape["path"], "cx": shape.get("cx"), "cy": shape.get("cy"),
                       "town": shape.get("town"), "town_name": towns[shape["town"]]["name"] if shape.get("town") in towns else None})
-    if level == "barangay" and town is None:                # every barangay: list rows only where someone lives
+    if level == "barangay" and town is None:
         listed = [a for a in areas if a["registered"]]
     else:
         listed = areas

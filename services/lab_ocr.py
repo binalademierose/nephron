@@ -18,18 +18,10 @@ import re
 MAX_UPLOAD_BYTES = 10 * 1024 * 1024
 ALLOWED_CONTENT_TYPES = {"image/jpeg": ".jpg", "image/png": ".png", "application/pdf": ".pdf"}
 
-# Each field: an ordered list of regex patterns to try (most specific / least ambiguous first). A pattern captures
-# ONE number. Deliberately excludes bare single-letter chemistry symbols (Na, K, Ca, P) as a way to find a value -
-# real reports print those, but matching on a single letter anywhere in noisy OCR text is far too likely to catch
-# the wrong number, so those fields rely on their full name being present instead.
-# One lab number as printed on a report: "1.2", "112", or with thousands separators "12,000" / "1,250.5" - with no
-# cap on its size, because an abnormal result (a urine ACR of 12,000 mg/g) is exactly what a kidney patient's report
-# may show. Grouped digits are tried first, so "12,000" is never cut short to "12".
 _NUMBER = r"(\d{1,3}(?:,\d{3})+(?:\.\d+)?|\d+(?:\.\d+)?)"
 
 _PATTERNS = {
     "HbA1c": [r"Hb.{0,2}A.{0,2}1.{0,2}c\D{0,15}?(\d{1,2}\.\d)", r"(?:Hemoglobin|Glycated)\s*A1c\D{0,15}?(\d{1,2}\.\d)"],
-    # not the "...Creatinine Ratio" of a urine ACR, and not urine creatinine (a different test)
     "Serum_Creatinine": [r"(?<!Urine )(?:Serum\s*)?Creatinine(?!\s*Ratio)\D{0,15}?" + _NUMBER],
     "Blood_Urea_Nitrogen": [r"(?:Blood\s*Urea\s*Nitrogen|BUN)\D{0,15}?" + _NUMBER],
     "Urine_ACR": [r"(?:Urine\s*)?Albumin[- ]?(?:to|/)[- ]?Creatinine\s*Ratio\D{0,15}?" + _NUMBER,
@@ -77,9 +69,6 @@ def extract_text(file_path, content_type, tesseract_cmd=None):
             pages = convert_from_path(file_path)
             return "\n".join(pytesseract.image_to_string(page) for page in pages)
         except Exception as error:
-            # OCR is best-effort by design (see this module's own docstring): a problem running tesseract itself -
-            # not installed, not on PATH, TESSERACT_CMD pointing at the wrong thing, no permission to run it, an
-            # antivirus block - is treated exactly like a page that could not be read, never a crash of the upload.
             raise UnreadableDocument(f"could not read this PDF ({type(error).__name__}: {error})") from error
     if content_type in ALLOWED_CONTENT_TYPES:
         try:

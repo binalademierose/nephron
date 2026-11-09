@@ -26,7 +26,7 @@ GROUPS = {"sign_in": ("signed_in", "sign_in_failed", "signed_out"), "accounts": 
 def record(action, actor_user_id=None, target_user_id=None, details=None):
     try:
         current_app.extensions["activity_store"].add(actor_user_id, action, target_user_id, details, clock.now_utc())
-    except Exception as error:                      # the log must never break the action it records
+    except Exception as error:
         current_app.logger.error("Activity log could not be written (%s): %s: %s", action, type(error).__name__, error)
 
 

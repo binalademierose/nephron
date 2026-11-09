@@ -35,8 +35,8 @@ def _describer(catalog_or_describe):
         return question["short"], answer, contract.answer_text(question, inputs, brief=True)
     return describe
 
-MAX_FACTORS = 5                  # per card
-SMALLEST_SHARE = 0.03            # a factor with less than 3% of the biggest effect is not worth a line
+MAX_FACTORS = 5
+SMALLEST_SHARE = 0.03
 KINDS = ("raises", "lowers")
 
 CAVEAT = ("Each bar compares a factor with the biggest effect on this result, in either direction. A factor that raised the estimate "
@@ -48,7 +48,6 @@ EMPTY = {
     "lowers": "None of your answers lowered the estimate by a meaningful amount.",
 }
 
-# The same words for a professional reading someone else's result (services/result_details.py): about "the" answers.
 CAVEAT_PROFESSIONAL = CAVEAT.replace("calculated your result", "calculated this result").replace("caused your health", "caused this person's health")
 EMPTY_PROFESSIONAL = {kind: text.replace("None of your answers", "None of the answers") for kind, text in EMPTY.items()}
 
@@ -76,7 +75,7 @@ def build(catalog_or_describe, effects, inputs, limit=MAX_FACTORS):
         if share < SMALLEST_SHARE:
             continue
         described = describe(effect["name"], inputs)
-        if described is None:                                        # an answer that was not saved is never guessed
+        if described is None:
             continue
         label, answer, answer_brief = described
         kind = "raises" if effect["effect"] > 0 else "lowers"
@@ -115,13 +114,10 @@ def explain_saved_result(model, catalog_or_describe, row, tolerance=1e-4):
         return None
     if not row.get("model_version") or row["model_version"] != model.version or not row.get("inputs"):
         return None
-    # .get(), not [] : a feature genuinely absent from the saved answers (an optional lab value nobody gave, for
-    # Enhanced Screening) becomes None here, the same as it was when this result was first computed - never a
-    # KeyError, and never guessed into something that was not actually saved.
     values = {name: row["inputs"].get(name) for name in model.metadata["features"]}
     try:
         result = model.explain(values)
-    except Exception:                                               # any failure means "no explanation", never a wrong one
+    except Exception:
         return None
     if abs(result["probability"] - row["probability"]) > tolerance:
         return None

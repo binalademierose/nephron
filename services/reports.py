@@ -64,6 +64,7 @@ def assessment_report_data(row, patient_name, patient_email, timezone_name, incl
             "what_this_means": WHAT_THIS_MEANS[record["level"]],
         },
         "answers": answers,
+        "single_kidney": screening_contract.SINGLE_KIDNEY_NOTICE if screening_contract.has_single_kidney(row["inputs"]) else None,
         "factors_up": _factor_lines(explanation["raises"]) if explanation else [],
         "factors_down": _factor_lines(explanation["lowers"]) if explanation else [],
         "reviews": reviews,

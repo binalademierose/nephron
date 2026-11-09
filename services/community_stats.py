@@ -12,8 +12,8 @@ fewer than MIN_GROUP people is folded into "Other answers", and if even that is 
 page says how many people are not shown. The whole picture waits until MIN_PEOPLE people have a result.
 """
 PHILIPPINES = "Philippines"
-MIN_GROUP = 3          # smallest group shown on its own (or folded together) on a shared/community view
-MIN_PEOPLE = 5         # the community picture is shown once this many people in the Philippines have a result
+MIN_GROUP = 3
+MIN_PEOPLE = 5
 OTHER_LABEL = "Other answers"
 
 
@@ -51,7 +51,7 @@ def by_gender(profiles, catalog, min_group=MIN_GROUP):
 
     labels = dict(gender_order(catalog))
     ordered = [value for value, _ in gender_order(catalog) if value in counts]
-    ordered += sorted(value for value in counts if value not in labels)          # an answer no longer offered
+    ordered += sorted(value for value in counts if value not in labels)
     rows = [{"label": labels.get(value, value), "people": counts[value][0], "high": counts[value][1]} for value in ordered]
 
     hidden = 0
@@ -61,7 +61,7 @@ def by_gender(profiles, catalog, min_group=MIN_GROUP):
         folded = {"label": OTHER_LABEL, "people": sum(r["people"] for r in small), "high": sum(r["high"] for r in small),
                   "folded": len(small)}
         if len(small) == 1 or folded["people"] < min_group:
-            hidden = folded["people"]          # one small group alone, or too few together: still identifiable
+            hidden = folded["people"]
         elif small:
             rows.append(folded)
 
@@ -69,8 +69,8 @@ def by_gender(profiles, catalog, min_group=MIN_GROUP):
     for row in rows:
         row["low"] = row["people"] - row["high"]
         row["high_percent"] = _pct(row["high"], row["people"])
-        row["bar"] = _pct(row["people"], peak)                      # bar length, relative to the largest group
-        row["high_bar"] = _pct(row["high"], peak)                   # the higher-risk part, on the same scale
+        row["bar"] = _pct(row["people"], peak)
+        row["high_bar"] = _pct(row["high"], peak)
     shown = sum(row["people"] for row in rows)
     most = max(rows, key=lambda row: (row["high_percent"], row["people"])) if any(row["high"] for row in rows) else None
     return {"rows": rows, "people": shown, "hidden": hidden, "highest_share": most["label"] if most else None,

@@ -84,8 +84,6 @@ class MemoryClinicalReviewStore:
         self._next_id = 1
 
     def _assessment_exists(self, assessment_id):
-        # The assessment store is scoped by user_id, so a direct existence check needs its own small back door:
-        # every in-memory assessment row is kept on the store itself for exactly this.
         return any(row["assessment_id"] == assessment_id for row in getattr(self._assessment_store, "_rows", []))
 
     def add_review(self, assessment_id, professional_user_id, professional_name, profession_title, note, created_at):

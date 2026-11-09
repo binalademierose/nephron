@@ -22,6 +22,28 @@ KINDS = ("choice", "yesno", "number", "bmi", "derived")
 NUMBER_PATTERN = re.compile(r"^\d{1,4}(\.\d{1,3})?$")
 WHOLE_PATTERN = re.compile(r"^\d{1,4}$")
 
+SINGLE_KIDNEY = {
+    "name": "Single_Kidney",
+    "short": "Only one kidney",
+    "label": "Do you have only one kidney (born with one, removed, or donated)?",
+    "kind": "yesno",
+    "step": "history",
+    "hint": "Living with one kidney can increase the chance of developing CKD. This answer is not used in the risk estimate.",
+    "why": "One kidney does the work of two, so it needs regular checks even when the screening result is low.",
+    "options": [{"value": "1", "label": "Yes"}, {"value": "0", "label": "No"}],
+}
+EXTRA_QUESTIONS = (SINGLE_KIDNEY,)
+SINGLE_KIDNEY_NOTICE = {
+    "title": "Only one kidney",
+    "risk": "Having only one kidney increases the chance of developing chronic kidney disease over time.",
+    "recommendation": "Annual eGFR, urine ACR and blood pressure check advised.",
+    "scope": "This answer is not part of the model, so it does not change the risk estimate.",
+}
+
+
+def has_single_kidney(inputs):
+    return bool(inputs) and inputs.get(SINGLE_KIDNEY["name"]) == 1
+
 
 def load_catalog(path=CATALOG_PATH):
     with open(path, encoding="utf-8") as handle:
@@ -237,7 +259,7 @@ def validate_answers(catalog, form, fixed=None):
             if implied_sex and name in fixed and sex and sex != implied_sex:
                 errors[field] = "This does not match the sex kept from the first screening. Choose another answer."
             elif implied_sex:
-                values[name] = implied_sex                  # the gender tells: what the page sent for Sex is not needed
+                values[name] = implied_sex
             elif not sex:
                 errors[name] = "Choose the sex you were assigned at birth."
             elif sex not in own:
@@ -245,12 +267,12 @@ def validate_answers(catalog, form, fixed=None):
             else:
                 values[name] = sex
         elif kind == "choice" and "derived_from" in question:
-            continue                                            # worked out below, from its source answer - never typed
+            continue
         elif kind == "choice":
             answer = text(name)
             if not answer:
                 errors[name] = "Choose one answer."
-            elif answer not in {option["value"] for option in question["options"]}:     # what the FORM offers (incl. Philippines)
+            elif answer not in {option["value"] for option in question["options"]}:
                 errors[name] = "Choose one of the answers shown."
             else:
                 values[name] = answer
@@ -302,8 +324,14 @@ def validate_answers(catalog, form, fixed=None):
     for question in catalog["questions"]:
         if question["kind"] == "choice" and "derived_from" in question:
             source = question["derived_from"]["field"]
-            if source in values:                                # a wrong or missing source already has its own error
+            if source in values:
                 values[question["name"]] = derive_choice(question, values[source])
+    for question in EXTRA_QUESTIONS:
+        answer = text(question["name"])
+        if answer not in ("1", "0"):
+            errors[question["name"]] = "Choose Yes or No."
+        else:
+            extra[question["name"]] = int(answer)
     inputs = {**values, **extra}
     return values, inputs, errors
 
@@ -320,7 +348,7 @@ def fields_of(question):
 
 def steps_with_errors(catalog, errors):
     """The step keys holding a question with an error, so the form can open on the first of them."""
-    return {q["step"] for q in catalog["questions"] if fields_of(q) & set(errors)}
+    return {q["step"] for q in [*catalog["questions"], *EXTRA_QUESTIONS] if fields_of(q) & set(errors)}
 
 
 def answer_text(question, inputs, brief=False):
@@ -354,6 +382,10 @@ def describe_inputs(catalog, inputs):
             steps[question["step"]][1].append((spec["short"], gender_label(catalog, inputs[spec["field"]])))
         text = answer_text(question, inputs)
         if text is not None:
+            steps[question["step"]][1].append((question["short"], text))
+    for question in EXTRA_QUESTIONS:
+        text = answer_text(question, inputs)
+        if text is not None and question["step"] in steps:
             steps[question["step"]][1].append((question["short"], text))
     return [(title, rows) for title, rows in steps.values() if rows]
 

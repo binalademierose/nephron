@@ -42,7 +42,7 @@ class MySQLChecklistStore:
 
 class MemoryChecklistStore:
     def __init__(self):
-        self._done = {}          # (user_id, day) -> set of tip_id
+        self._done = {}
 
     def completed_tip_ids(self, user_id, day=None):
         return set(self._done.get((user_id, day or date.today()), set()))

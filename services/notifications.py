@@ -7,7 +7,7 @@ built here so it stays consistent and is covered by tests, not scattered as stri
 """
 from services import clock
 
-MAX_RECENT = 5    # how many the header's dropdown preview shows
+MAX_RECENT = 5
 
 
 def notify_follow_up_requested(store, patient_user_id, professional_name, message, now):

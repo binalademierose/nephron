@@ -12,7 +12,7 @@ from services.validation import ROLE_LABELS, first_name, initials
 LOGIN_OK = "ok"
 LOGIN_FAILED = "failed"
 LOGIN_LOCKED = "locked"
-LOGIN_INACTIVE = "inactive"        # the right password, but an administrator has switched the account off
+LOGIN_INACTIVE = "inactive"
 
 KEEP_ATTEMPTS_FOR = timedelta(days=30)
 
@@ -38,18 +38,13 @@ def authenticate(store, email, password, ip_address, now, max_failures, lock_min
         return LOGIN_LOCKED, None
 
     user = store.find_by_email(email)
-    # Always check a hash, even when there is no such account (see DUMMY_HASH in security.py).
     password_is_right = verify_password(user["password_hash"] if user else DUMMY_HASH, password)
 
     if user is not None and password_is_right and user["is_patient_record"]:
-        # Defense in depth: a patient_record's password is an unguessable secret nobody is ever told (see
-        # services/patient_records.py), so this should never actually happen - but routes/auth_hooks.py is the
-        # layer that actually matters (it refuses the session outright); this is a second, independent refusal.
         store.record_login_attempt(email, ip_address, False, now)
         return LOGIN_FAILED, None
 
     if user is not None and password_is_right and not user.get("is_active", True):
-        # Said only once the password is right, so a deactivated account is never revealed to someone guessing.
         store.record_login_attempt(email, ip_address, False, now)
         return LOGIN_INACTIVE, None
 
@@ -103,10 +98,10 @@ def reset_password(store, email, new_password, now):
 def describe(user):
     """A copy of the user with the extra words the pages need (greeting name, initials, role label)."""
     person = dict(user)
-    person.pop("password_hash", None)          # the hash never goes into a page
+    person.pop("password_hash", None)
     person["first_name"] = first_name(user["full_name"])
     person["initials"] = initials(user["full_name"])
     if user.get("is_admin"):
-        person["role"] = "admin"          # stored role is unchanged (migrations never MODIFY the ENUM): see migration 019
+        person["role"] = "admin"
     person["role_label"] = ROLE_LABELS[person["role"]]
     return person

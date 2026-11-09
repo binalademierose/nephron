@@ -15,8 +15,8 @@ from datetime import datetime, timezone
 
 METRICS_FILE = "model_metrics.json"
 ROC_POINTS = 60
-SCORE_BINS = 20            # the score-distribution histogram: 0-5%, 5-10%, ... 95-100%
-TRADEOFF_STEPS = 50        # the threshold trade-off curve: sensitivity and specificity at 0%, 2%, ... 100%
+SCORE_BINS = 20
+TRADEOFF_STEPS = 50
 
 
 def compute_metrics(y_true, scores, threshold, source_name):

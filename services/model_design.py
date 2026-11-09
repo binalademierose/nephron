@@ -11,12 +11,10 @@ cannot be read (an older metrics file, a model that is not ready) is reported as
   histogram() / tradeoff_lines()
                      SVG-ready geometry for the charts on the How-the-models-work page
 """
-# Chart frame sizes (SVG user units); the templates draw inside these.
 HIST_W, HIST_H = 400, 160
 TRADE_W, TRADE_H = 400, 180
 
 
-# ------------------------------------------------------------------ the pipeline, in plain words
 def _class_name(obj):
     return type(obj).__name__
 
@@ -152,7 +150,7 @@ def pipeline_steps(service, inputs_title, inputs_detail):
     steps = [{"kind": "inputs", "icon": "clipboard-list", "title": inputs_title, "detail": inputs_detail, "items": []}]
     try:
         _walk(service._pipeline, steps)
-    except Exception:              # an object this page cannot read: say so rather than guess
+    except Exception:
         steps.append({"kind": "model", "icon": "gauge", "title": _class_name(service._pipeline),
                       "detail": "This saved model could not be broken into its steps here.", "items": []})
     threshold = meta.get("threshold")
@@ -165,7 +163,6 @@ def pipeline_steps(service, inputs_title, inputs_detail):
     return steps
 
 
-# ------------------------------------------------------------------ where the inputs come from
 def input_groups(features, importance, groups):
     """groups: [(label, names), ...] in display order. Returns [{label, count, names, weight, share}] - weight is
     the share of the model's overall importance carried by that group (from importance(), which sums to ~100)."""
@@ -186,7 +183,6 @@ def input_groups(features, importance, groups):
     return rows
 
 
-# ------------------------------------------------------------------ chart geometry
 def histogram(metrics, width=HIST_W, height=HIST_H):
     """Bars for the score distribution, as a SHARE of each group (so a small group is not dwarfed by a big one).
     None when the metrics file predates the distribution (re-run model_report.py)."""
@@ -199,7 +195,7 @@ def histogram(metrics, width=HIST_W, height=HIST_H):
     neg_share = [n / neg_total for n in neg]
     peak = max(pos_share + neg_share) or 1
     slot = width / len(pos)
-    bar = max(slot / 2 - 1.5, 1)              # two bars per bin, a 1px gap between them and between bins
+    bar = max(slot / 2 - 1.5, 1)
     bins = []
     for i in range(len(pos)):
         x = i * slot

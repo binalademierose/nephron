@@ -39,7 +39,7 @@ USER_COLUMNS = """
 """
 USER_FROM = "FROM users AS u LEFT JOIN professionals AS p ON p.user_id = u.user_id"
 
-MYSQL_DUPLICATE_ENTRY = 1062     # MySQL's error number for "this value already exists in a UNIQUE column"
+MYSQL_DUPLICATE_ENTRY = 1062
 
 
 class MySQLUserStore:
@@ -131,7 +131,6 @@ class MySQLUserStore:
         db.execute("UPDATE users SET password_hash = %s, password_changed_at = %s WHERE user_id = %s",
                    (password_hash, now, user_id))
 
-    # ---- sign-in attempts ----
     def record_login_attempt(self, email, ip_address, was_successful, now):
         db.execute(
             "INSERT INTO login_attempts (email, ip_address, was_successful, attempted_at) VALUES (%s, %s, %s, %s)",
@@ -187,7 +186,7 @@ class MemoryUserStore:
 
     def find_by_email(self, email):
         for user in self._users.values():
-            if user["email"].lower() == email.lower():          # MySQL compares emails without regard to case
+            if user["email"].lower() == email.lower():
                 return dict(user)
         return None
 

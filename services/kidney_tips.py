@@ -33,7 +33,6 @@ def _has(inputs, key):
 
 
 TIPS = [
-    # ---- diet ----
     {"id": "diet_general", "category": "diet", "always": True,
      "text": "Favor whole foods - vegetables, fruits, whole grains, and plant-based proteins - over processed and "
              "ultra-processed foods, which tend to be high in sodium, sugar, and additives.",
@@ -74,7 +73,6 @@ TIPS = [
              "phosphorus that the body absorbs easily - your doctor can advise whether you need to limit these.",
      "source": KDIGO_2024},
 
-    # ---- hydration (deliberately no single universal number) ----
     {"id": "hydration_general", "category": "hydration", "always": True,
      "text": "Stay consistently hydrated with water through the day rather than large amounts at once. How much "
              "fluid is right for you varies by body size, climate, activity, and any heart or kidney condition - "
@@ -86,7 +84,6 @@ TIPS = [
              "you a specific daily fluid limit, follow that rather than general hydration advice.",
      "source": KDIGO_2024},
 
-    # ---- activity ----
     {"id": "activity_general", "category": "activity", "always": True,
      "text": "Aim for at least 150 minutes a week of moderate-intensity activity (e.g. brisk walking) - spread "
              "across most days - at a level that is comfortable for your own cardiovascular fitness.",
@@ -102,7 +99,6 @@ TIPS = [
              "eases the load on your kidneys and heart. Aim for gradual, sustainable change rather than a rapid diet.",
      "source": KDIGO_2024},
 
-    # ---- lifestyle ----
     {"id": "lifestyle_smoking", "category": "lifestyle",
      "condition": lambda i, c: i.get("Smoking_Status") == "Current",
      "text": "Stopping smoking is one of the most protective things you can do for both your kidneys and your "
@@ -119,7 +115,6 @@ TIPS = [
              "higher blood pressure and blood sugar over time - both relevant to kidney health.",
      "source": KDIGO_2024},
 
-    # ---- medication (never "stop" - only "ask your doctor") ----
     {"id": "medication_general", "category": "medication", "always": True,
      "text": "Never stop, start, or change the dose of any prescribed medication on your own - always talk to "
              "your doctor first, even if you feel well or have read something that concerns you.",
@@ -141,7 +136,6 @@ TIPS = [
              "steps above, is one of the strongest ways to protect your kidneys over time.",
      "source": KDIGO_DIABETES},
 
-    # ---- follow-up ----
     {"id": "follow_up_high", "category": "follow_up",
      "condition": lambda i, c: c == "high",
      "text": "This result places you in a higher-risk group. Consider discussing it with a doctor soon, especially "

@@ -116,7 +116,7 @@ def build_assessment_report(data):
     """
     data: {patient_name, patient_email, generated_at_text, record: {date_text, type, probability_text,
     classification, classification_text, threshold_text, what_this_means}, answers, factors_up, factors_down,
-    reviews (possibly empty), disclaimer}
+    reviews (possibly empty), disclaimer, single_kidney (a notice dict or None)}
     Returns PDF bytes.
     """
     buf = io.BytesIO()
@@ -132,6 +132,12 @@ def build_assessment_report(data):
              colWidths=[45 * mm, 115 * mm], style=TableStyle([("VALIGN", (0, 0), (-1, -1), "TOP")])),
         Spacer(1, 3 * mm),
     ]
+    notice = data.get("single_kidney")
+    if notice:
+        story.append(Paragraph(f"{_escape(notice['title'])}: higher chance of CKD", H2))
+        story.append(Paragraph(_escape(notice["risk"]), BODY))
+        story.append(Paragraph(f"<b>Recommendation: {_escape(notice['recommendation'])}</b>", BODY))
+        story.append(Paragraph(_escape(notice["scope"]), BODY))
     if data["factors_up"] or data["factors_down"]:
         story.append(Paragraph("What raised your estimate", H2))
         story.append(_factors_table(data["factors_up"]))
@@ -175,7 +181,7 @@ def build_history_report(data):
             if not reviews:
                 continue
             story.append(Paragraph(f"<b>{_escape(row['date_text'])} &middot; {_escape(row['type'])}</b>", BODY))
-            story += _reviews_block(reviews)[1:]        # skip the repeated "Notes from your professional" heading
+            story += _reviews_block(reviews)[1:]
             story.append(Spacer(1, 3 * mm))
     story += _disclaimer_footer(data["disclaimer"])
     doc.build(story)

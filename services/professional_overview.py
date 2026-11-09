@@ -77,7 +77,6 @@ def patient_list(patient_records_store, auth_store, user_store, assessment_store
     elif category == CATEGORY_FOLLOW_UP:
         described = [row for row in described if row["has_follow_up"]]
 
-    # Newest result first; a patient with no assessment yet sorts to the end, regardless of name.
     described.sort(key=lambda row: (row["latest"] is None, -row["latest"]["date"].toordinal() if row["latest"] else 0))
     return described
 
@@ -93,7 +92,7 @@ def _matches_date_period(day, today, period):
     if period == DATE_TODAY:
         return day == today
     if period == DATE_THIS_WEEK:
-        start_of_week = today - timedelta(days=today.weekday())          # Monday
+        start_of_week = today - timedelta(days=today.weekday())
         return start_of_week <= day <= today
     if period == DATE_THIS_MONTH:
         return day.year == today.year and day.month == today.month
@@ -190,7 +189,7 @@ def follow_up_list(patient_records_store, auth_store, user_store, followup_store
     rows = []
     for appointment in followup_appointments.for_professional(followup_store, professional_user_id, timezone_name):
         patient = by_user_id.get(appointment["patient_user_id"])
-        if patient is None:                    # the patient record or the sharing itself is gone - nothing to show
+        if patient is None:
             continue
         rows.append({**appointment, "patient": patient, "follow_up_status": _follow_up_status(appointment, now_utc)})
 
@@ -229,7 +228,7 @@ def _patient_profile(assessment_store, patient):
         for key, name in (("age", "Age"), ("sex", "Sex"), ("gender", "Gender"), ("country", "Country")):
             if profile[key] is None:
                 profile[key] = saved.get(name)
-    profile["gender"] = profile["gender"] or profile["sex"]           # saved before Gender was asked: Male/Female
+    profile["gender"] = profile["gender"] or profile["sex"]
     return profile
 
 
@@ -262,7 +261,7 @@ def patient_insights(patient_records_store, auth_store, user_store, assessment_s
     high = 0
     age_counts = {label: 0 for label, _, _ in AGE_BUCKETS}
     with_result = 0
-    profiles = []          # one per patient WITH a result: {level, gender, country} - what the gender and Philippines views use
+    profiles = []
 
     for patient in pool:
         rows = assessments.load_records(assessment_store, patient["user_id"], timezone_name)
@@ -347,8 +346,8 @@ def dashboard(patient_records_store, auth_store, user_store, assessment_store, r
     pool = patient_pool(patient_records_store, auth_store, user_store, professional_user_id)
     by_user_id = {patient["user_id"]: patient for patient in pool}
 
-    all_rows = []            # every assessment across every patient, each tagged with its own patient's info
-    latest_by_patient = {}   # user_id -> that patient's own latest assessment record (for the risk counts)
+    all_rows = []
+    latest_by_patient = {}
     for patient in pool:
         records = assessments.load_records(assessment_store, patient["user_id"], timezone_name)
         if records:
@@ -362,7 +361,6 @@ def dashboard(patient_records_store, auth_store, user_store, assessment_store, r
     all_rows.sort(key=lambda row: (row["date"], row["assessment_id"]), reverse=True)
     recent = all_rows[:recent_limit]
 
-    # Review status only means anything for a shared patient's own assessment - see the module note above.
     shared_assessment_ids = [row["assessment_id"] for row in all_rows if row["patient"]["source"] == "shared"]
     reviews_by_assessment = clinical_reviews.for_assessments(review_store, shared_assessment_ids)
     for row in recent:

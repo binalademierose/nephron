@@ -42,8 +42,8 @@ REQUIRED_METADATA_KEYS = ("schema_version", "artifact_file", "artifact_sha256", 
                           "threshold", "threshold_method", "stage", "features", "library_versions")
 SCHEMA_VERSION = 1
 ARTIFACT_NAME = re.compile(r"^[A-Za-z0-9._-]+\.(joblib|pkl|pickle)$")
-STRICT_LIBRARIES = {"scikit-learn": "scikit-learn", "xgboost": "xgboost"}      # a different version can break the file
-SOFT_LIBRARIES = {"pandas": "pandas", "numpy": "numpy"}                           # a different version is only a warning
+STRICT_LIBRARIES = {"scikit-learn": "scikit-learn", "xgboost": "xgboost"}
+SOFT_LIBRARIES = {"pandas": "pandas", "numpy": "numpy"}
 
 Check = namedtuple("Check", "name ok detail fatal")
 
@@ -65,10 +65,6 @@ def _minor(version):
     return (int(match.group(1)), int(match.group(2))) if match else None
 
 
-# xgboost ships as two interchangeable wheels: the full "xgboost" and the smaller CPU-only "xgboost-cpu" (used on
-# hosts with a size limit, such as serverless). Both import as `xgboost` and share the same version line, so either
-# one satisfies the model's recorded xgboost version. The installed-version check must therefore look under BOTH
-# distribution names, or a perfectly good xgboost-cpu install would be reported as "not installed".
 _DISTRIBUTION_ALIASES = {"xgboost": ("xgboost", "xgboost-cpu")}
 
 
@@ -133,7 +129,6 @@ class ModelService:
         self._importance = {}
         self.can_explain = False
 
-    # ------------------------------------------------------------------ loading and verification
     def load(self):
         """Run every check. Afterwards `ready` says whether screening may be used, `checks` shows the whole report."""
         self.checks, self.ready, self._pipeline = [], False, None
@@ -141,7 +136,7 @@ class ModelService:
             self._verify()
         except _Stop:
             pass
-        except Exception as error:                                        # a bug or a strange file must never crash the app
+        except Exception as error:
             self.checks.append(Check("Unexpected problem while checking the model", False, f"{type(error).__name__}: {error}", True))
         failed = next((c for c in self.checks if not c.ok and c.fatal), None)
         self.ready = failed is None and self._pipeline is not None
@@ -252,14 +247,13 @@ class ModelService:
                           f"saved with {versions[key]}, installed {installed}. This is only a warning.", fatal=False)
 
     def _check_classes(self, meta, pipeline):
-        # Read from the OUTER object: predict() indexes pipeline.predict_proba()'s own columns, calibrated or not.
         classes = getattr(pipeline, "classes_", None)
         self._add("Model reports its two classes", classes is not None and len(classes) == 2, "the model must have exactly two classes.")
         labels = [_plain(c) for c in classes]
         high = _plain(meta["high_risk_class"])
         self._add("The high-risk class is one of the model's classes", high in labels,
                   f"metadata says the high-risk class is {high!r} but the model's classes are {labels}.")
-        self._high_index = labels.index(high)          # found by LABEL, never assumed to be column 1
+        self._high_index = labels.index(high)
 
     def _check_features(self, meta, pipeline):
         features, wanted = meta["features"], contract.feature_names(self.catalog)
@@ -315,7 +309,6 @@ class ModelService:
         self.can_explain = ok
         self._add("Each result can be explained (contributions add up to the model's probability)", ok, detail, fatal=False)
 
-    # ------------------------------------------------------------------ using the model
     @property
     def version(self):
         return self.metadata.get("model_version")
@@ -421,15 +414,12 @@ class ModelService:
         if raw.shape != (1, encoded.shape[1] + 1):
             raise ExplanationUnavailable(f"the contributions have an unexpected shape {raw.shape}")
 
-        # XGBoost's contributions are for its OWN positive class, estimator.classes_[1]. When the model is calibrated,
-        # estimator.classes_[1] is the same class as self._pipeline.classes_[1] (just verified above), so this is also
-        # the class the isotonic curve was fitted to move towards. Turn everything towards the HIGH-risk class.
         sign = 1.0 if self._high_index == 1 else -1.0
-        margin = max(min(float(raw[0].sum()), 30.0), -30.0)                 # contributions + bias = the log-odds of estimator.classes_[1]
-        positive = 1.0 / (1.0 + math.exp(-margin))                          # estimator's OWN probability of its classes_[1]
+        margin = max(min(float(raw[0].sum()), 30.0), -30.0)
+        positive = 1.0 / (1.0 + math.exp(-margin))
         if calibrator is not None:
             try:
-                positive = float(calibrator.predict(numpy.array([positive]))[0])    # the same curve predict_proba() itself applies
+                positive = float(calibrator.predict(numpy.array([positive]))[0])
             except Exception as error:
                 raise ExplanationUnavailable(f"could not apply the model's calibration curve ({type(error).__name__}: {error})") from error
         from_contributions = positive if self._high_index == 1 else 1.0 - positive
@@ -439,7 +429,7 @@ class ModelService:
 
         totals = dict.fromkeys(features, 0.0)
         for owner, value in zip(_owners(transform, features), raw[0][:-1]):
-            totals[owner] += sign * float(value)                          # every encoded column is added to ITS question
+            totals[owner] += sign * float(value)
         effects = [{"name": name, "label": contract.question_for(self.catalog, name)["short"], "effect": value}
                    for name, value in totals.items()]
         effects.sort(key=lambda item: (-abs(item["effect"]), item["name"]))
@@ -551,7 +541,7 @@ def _owners(transform, features):
         matches = [f for f in features if base == f or base.startswith(f + "_")]
         if not matches:
             raise ValueError(f"encoded column '{encoded}' does not belong to any input")
-        owners.append(max(matches, key=len))                    # 'Diabetes_Medication_x' belongs to Diabetes_Medication, not Diabetes
+        owners.append(max(matches, key=len))
     return owners
 
 

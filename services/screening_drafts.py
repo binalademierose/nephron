@@ -6,8 +6,8 @@ never trusted as a real answer either way - services/screening_contract.py check
 scratch - but a autosave endpoint reachable by anyone signed in still deserves basic limits against abuse) and
 turns a saved draft back into what the form and the dashboard need.
 """
-MAX_DRAFT_FIELDS = 80          # comfortably more than either catalog has questions for
-MAX_DRAFT_VALUE_LENGTH = 200   # every real answer is a short choice or a short number
+MAX_DRAFT_FIELDS = 80
+MAX_DRAFT_VALUE_LENGTH = 200
 
 
 def save_draft(store, user_id, assessment_type, form, current_step, now):

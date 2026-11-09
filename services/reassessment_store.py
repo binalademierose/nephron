@@ -32,9 +32,8 @@ _COLUMNS = "request_id, user_id, reason, status, requested_at, decided_at, decid
 
 
 class MySQLReassessmentStore:
-    default_months = 3          # the rule until an administrator saves one (and .env sets no REASSESSMENT_DAYS)
+    default_months = 3
 
-    # ---- the administrator's setting ----
     def get_months(self):
         """The waiting period in months, 0 for "no waiting period", or None if it was never set."""
         row = db.query_one("SELECT setting_value FROM app_settings WHERE setting_key = %s", (MONTHS_KEY,))
@@ -50,7 +49,6 @@ class MySQLReassessmentStore:
                    "ON DUPLICATE KEY UPDATE setting_value = VALUES(setting_value), updated_at = VALUES(updated_at), "
                    "updated_by = VALUES(updated_by)", (MONTHS_KEY, str(months), now, admin_user_id))
 
-    # ---- people's requests ----
     def add_request(self, user_id, reason, now):
         try:
             with db.transaction() as cursor:
@@ -98,7 +96,7 @@ class MySQLReassessmentStore:
 class MemoryReassessmentStore:
     """For the automated tests. Starts with NO administrator setting, so the .env value (normally empty) applies."""
 
-    default_months = None       # tests start with no waiting period unless they set one
+    default_months = None
 
     def __init__(self, user_store=None, months=None):
         self._user_store = user_store

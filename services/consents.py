@@ -25,6 +25,6 @@ def record_share_consent(store, patient_user_id, professional_user_id, now):
 def latest_dates_for_patient(store, patient_user_id, timezone_name):
     """{professional_user_id: local date of the patient's most recent agreement to share with them}."""
     latest = {}
-    for row in store.list_for_patient(patient_user_id):            # newest first, so the first one seen wins
+    for row in store.list_for_patient(patient_user_id):
         latest.setdefault(row["professional_user_id"], clock.to_local_date(row["consented_at"], timezone_name))
     return latest
