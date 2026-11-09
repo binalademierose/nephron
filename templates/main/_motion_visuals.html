@@ -1,10 +1,5 @@
-{# The animated pictures on Home and How it works. Every one is an ILLUSTRATION (each says so, on the picture itself):
-   none of these numbers or names is a real result. All motion comes from static/css/home.css and is triggered by
-   the classes static/js/motion.js adds - the markup itself is finished and readable with no script at all. #}
 {% from "partials/_macros.html" import icon, risk_badge %}
 
-{# A ring that fills to an ARC - a picture of the idea, never a value: a public page shows no invented numbers, so the
-   centre is an icon, not a percentage. threshold (optional) adds the validated-cut-off tick. #}
 {% macro mini_ring(fill, threshold=None, extra_class='') -%}
 {% set g = ring_geometry(fill, radius=38, stroke=9, threshold=threshold) %}
 <div class="ring mini-ring {{ extra_class }}" role="img" aria-label="Illustration of a risk ring, not a real result">
@@ -17,7 +12,6 @@
 </div>
 {%- endmacro %}
 
-{# The small picture above each step of "How screening works" on the home page. #}
 {% macro journey_visual(n) -%}
 {% if n == 1 %}
 <div class="mv mv-form" aria-hidden="true">
@@ -39,8 +33,6 @@
 {% endif %}
 {%- endmacro %}
 
-{# The five scenes of the How it works walkthrough. One per step, always the same markup whether it appears in the sticky
-   stage (wide screens) or above its step (phones and no-script). #}
 {% macro scene(n) -%}
 {% if n == 1 %}
 <div class="scene sc-answers">
