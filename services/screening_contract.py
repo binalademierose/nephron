@@ -188,27 +188,6 @@ def to_model_values(catalog, values):
     return translated
 
 
-def outside_training(catalog, inputs):
-    """[(label, value text, training range text), ...] for every saved answer the model never saw in training - a
-    country it only knows as "Other", or a number outside the range it learned from. Shown on the result so an
-    estimate built on an extrapolation is never presented as if it were not one."""
-    flagged = []
-    for question in catalog["questions"]:
-        name, kind = question["name"], question["kind"]
-        if name not in inputs or inputs[name] is None:
-            continue
-        value = inputs[name]
-        if kind == "choice":
-            option = next((o for o in question["options"] if o["value"] == value), None)
-            if option and "model_value" in option:
-                flagged.append((question["short"], option["label"], f'the model knows it only as "{option["model_value"]}"'))
-        elif kind in ("number", "bmi") and isinstance(value, (int, float)):
-            if not question["min"] <= value <= question["max"]:
-                unit = (" " + question["unit"]) if question.get("unit") else ""
-                flagged.append((question["short"], f"{_fmt(value)}{unit}", f"the model learned from {_fmt(question['min'])} to {_fmt(question['max'])}{unit}"))
-    return flagged
-
-
 def _fmt(number):
     return f"{number:g}"
 

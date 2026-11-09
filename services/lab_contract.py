@@ -9,9 +9,8 @@ be worked out from it). A thousands separator is fine ("1,000").
 
 Each field's "min"/"max" in ml/lab_catalog.json is the range Nephron normally EXPECTS for that test - no longer a
 limit. A value outside it is still accepted, but the person is asked once to check it and its unit (a creatinine of
-1000 is far more likely to be umol/L typed into the mg/dL box than a real mg/dL value) - see unusual_values() - and
-the saved result says the value was outside that range (outside_usual_range()), so an estimate built on it is never
-presented as an ordinary one. Nothing here decides what the model does with a gap; that is the Stage 2 model's own
+1000 is far more likely to be umol/L typed into the mg/dL box than a real mg/dL value) - see unusual_values().
+Nothing here decides what the model does with a gap; that is the Stage 2 model's own
 trained handling (see services/model_service.py and ml/model_stage2/README.md).
 """
 import json
@@ -161,13 +160,6 @@ def unusual_errors(flagged, form):
     if form.get("unusual_shown") == unusual_signature(flagged):
         return {"confirm_unusual": "Tick this box to confirm the values are correct, or change them."}
     return {}
-
-
-def outside_usual_range(catalog, inputs):
-    """For a saved result: [(label, value text, note), ...] for every lab value outside its usual range, in the same
-    shape as screening_contract.outside_training() so the result page shows both in one notice."""
-    return [(item["short"], item["value"], f"Nephron usually expects {item['usual']} for this test")
-            for item in unusual_values(catalog, inputs or {})]
 
 
 def with_egfr(lab_values, age, sex):
