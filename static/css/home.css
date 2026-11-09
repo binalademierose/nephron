@@ -1,15 +1,9 @@
-/* home.css - the Home page and the How it works walkthrough. Motion rules live in motion.css; here, everything is
-   written as a FINISHED picture first, and only the "before" states and transitions sit inside
-   @media (prefers-reduced-motion: no-preference) with html.js - so no script, or a request for less motion, just
-   shows the finished picture. */
 
-/* ---------- shared bits ---------- */
 .sc-tag { display: inline-block; padding: 0.15rem 0.55rem; border-radius: var(--radius-pill); background: var(--lavender); color: var(--indigo); font-size: 0.68rem; font-weight: 700; letter-spacing: 0.04em; text-transform: uppercase; }
 .mini-ring { width: 5rem; }
 .mini-ring .ring-centre .icon { width: 36%; height: 36%; color: var(--indigo); }
 .output-ring { width: 9rem; }
 
-/* ---------- home hero ---------- */
 .hero-in { animation: hero-rise 0.8s var(--ease) both; animation-delay: calc(var(--h, 0) * 90ms + 250ms); }
 .hw { display: inline-block; animation: word-rise 0.75s var(--ease) both; animation-delay: calc(var(--w, 0) * 65ms + 150ms); }
 @keyframes hero-rise { from { opacity: 0; transform: translateY(1.2rem); } to { opacity: 1; transform: none; } }
@@ -19,8 +13,6 @@
 @keyframes ripple { from { opacity: 0.55; transform: scale(0.55); } to { opacity: 0; transform: scale(1.25); } }
 
 .hero-visual { position: relative; justify-self: end; width: 100%; max-width: 30rem; display: grid; place-items: center; transform: translate3d(calc(var(--px, 0) * 12px), calc(var(--py, 0) * 8px), 0); transition: transform 0.3s ease-out; }
-/* The dashboard's own .hero-art rule pins the picture with right/top/transform; on the home page it is a normal grid child, so
-   those are switched off - and its soft edges are feathered so the glow behind it never shows a rectangle. */
 .hero-home .hero-visual .hero-art {
   position: relative; inset: auto; z-index: 1; width: 100%; max-width: none; justify-self: center; animation: float 8s ease-in-out infinite;
   -webkit-mask-image: radial-gradient(ellipse 50% 50% at 50% 50%, #000 76%, transparent 100%); mask-image: radial-gradient(ellipse 50% 50% at 50% 50%, #000 76%, transparent 100%);
@@ -44,10 +36,8 @@
 .hero-float-text small { font-size: 0.72rem; color: var(--muted); }
 @container hero (max-width: 46rem) { .hero-home .hero-visual { display: none; } }
 
-/* ---------- outputs ---------- */
 .output-badges > span { display: block; }
 
-/* ---------- "How screening works" ---------- */
 .journey-head { display: flex; flex-wrap: wrap; align-items: flex-end; justify-content: space-between; gap: var(--space-4); }
 .journey { display: grid; grid-template-columns: repeat(5, minmax(0, 1fr)); gap: var(--space-4); margin: var(--space-6) 0 0; padding: 0; list-style: none; }
 .journey-step { position: relative; margin: 0; padding-top: 4rem; }
@@ -86,7 +76,6 @@
   .journey-visual { height: 6rem; max-width: 22rem; }
 }
 
-/* ---------- closing call to action ---------- */
 .cta-section { padding-block: var(--space-6) var(--space-8); }
 .cta-band { position: relative; overflow: hidden; display: grid; grid-template-columns: minmax(0, 1fr) auto; gap: var(--space-6); align-items: center; padding: clamp(1.75rem, 4vw, 3rem); color: #fff; background: linear-gradient(120deg, #1B1A5C 0%, #302B91 55%, #5B54D6 100%); border-radius: var(--radius-xl); box-shadow: 0 24px 60px rgba(48, 43, 145, 0.3); }
 .cta-copy, .cta-actions { position: relative; z-index: 1; }
@@ -104,7 +93,6 @@
 @keyframes orb { 50% { transform: translate(1rem, -1rem) scale(1.08); } }
 @media (max-width: 48rem) { .cta-band { grid-template-columns: minmax(0, 1fr); } }
 
-/* ---------- How it works: the walkthrough ---------- */
 .about-intro { margin-bottom: var(--space-5); }
 .walk { display: grid; grid-template-columns: minmax(0, 25rem) minmax(0, 1fr); column-gap: var(--space-8); align-items: start; margin-top: var(--space-6); }
 .walk-heading { grid-column: 1 / -1; margin: 0 0 var(--space-5); }
@@ -119,7 +107,7 @@
 .walk-dot.is-active { width: 1.6rem; background: var(--indigo); }
 
 .walk-steps { position: relative; margin: 0; padding: 0 0 0 3.6rem; list-style: none; }
-.walk-steps::before, .walk-steps::after { content: ""; position: absolute; z-index: 0; left: 1.25rem; top: 2.4rem; bottom: 2.4rem; width: 3px; border-radius: 3px; }   /* behind the step icons */
+.walk-steps::before, .walk-steps::after { content: ""; position: absolute; z-index: 0; left: 1.25rem; top: 2.4rem; bottom: 2.4rem; width: 3px; border-radius: 3px; }
 .walk-steps::before { background: var(--lavender-strong); }
 .walk-steps::after { background: linear-gradient(180deg, var(--indigo), #7D75EE); transform-origin: top; transform: scaleY(var(--walk-progress, 0)); }
 .walk-step { position: relative; z-index: 1; display: flex; flex-direction: column; justify-content: center; min-height: 26rem; padding-block: var(--space-4); }
@@ -136,7 +124,7 @@
 .walk-note { display: flex; align-items: center; gap: 0.45rem; margin: var(--space-3) 0 0; padding: 0.5rem 0.8rem; font-size: 0.85rem; font-weight: 600; color: var(--navy); background: var(--lavender); border-radius: var(--radius-md); }
 .walk-card .walk-note { color: var(--navy); }
 .walk-note .icon { flex: none; width: 1.1rem; height: 1.1rem; color: var(--green-text); }
-@media (min-width: 64.01rem) { .js .walk-step:not(.is-active) .walk-card > :not(.walk-num) { opacity: 0.86; } }   /* the card's text only: dimming the icon's own ancestor made the white circle see-through, so the line showed through it */   /* dimmed, but body text stays above 4.5:1 */
+@media (min-width: 64.01rem) { .js .walk-step:not(.is-active) .walk-card > :not(.walk-num) { opacity: 0.86; } }   
 @media (max-width: 64rem) {
   .walk { grid-template-columns: minmax(0, 1fr); }
   .walk-stage-col { display: none; }
@@ -157,7 +145,6 @@ html:not(.js) .walk-num { position: static; margin-bottom: var(--space-2); }
 .about-read { display: grid; grid-template-columns: minmax(0, 26rem) minmax(0, 1fr); gap: var(--space-7); align-items: start; padding-block: var(--space-7); }
 @media (max-width: 64rem) { .about-read { grid-template-columns: minmax(0, 1fr); gap: var(--space-5); } }
 
-/* ---------- the walkthrough's five pictures ---------- */
 .scene { position: relative; display: flex; flex-direction: column; justify-content: center; gap: 0.9rem; height: 100%; padding-top: 1.8rem; }
 .scene .sc-tag { position: absolute; top: 0; left: 0; }
 .walk-inline .scene { height: auto; }
@@ -167,7 +154,6 @@ html:not(.js) .walk-num { position: static; margin-bottom: var(--space-2); }
 .sc-tick { flex: none; display: grid; place-items: center; width: 1.3rem; height: 1.3rem; color: #fff; background: var(--indigo); border-radius: 50%; }
 .sc-tick .icon { width: 0.8rem; height: 0.8rem; }
 
-/* 1 - answers */
 .sc-rows { display: grid; gap: 0.6rem; margin: 0; padding: 0; list-style: none; }
 .sc-row { display: grid; grid-template-columns: 1.3rem 7rem minmax(0, 1fr); align-items: center; gap: 0.6rem; font-size: 0.85rem; color: var(--navy); }
 .sc-skel { display: block; height: 0.55rem; width: var(--w); background: var(--lavender-strong); border-radius: 99px; transform-origin: left; }
@@ -177,12 +163,10 @@ html:not(.js) .walk-num { position: static; margin-bottom: var(--space-2); }
 .sc-lab strong { display: block; font-size: 0.85rem; color: var(--navy); }
 .sc-lab p { margin: 0; font-size: 0.78rem; color: var(--muted); }
 
-/* 2 - estimate */
 .sc-estimate { align-items: center; text-align: center; }
 .sc-ring { width: 11rem; }
 .sc-note { max-width: 19rem; margin: 0; font-size: 0.82rem; color: var(--muted); }
 
-/* 3 - what moved it */
 .sc-frows { display: grid; gap: 0.85rem; margin: 0; padding: 0; list-style: none; }
 .sc-frow { display: grid; grid-template-columns: 8rem minmax(0, 1fr) 5rem; align-items: center; gap: 0.6rem; font-size: 0.82rem; }
 .sc-fname { font-weight: 600; color: var(--navy); }
@@ -193,10 +177,9 @@ html:not(.js) .walk-num { position: static; margin-bottom: var(--space-2); }
 .sc-fdir { display: inline-flex; align-items: center; gap: 0.2rem; font-size: 0.78rem; font-weight: 700; }
 .sc-fdir .icon { width: 0.9rem; height: 0.9rem; }
 .sc-up .sc-fdir { color: var(--red-text); }
-.sc-down .sc-fdir { color: #056B55; }          /* darker than --green-text: this one sits on the lavender panel */
+.sc-down .sc-fdir { color: #056B55; }
 .sc-down .sc-fdir .icon { transform: rotate(180deg); }
 
-/* 4 - share */
 .sc-consent { display: flex; align-items: center; gap: 0.6rem; padding: 0.75rem 0.95rem; font-size: 0.85rem; font-weight: 700; color: var(--navy); background: #fff; border: 1.5px solid var(--indigo); border-radius: var(--radius-md); box-shadow: 0 8px 24px rgba(48, 43, 145, 0.1); }
 .sc-people { display: grid; grid-template-columns: auto minmax(0, 1fr) auto; align-items: center; gap: 0.6rem; margin: 0.35rem 0; }
 .sc-person { display: grid; justify-items: center; gap: 0.3rem; font-size: 0.78rem; color: var(--navy); }
@@ -207,7 +190,6 @@ html:not(.js) .walk-num { position: static; margin-bottom: var(--space-2); }
 .sc-pill { display: flex; align-items: center; gap: 0.45rem; margin: 0; padding: 0.55rem 0.8rem; font-size: 0.8rem; font-weight: 600; color: var(--navy); background: #fff; border: 1px solid var(--border); border-radius: var(--radius-md); }
 .sc-pill .icon { flex: none; width: 1rem; height: 1rem; color: var(--indigo); }
 
-/* 5 - follow-up */
 .sc-duo { display: grid; grid-template-columns: repeat(2, minmax(0, 1fr)); gap: 0.75rem; }
 .sc-grid { display: grid; grid-template-columns: repeat(7, minmax(0, 1fr)); gap: 0.25rem; }
 .sc-grid span { aspect-ratio: 1; background: var(--lavender); border-radius: 0.3rem; }
@@ -219,9 +201,7 @@ html:not(.js) .walk-num { position: static; margin-bottom: var(--space-2); }
 .sc-check { display: flex; align-items: center; gap: 0.6rem; margin: 0; font-size: 0.82rem; color: var(--navy); }
 @media (max-width: 30rem) { .sc-frow { grid-template-columns: 6.2rem minmax(0, 1fr) 4.4rem; } .sc-row { grid-template-columns: 1.3rem 6rem minmax(0, 1fr); } .sc-duo { grid-template-columns: minmax(0, 1fr); } }
 
-/* ================= motion: only for people who have not asked for less ================= */
 @media (prefers-reduced-motion: no-preference) {
-  /* journey */
   .journey-node { transition: opacity 0.5s var(--ease), transform 0.6s cubic-bezier(0.2, 0.9, 0.3, 1.4); transition-delay: calc(var(--d, 0) * 0.3s); }
   .journey-body { transition: opacity 0.6s var(--ease), transform 0.6s var(--ease); transition-delay: calc(var(--d, 0) * 0.3s + 0.15s); }
   .journey-line::after { transition: transform 0.7s var(--ease); transition-delay: calc(var(--d, 0) * 0.3s + 0.25s); }
@@ -238,34 +218,28 @@ html:not(.js) .walk-num { position: static; margin-bottom: var(--space-2); }
   .js .journey:not(.is-in) .mv-switch::after { transform: none; }
   @media (max-width: 64rem) { .js .journey:not(.is-in) .journey-line { --sx: 1; --sy: 0; } }
 
-  /* hero pointer depth already eases in its own rule; here just keep the walkthrough's step change smooth */
   .walk-scene { transition: opacity 0.5s var(--ease), transform 0.5s var(--ease), visibility 0.5s; }
   .walk-card > * { transition: opacity 0.4s ease; }
   .walk-num { transition: background-color 0.3s ease, color 0.3s ease, border-color 0.3s ease, transform 0.4s cubic-bezier(0.2, 0.9, 0.3, 1.4); }
   .walk-dot { transition: width 0.35s var(--ease), background-color 0.35s ease; }
 
-  /* scenes: every piece is finished by default; before the scene is "in", the moving pieces wait */
   .sc-tick, .sc-skel, .sc-lab, .sc-result, .sc-note, .sc-fbar i, .sc-frow, .sc-consent, .sc-pill, .sc-pro, .sc-grid .is-appt, .sc-tline, .sc-tpoint, .sc-check, .sc-card {
     transition: transform 0.55s var(--ease), opacity 0.55s var(--ease), stroke-dashoffset 1.2s var(--ease);
   }
   .js :is(.walk-scene, .walk-inline):not(.is-in) .ring-value { animation: none; stroke-dasharray: 0 var(--circ); }
-  /* 1 */
   .sc-answers .sc-tick, .sc-answers .sc-skel { transition-delay: calc(var(--r, 0) * 0.22s + 0.2s); }
   .sc-answers .sc-lab { transition-delay: 1.4s; }
   .js :is(.walk-scene, .walk-inline):not(.is-in) .sc-answers .sc-tick { transform: scale(0); }
   .js :is(.walk-scene, .walk-inline):not(.is-in) .sc-answers .sc-skel { transform: scaleX(0); }
   .js :is(.walk-scene, .walk-inline):not(.is-in) .sc-answers .sc-lab { opacity: 0; transform: translateY(1rem); }
-  /* 2 */
   .sc-estimate .sc-result { transition-delay: 1.2s; }
   .sc-estimate .sc-note { transition-delay: 1.6s; }
   .js :is(.walk-scene, .walk-inline):not(.is-in) .sc-estimate .sc-result { opacity: 0; transform: scale(0.6); }
   .js :is(.walk-scene, .walk-inline):not(.is-in) .sc-estimate .sc-note { opacity: 0; transform: translateY(0.5rem); }
-  /* 3 */
   .sc-factors .sc-frow { transition-delay: calc(var(--r, 0) * 0.2s + 0.1s); }
   .sc-factors .sc-fbar i { transition-delay: calc(var(--r, 0) * 0.2s + 0.3s); transition-duration: 0.9s; }
   .js :is(.walk-scene, .walk-inline):not(.is-in) .sc-factors .sc-frow { opacity: 0; transform: translateX(-1rem); }
   .js :is(.walk-scene, .walk-inline):not(.is-in) .sc-factors .sc-fbar i { transform: scaleX(0); }
-  /* 4 */
   .sc-share .sc-consent .sc-tick { transition-delay: 0.5s; }
   .sc-share .sc-pro { transition-delay: 2s; }
   .sc-share .sc-pill-a { transition-delay: 1.9s; }
@@ -276,7 +250,6 @@ html:not(.js) .walk-num { position: static; margin-bottom: var(--space-2); }
   .js :is(.walk-scene, .walk-inline):not(.is-in) .sc-share .sc-pill { opacity: 0; transform: translateY(0.6rem); }
   .is-in .sc-share .sc-packet { animation: packet-run 2.4s var(--ease) 0.9s infinite; }
   @keyframes packet-run { 0% { left: 0; opacity: 0; } 12% { opacity: 1; } 80% { opacity: 1; } 100% { left: calc(100% - 0.8rem); opacity: 0; } }
-  /* 5 */
   .sc-follow .sc-card { transition-delay: 0.1s; }
   .sc-follow .sc-grid .is-appt { transition-delay: 0.7s; }
   .sc-follow .sc-tline { transition-delay: 0.5s; }

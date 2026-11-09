@@ -1,20 +1,16 @@
-/* layout.css - page structure: public pages, the signed-in shell (header + curved rail), the sign-in layout. */
 
-/* ---------- Shared containers ---------- */
 .container { width: 100%; max-width: var(--content-width); margin-inline: auto; padding-inline: var(--space-5); }
 .reading-width { max-width: var(--reading-width); }
 
 .page-fade { animation: page-in var(--duration-slow) var(--ease); }
 @keyframes page-in { from { opacity: 0; transform: translateY(6px); } to { opacity: 1; transform: none; } }
 
-/* ---------- Logo sizes: height stays automatic, so it is never stretched ---------- */
 .logo-mark { display: block; width: 5.25rem; max-width: 100%; height: auto; }
 a.brand, a.footer-logo, a.auth-logo, .logo-lockup { text-decoration: none; }
 .logo-lockup { display: inline-flex; align-items: center; gap: 0.6rem; }
 .logo-lockup .logo-mark { width: 3.6rem; }
 .brand-name { font-family: var(--font-heading); font-size: 1.3rem; font-weight: 700; letter-spacing: 0.14em; text-transform: uppercase; line-height: 1; color: var(--indigo); }
 
-/* ================= PUBLIC PAGES ================= */
 .site-header { position: sticky; top: 0; z-index: 30; background: var(--surface-glass-strong); -webkit-backdrop-filter: blur(var(--blur-glass)); backdrop-filter: blur(var(--blur-glass)); border-bottom: 1px solid var(--border); }
 @supports not ((backdrop-filter: blur(1px)) or (-webkit-backdrop-filter: blur(1px))) { .site-header { background: #fff; } }
 .site-header-inner { display: flex; flex-wrap: wrap; align-items: center; justify-content: space-between; gap: var(--space-1) var(--space-4); min-height: 4.25rem; }
@@ -49,19 +45,15 @@ a.brand, a.footer-logo, a.auth-logo, .logo-lockup { text-decoration: none; }
 .footer-logo .brand-name { font-size: 1.15rem; }
 .footer-disclaimer { max-width: 46rem; }
 
-/* ================= APP SHELL: header on top, a curved rail on the left ================= */
 .app-body { background: linear-gradient(180deg, #F8F9FE 0%, #F3F4FC 100%); }
 
-/* Soft decoration behind everything: a lavender glow top left and a swoosh bottom right */
 .app-backdrop { position: fixed; inset: 0; z-index: -1; overflow: hidden; pointer-events: none; }
 .app-backdrop::before { content: ""; position: absolute; left: -14%; top: -30%; width: 62%; aspect-ratio: 1; border-radius: 50%; background: radial-gradient(closest-side, rgba(227, 226, 255, 0.75), rgba(227, 226, 255, 0)); }
 .app-backdrop::after { content: ""; position: absolute; right: -9vw; bottom: -26vh; width: 36vw; min-width: 16rem; aspect-ratio: 1; border-radius: 50%; background: linear-gradient(140deg, rgba(178, 170, 250, 0.22), rgba(214, 210, 254, 0.18)); box-shadow: -7vw -5vh 0 -3vw rgba(198, 192, 252, 0.16); }
-/* On the overview the swoosh shows through the translucent right panel, as in the design. Text never sits on it there. */
 .has-aside .app-backdrop::after { background: linear-gradient(140deg, rgba(178, 170, 250, 0.5), rgba(214, 210, 254, 0.4)); box-shadow: -7vw -5vh 0 -3vw rgba(198, 192, 252, 0.4); }
 
 .app-shell { position: relative; min-height: 100vh; }
 
-/* ---- Header: the logo badge, a greeting, and the tools on the right ---- */
 .app-header { position: sticky; top: 0; z-index: 40; display: flex; align-items: center; gap: var(--space-3); min-height: 6.5rem; padding: 0.75rem 1.5rem 0 0.5rem; background: var(--surface-glass-strong); -webkit-backdrop-filter: blur(var(--blur-glass)); backdrop-filter: blur(var(--blur-glass)); }
 @supports not ((backdrop-filter: blur(1px)) or (-webkit-backdrop-filter: blur(1px))) { .app-header { background: #fff; } }
 .app-badge { flex: none; display: block; width: 5.25rem; height: 5.25rem; border-radius: 50%; filter: drop-shadow(0 6px 14px rgba(48, 43, 145, 0.22)); }
@@ -81,7 +73,6 @@ a.brand, a.footer-logo, a.auth-logo, .logo-lockup { text-decoration: none; }
 .tool-pill:hover, .tool-circle:hover { color: var(--navy); background: var(--lavender-wash); box-shadow: var(--shadow-card); transform: translateY(-1px); }
 .tool-pill .icon { color: var(--indigo); }
 
-/* The account menu: an avatar and a chevron */
 .user-menu { position: relative; }
 .user-menu-button { display: inline-flex; align-items: center; gap: var(--space-2); padding: 0; color: var(--muted); background: none; border: 0; border-radius: var(--radius-pill); cursor: pointer; }
 .avatar { display: grid; place-items: center; flex: none; width: 2.9rem; height: 2.9rem; font-size: var(--text-small); font-weight: 700; color: var(--indigo); background: linear-gradient(145deg, #fff, var(--lavender)); border: 2px solid #fff; border-radius: 50%; box-shadow: var(--shadow-card); }
@@ -105,10 +96,9 @@ a.brand, a.footer-logo, a.auth-logo, .logo-lockup { text-decoration: none; }
 
 .menu-button { display: none; }
 
-/* ---- The curved rail: a white panel with an S-curve at each end, drawn from the design ---- */
 .rail {
   position: fixed; left: 0; z-index: 50;
-  top: clamp(6.5rem, 22.4vh, 16rem); height: clamp(34rem, 55.7vh, 46rem);   /* the proportions of the approved design */
+  top: clamp(6.5rem, 22.4vh, 16rem); height: clamp(34rem, 55.7vh, 46rem);
   width: var(--rail-width);
   display: flex; flex-direction: column;
   filter: drop-shadow(3px 4px 7px rgba(125, 117, 238, 0.3));
@@ -121,12 +111,7 @@ a.brand, a.footer-logo, a.auth-logo, .logo-lockup { text-decoration: none; }
 .rail-glow { fill: none; stroke: var(--violet); stroke-width: 2; opacity: 0.32; filter: blur(0.6px); }
 .rail-glow-strong { stroke-width: 5; opacity: 0.6; filter: blur(2.5px); }
 .rail-body { flex: 1; margin-block: -1px; background: #fff; position: relative; }
-/* The violet outline is drawn by each curved cap's own SVG stroke, so the straight middle had none at all - the
-   edge simply stopped between the two curves. This carries it down the straight edge, growing from the top
-   cap's faint 2px line into the bottom cap's stronger glow so both ends meet it without a seam. */
 .rail-body::after {
-  /* The same soft glow as the two curved caps (stroke 5, opacity .6, blur 2.5), all the way down the straight edge,
-     so the outline reads as one continuous line instead of stopping and starting. */
   content: ""; position: absolute; top: -2px; bottom: -2px; right: -2.5px; width: 5px;
   background: var(--violet); opacity: 0.6; filter: blur(2.5px);
 }
@@ -149,7 +134,6 @@ a.brand, a.footer-logo, a.auth-logo, .logo-lockup { text-decoration: none; }
 .rail-link.is-disabled:hover { color: #7B82A8; background: transparent; }
 .rail-label small { display: block; font-size: 0.6875rem; font-weight: 500; opacity: 0.8; }
 .rail-divider { width: 2.5rem; height: 0; border-top: 1px solid var(--navy); opacity: 0.85; }
-/* The name of each icon appears beside it on hover or keyboard focus */
 .rail-label {
   position: absolute; left: calc(100% + 0.9rem); top: 50%; z-index: 5;
   padding: 0.35rem 0.85rem; white-space: nowrap; font-size: var(--text-tiny); font-weight: 600;
@@ -159,13 +143,11 @@ a.brand, a.footer-logo, a.auth-logo, .logo-lockup { text-decoration: none; }
 }
 .rail-link:hover .rail-label, .rail-link:focus-visible .rail-label { opacity: 1; transform: translate(0, -50%); }
 
-/* ---- Page area ---- */
-.app-main { padding: 0.25rem 1.5rem var(--space-7) calc(var(--rail-width) + 1.6rem); max-width: 116rem; }   /* was 100rem: left ~320px of a 1920px screen empty, unused */
+.app-main { padding: 0.25rem 1.5rem var(--space-7) calc(var(--rail-width) + 1.6rem); max-width: 116rem; }
 
 .drawer-backdrop { position: fixed; inset: 0; z-index: 90; background: rgba(12, 13, 53, 0.45); opacity: 0; pointer-events: none; transition: opacity var(--duration-slow) var(--ease); }
 .rail .drawer-close { display: none; }
 
-/* Phones and small tablets: the rail becomes a drawer that shows every name */
 @media (max-width: 63.99rem) {
   .app-header { min-height: 4.75rem; gap: var(--space-2); padding: 0.5rem 1rem 0 0.75rem; }
   .menu-button { display: inline-grid; place-items: center; flex: none; width: 2.75rem; height: 2.75rem; color: var(--indigo); background: #fff; border: 1px solid var(--border); border-radius: 50%; cursor: pointer; }
@@ -174,17 +156,15 @@ a.brand, a.footer-logo, a.auth-logo, .logo-lockup { text-decoration: none; }
   .app-subtitle { font-size: var(--text-small); }
   .app-main { padding: 0.5rem 1rem var(--space-6); }
   .rail {
-    /* Above the backdrop (z-index 90). At the desktop value (50) the backdrop covered the open drawer, so every
-       tap landed on the backdrop - which closes the drawer - and no menu link could ever be followed. */
     z-index: 100;
-    top: 0; bottom: 0; height: auto; width: min(17rem, 86vw); padding: 4.25rem var(--space-3) var(--space-5);   /* room for the close button above the first link */
+    top: 0; bottom: 0; height: auto; width: min(17rem, 86vw); padding: 4.25rem var(--space-3) var(--space-5);
     background: #fff; border-radius: 0 var(--radius-lg) var(--radius-lg) 0; filter: none;
     transform: translateX(-100%); visibility: hidden; overflow-y: auto;
     transition: transform var(--duration-slow) var(--ease), visibility 0s linear var(--duration-slow);
   }
   .app-shell.is-drawer-open .rail { transform: translateX(0); visibility: visible; box-shadow: var(--shadow-overlay); transition: transform var(--duration-slow) var(--ease), visibility 0s; }
   .app-shell.is-drawer-open .drawer-backdrop { opacity: 1; pointer-events: auto; }
-  html.has-drawer-open, html.has-drawer-open body { overflow: hidden; }   /* the page behind stays put while the menu is open */
+  html.has-drawer-open, html.has-drawer-open body { overflow: hidden; }
   .rail-cap, .rail-body { display: none; }
   .rail-nav { position: static; }
   .rail-list { height: auto; align-items: stretch; gap: var(--space-1); }
@@ -194,28 +174,24 @@ a.brand, a.footer-logo, a.auth-logo, .logo-lockup { text-decoration: none; }
   .rail .drawer-close { display: inline-grid; position: absolute; top: var(--space-3); right: var(--space-3); }
 }
 @media (max-width: 40rem) {
-  /* Phones: the page title gets its own row under the menu button, logo and tools - squeezed between them it
-     broke over four lines and ran under the help button. */
   .app-header { flex-wrap: wrap; row-gap: 0.35rem; padding-bottom: 0.6rem; }
   .app-badge { width: 2.75rem; height: 2.75rem; }
   .app-tools { margin-left: auto; }
   .app-heading { order: 3; flex: 1 1 100%; }
   .app-title { font-size: 1.15rem; }
   .app-tools .tool-circle { display: none; }
-  .notif-menu .tool-circle { display: inline-flex; }   /* unlike settings, the bell has no other way in on mobile */
+  .notif-menu .tool-circle { display: inline-flex; }
   .tool-pill span { display: none; }
   .tool-pill { width: 2.75rem; padding: 0; border-radius: 50%; }
   .app-subtitle { display: none; }
 }
 
-/* ================= SIGN-IN LAYOUT ================= */
 .auth-layout { display: grid; grid-template-columns: minmax(0, 1.05fr) minmax(0, 1fr); min-height: 100vh; }
 
-/* The brand side: the hero gradient, the logo, the kidney artwork */
 .auth-brand {
   position: sticky; top: 0; align-self: start; height: 100vh; isolation: isolate; overflow: hidden;
   display: flex; flex-direction: column; justify-content: space-between; gap: var(--space-5);
-  padding: clamp(1.5rem, 4.5vh, 3.25rem) clamp(2rem, 5vw, 4rem);   /* follows the window HEIGHT so it fits one screen */
+  padding: clamp(1.5rem, 4.5vh, 3.25rem) clamp(2rem, 5vw, 4rem);
   background: linear-gradient(171deg, var(--hero-from), var(--hero-to));
 }
 .auth-logo { display: inline-flex; align-self: flex-start; padding: var(--space-3) var(--space-4); background: rgba(255, 255, 255, 0.72); border: 1px solid rgba(255, 255, 255, 0.8); border-radius: var(--radius-lg); box-shadow: var(--shadow-card); }
@@ -239,7 +215,7 @@ a.brand, a.footer-logo, a.auth-logo, .logo-lockup { text-decoration: none; }
 
 @media (max-width: 56rem) {
   .auth-layout { grid-template-columns: minmax(0, 1fr); }
-  .auth-brand { position: static; height: auto; padding: var(--space-5); gap: var(--space-4); }   /* stacked layout: nothing to keep in view while scrolling */
+  .auth-brand { position: static; height: auto; padding: var(--space-5); gap: var(--space-4); }
   .auth-logo { padding: var(--space-2) var(--space-3); }
   .auth-logo .logo-mark { width: 2.9rem; }
   .auth-logo .brand-name { font-size: 1.1rem; }

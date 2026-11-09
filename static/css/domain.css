@@ -1,8 +1,4 @@
-/* domain.css - components that belong to Nephron's screening experience.
-   Lavender is the identity. Indigo and navy carry text. Green means Low Preliminary Risk,
-   red means High Preliminary Risk, amber means pending. Every status also has words and an icon. */
 
-/* ---------- Small shared pieces ---------- */
 .section-header { display: flex; flex-wrap: wrap; align-items: baseline; justify-content: space-between; gap: var(--space-1) var(--space-4); margin-bottom: var(--space-3); }
 .section-header h2 { margin: 0; font-size: var(--text-subsection-heading); }
 .link-action { display: inline-flex; align-items: center; gap: var(--space-2); font-size: 0.9375rem; font-weight: 600; color: var(--indigo); text-decoration: none; }
@@ -15,12 +11,10 @@
 .summary-row dt { color: var(--muted); }
 .summary-row dd { margin: 0; font-weight: 600; text-align: right; }
 
-/* The small (i) that explains a chart. Keyboard users can reach it too. */
 .info-tip { display: inline-grid; place-items: center; width: 1.5rem; height: 1.5rem; color: var(--muted); border-radius: 50%; cursor: help; vertical-align: middle; }
 .info-tip .icon { width: 1.1rem; height: 1.1rem; }
 .info-tip:hover, .info-tip:focus-visible { color: var(--indigo); }
 
-/* A risk status: a dot AND the words. Green = Low Preliminary Risk, red = High Preliminary Risk. */
 .risk-pill { display: inline-flex; align-items: center; gap: 0.55rem; padding: 0.45rem 0.9rem; font-size: 0.875rem; text-wrap: balance; font-weight: 600; line-height: 1.2; border-radius: var(--radius-pill); }
 .risk-pill .risk-dot { flex: none; width: 0.65rem; height: 0.65rem; border-radius: 50%; }
 .result-panel .risk-pill { font-size: 0.8125rem; white-space: nowrap; }
@@ -29,7 +23,6 @@
 .risk-pill-high { color: var(--red-text); background: var(--red-soft); }
 .risk-pill-high .risk-dot { background: var(--red); }
 
-/* ---------- Risk meter: the probability as a marker on a line (used on the result page) ---------- */
 .risk-meter { position: relative; padding-top: 1.6rem; }
 .risk-meter-track { position: relative; height: 0.75rem; border-radius: 999px; background: var(--border); }
 .risk-meter-zone { position: absolute; top: 0; bottom: 0; }
@@ -47,7 +40,6 @@
 @keyframes marker-in { from { left: 0%; opacity: 0; } 30% { opacity: 1; } }
 .risk-meter-zone-labels { display: flex; justify-content: space-between; margin-top: var(--space-3); font-size: var(--text-tiny); font-weight: 600; color: var(--muted); }
 
-/* A thin risk line for rows in a list */
 .mini-meter {
   position: relative; display: inline-block; vertical-align: middle;
   width: 6.5rem; height: 0.5rem; border-radius: 999px;
@@ -58,7 +50,6 @@
 .mini-meter-wide { width: 100%; height: 0.625rem; }
 @keyframes bar-in { from { transform: scaleX(0); } }
 
-/* ---------- Ring: the predicted risk probability, filling clockwise from the top ---------- */
 .ring { position: relative; flex: none; width: 5rem; aspect-ratio: 1; }
 .ring svg { display: block; width: 100%; height: 100%; }
 .ring-track { fill: none; stroke: var(--lavender); }
@@ -68,7 +59,7 @@
 .ring-centre { position: absolute; inset: 0; display: grid; place-items: center; align-content: center; text-align: center; }
 .ring-number { font-size: 1.5rem; font-weight: var(--weight-heading); letter-spacing: -0.02em; color: var(--navy); font-variant-numeric: tabular-nums; }
 .ring-number small { font-size: 0.6em; font-weight: 600; }
-.ring:not(.ring-lg) .ring-number { font-size: 1.2rem; }        /* room for one decimal (55.7%) inside the small ring */
+.ring:not(.ring-lg) .ring-number { font-size: 1.2rem; }
 .ring:not(.ring-lg) .ring-number small { font-size: 0.75em; }
 .ring-lg { width: 12.5rem; }
 .ring-lg .ring-number { font-size: 3rem; }
@@ -79,7 +70,6 @@
 .ring-empty .ring-centre { color: var(--violet); }
 .ring-empty .icon { width: 1.5rem; height: 1.5rem; }
 
-/* ---------- Donut: how results have been classified ---------- */
 .donut { position: relative; flex: none; width: 6.9rem; aspect-ratio: 1; }
 .donut svg { display: block; width: 100%; height: 100%; }
 .donut-track { fill: none; stroke: var(--lavender); }
@@ -99,7 +89,6 @@
 .summary-note { display: flex; align-items: center; gap: var(--space-3); margin: 0.9rem 0 0; padding: 0.7rem 0.9rem; font-size: 0.875rem; line-height: 1.45; color: var(--body); background: var(--lavender-wash); border: 1px solid var(--border); border-radius: var(--radius-md); }
 .summary-note .icon { width: 1.6rem; height: 1.6rem; color: var(--violet); stroke-width: 1.4; }
 
-/* ---------- Trend chart: a smooth violet line on a 0 to 100 percent scale ---------- */
 .chart { position: relative; }
 .chart-svg { display: block; width: 100%; height: auto; overflow: visible; }
 .chart-grid line { stroke: var(--border); stroke-width: 1; }
@@ -112,23 +101,20 @@
 .chart-point:hover, .chart-point:focus-visible { r: 8; }
 .chart-point:focus-visible { stroke: var(--navy); }
 @keyframes point-in { from { opacity: 0; } }
-/* An empty chart frame: axes only. No points, no line, so nothing looks like data. */
 .chart-empty { position: relative; }
 .chart-empty .chart-message { position: absolute; inset: 1.2rem 0.9rem 2.2rem 3.1rem; background: rgba(255, 255, 255, 0.92); border-radius: var(--radius-md); display: grid; place-content: center; justify-items: center; gap: var(--space-2); padding: var(--space-4); text-align: center; color: var(--muted); font-size: var(--text-small); }
 .chart-empty .chart-message .icon-chip { margin-bottom: var(--space-1); }
 .chart-empty .chart-message p { margin: 0; max-width: 17rem; }
 
-/* The tiny trend line on the Total Assessments card */
 .sparkline { display: block; width: 100%; height: auto; overflow: visible; }
 .sparkline-area { fill: url(#spark-gradient); }
 .sparkline-line { fill: none; stroke: var(--violet); stroke-width: 2; stroke-linecap: round; }
 
-/* ---------- Hero: the welcome card with the kidney artwork and the path ---------- */
 .hero-card {
   position: relative; isolation: isolate; overflow: hidden;
   display: grid; grid-template-columns: minmax(0, 1fr) 10.6rem; gap: var(--space-5); align-items: center;
   min-height: 17.7rem; padding: 1.6rem 1.5rem 1.6rem 2.4rem;
-  background: linear-gradient(171deg, var(--hero-from), var(--hero-to));   /* fitted to the design's colours */
+  background: linear-gradient(171deg, var(--hero-from), var(--hero-to));
   border-radius: var(--radius-xl); box-shadow: var(--shadow-card);
 }
 .hero-copy { position: relative; z-index: 2; max-width: 30rem; }
@@ -140,7 +126,6 @@
 
 .hero-locked { display: inline-flex; align-items: center; gap: var(--space-2); margin: 0; padding: 0.6rem 1.1rem; font-size: 0.9375rem; font-weight: 600; color: var(--indigo); background: rgba(255, 255, 255, 0.72); border-radius: var(--radius-pill); }
 
-/* Your path to better kidney health: four steps, like radio dots on a line */
 .path-card {
   display: flex; flex-direction: column; justify-content: center; gap: var(--space-4);
   padding: 1.25rem 1.1rem;
@@ -161,15 +146,13 @@
 .path-step.is-done .path-node { background: var(--indigo); border-color: var(--indigo); }
 .path-step.is-done::after { background: var(--indigo) !important; }
 
-/* When the hero gets narrower the artwork sinks behind the copy and the path moves underneath */
 .hero-frame { container: hero / inline-size; }
 @container hero (max-width: 46rem) {
   .hero-card { grid-template-columns: minmax(0, 1fr); padding: 1.6rem; }
-  .hero-art { display: none; }                       /* text first: the artwork never sits behind words */
+  .hero-art { display: none; }
   .hero-card > .path-card { align-self: auto; }
 }
 
-/* ---------- Stat cards: an icon, a label, a value ---------- */
 .stat-card { display: grid; grid-template-columns: auto minmax(0, 1fr); align-items: start; gap: 0 0.9rem; min-height: 9.6rem; padding: 1.4rem; overflow: hidden; }
 .stat-body { min-width: 0; }
 .stat-label { margin: 0.1rem 0 0.35rem; font-size: 0.9375rem; color: var(--muted); }
@@ -184,9 +167,6 @@
 .stat-go { position: absolute; right: 1.5rem; top: 50%; transform: translateY(-58%); }
 .stat-card .stat-go .icon { width: 1.1rem; height: 1.1rem; }
 .circle-button { display: grid; place-items: center; width: 2.75rem; height: 2.75rem; color: var(--indigo); background: var(--lavender-wash); border: 1px solid var(--border); border-radius: 50%; text-decoration: none; transition: background-color var(--duration-base) var(--ease), transform var(--duration-base) var(--ease); }
-/* Only the ARROW nudges on hover - never the button itself. The button on the Next Assessment card is centred with
-   transform: translateY(-58%), and a hover transform on the button replaced that, so it jumped away from the cursor,
-   lost its hover, jumped back, and could hardly be clicked. */
 .circle-button:hover { color: var(--indigo); background: var(--lavender); }
 .circle-button .icon { transition: transform 0.15s ease; }
 .circle-button:hover .icon { transform: translateX(2px); }
@@ -194,7 +174,6 @@
 .circle-button[aria-disabled="true"]:hover .icon { transform: none; }
 .next-days { font-variant-numeric: tabular-nums; }
 
-/* ---------- The trend card: chart on the left, the latest result on the right ---------- */
 .trend-card { container: trend / inline-size; padding: 1.5rem 1.6rem 1.35rem; }
 .trend-card .card-header { margin-bottom: var(--space-3); }
 .trend-layout { display: grid; grid-template-columns: minmax(0, 1fr) 14.25rem; gap: var(--space-5); align-items: stretch; }
@@ -206,7 +185,6 @@
 .result-panel-threshold { display: flex; align-items: center; gap: var(--space-1); margin: 0; font-size: 0.9375rem; color: var(--body); }
 .result-panel .empty-note { margin: 0; font-size: var(--text-small); color: var(--muted); }
 
-/* ---------- Assessment History: dots on a line ---------- */
 .timeline { position: relative; display: grid; grid-template-columns: repeat(var(--count, 3), minmax(0, 1fr)); margin: var(--space-2) 0 0; padding: 0; list-style: none; }
 .timeline::before { content: ""; position: absolute; left: 0; right: 0; top: 0.35rem; height: 0.6rem; background: var(--lavender); border-radius: 999px; }
 .timeline-item { position: relative; margin: 0; padding: 2rem 0 0 0.25rem; }
@@ -220,7 +198,6 @@
 .timeline-ghost .timeline-dot { background: #fff; box-shadow: 0 0 0 1px var(--border-strong); }
 .timeline-note { margin: var(--space-4) 0 0; font-size: var(--text-small); color: var(--muted); }
 
-/* ---------- Helpful Resources ---------- */
 .resource-list { display: grid; gap: 0.05rem; margin: 0; padding: 0; list-style: none; }
 .resource-list li { margin: 0; }
 .resource { display: grid; grid-template-columns: auto minmax(0, 1fr) auto; align-items: center; gap: 0.8rem; padding: 0.3rem 0.4rem; color: var(--navy); text-decoration: none; border-radius: var(--radius-sm); transition: background-color var(--duration-base) var(--ease); }
@@ -235,7 +212,6 @@
 .icon-tile { display: grid; place-items: center; flex: none; width: 2rem; height: 2rem; color: var(--indigo); background: var(--lavender-wash); border: 1px solid var(--border); border-radius: 0.7rem; }
 .icon-tile .icon { width: 1rem; height: 1rem; }
 
-/* ---------- The right-hand panel: profile, quote, quick actions, recent activity ---------- */
 .profile-row { display: flex; align-items: center; gap: var(--space-4); padding: 0; color: inherit; text-decoration: none; border-radius: var(--radius-md); }
 .profile-avatar { display: grid; place-items: center; flex: none; width: 4.1rem; height: 4.1rem; font-size: 1.25rem; font-weight: 700; color: var(--indigo); background: linear-gradient(145deg, #fff, var(--lavender)); border: 3px solid #fff; border-radius: 50%; box-shadow: var(--shadow-card); }
 .profile-text { min-width: 0; flex: 1; }
@@ -274,10 +250,9 @@ a.profile-row:hover > .icon { transform: translateX(3px); color: var(--indigo); 
 .activity-high .activity-dot { background: var(--red); }
 .aside-more { margin-top: var(--space-5); }
 
-/* ---------- Ranked factor cards ---------- */
 .factor-list {
   display: grid; grid-template-columns: minmax(0, 1fr); gap: var(--space-3); margin: 0; padding: 0 var(--space-1) 0 0; list-style: none;
-  max-height: 26rem; overflow-y: auto;                 /* both explain cards match height (see .explain-grid); more than fits here scrolls in place, never the page */
+  max-height: 26rem; overflow-y: auto;
 }
 .factor-list::-webkit-scrollbar { width: 6px; }
 .factor-list::-webkit-scrollbar-thumb { background: var(--border-strong); border-radius: var(--radius-pill); }
@@ -295,7 +270,6 @@ a.profile-row:hover > .icon { transform: translateX(3px); color: var(--indigo); 
 .factor-bar { grid-area: bar; display: block; height: 0.5rem; background: var(--lavender); border-radius: 999px; overflow: hidden; }
 .factor-fill { display: block; height: 100%; width: calc(var(--share) * 1%); background: linear-gradient(90deg, var(--indigo), var(--violet)); border-radius: 999px; transform-origin: left; animation: bar-in 800ms var(--ease) calc(var(--order) * 90ms) backwards; }
 
-/* ---------- What affected one person's result: a card for what RAISED the estimate and a card for what LOWERED it ---------- */
 .explain-grid { display: grid; grid-template-columns: repeat(2, minmax(0, 1fr)); gap: var(--gap); align-items: stretch; margin-top: var(--gap); }
 .explain-card { display: flex; flex-direction: column; }
 .explain-caveat, .explain-unavailable { grid-column: 1 / -1; }
@@ -315,7 +289,6 @@ a.profile-row:hover > .icon { transform: translateX(3px); color: var(--indigo); 
 .empty-state-compact p { margin: 0; color: var(--body); }
 @media (max-width: 62rem) { .explain-grid { grid-template-columns: minmax(0, 1fr); } }
 
-/* ---------- Comparison: previous and latest, on the same line ---------- */
 .compare { display: grid; grid-template-columns: minmax(0, 1fr); gap: var(--space-4); margin: 0; }
 .compare-row { display: grid; grid-template-columns: 5.5rem minmax(0, 1fr) 3rem; gap: var(--space-3); align-items: center; font-size: var(--text-small); }
 .compare-row dt { color: var(--muted); font-weight: 600; }
@@ -323,7 +296,6 @@ a.profile-row:hover > .icon { transform: translateX(3px); color: var(--indigo); 
 .compare-meter { text-align: left !important; }
 .compare-meter .mini-meter { width: 100%; }
 
-/* ---------- Result page ---------- */
 .result-frame { container: result / inline-size; }
 .result-card { padding: var(--space-6); }
 .result-main { display: grid; grid-template-columns: minmax(0, 1fr); gap: var(--space-5); justify-items: center; text-align: center; }
@@ -342,7 +314,6 @@ a.profile-row:hover > .icon { transform: translateX(3px); color: var(--indigo); 
 }
 @container result (max-width: 43.99rem) { .result-classification { flex-direction: column; } }
 
-/* ---------- Stepper and guided screening ---------- */
 .stepper { display: flex; margin: 0 0 var(--space-4); padding: 0; list-style: none; }
 .stepper-step { flex: 1 1 0; display: grid; grid-template-columns: auto minmax(0, 1fr); align-items: center; column-gap: var(--space-2); row-gap: var(--space-2); margin: 0; }
 .stepper-step:last-child { flex: 0 0 auto; }
@@ -380,11 +351,6 @@ a.profile-row:hover > .icon { transform: translateX(3px); color: var(--indigo); 
 .step-panel > .text-muted { margin-bottom: var(--space-4); }
 
 .assessment-layout { display: grid; grid-template-columns: minmax(0, 1fr); gap: var(--gap); }
-/* ---------- Screening questions: ONE column, the same rhythm for every question ----------
-   (Phase 9 refinement) The old two-column grid paired yes/no questions side by side, but its
-   :first-of-type / :nth-of-type rules also counted the card header (it is a div too), so the right-hand column
-   started one border lower than the left and every pair drifted out of line. Every question now sits in one
-   column with one spacing scale; a yes/no question is a checklist row (question left, Yes/No right). */
 .form-card { margin-bottom: var(--space-4); display: block; }
 .form-card > .card-header + .question-group { border-top: 0; padding-top: 0; }
 .question-group { display: flex; flex-direction: column; gap: var(--space-2); padding-block: var(--space-4); border-top: 1px solid var(--border); }
@@ -396,16 +362,14 @@ a.profile-row:hover > .icon { transform: translateX(3px); color: var(--indigo); 
 .question-group .choice-group { gap: var(--space-3); }
 .question-group .choice { flex: 1 1 9rem; }
 
-/* A yes/no question: a checklist row. The legend is floated so it stops being the fieldset's special
-   "rendered legend" and becomes an ordinary grid item, letting it sit in the same row as its own answers. */
 .question-group[data-kind="yesno"] .form-fieldset {
   display: grid; grid-template-columns: minmax(0, 1fr) auto; column-gap: var(--space-5); align-items: center;
-  min-inline-size: 0;                     /* a fieldset is min-content wide by default, which pushed the answers past the card edge */
+  min-inline-size: 0;
 }
 .question-group[data-kind="yesno"] .form-fieldset legend { float: left; grid-column: 1; grid-row: 1; margin: 0; font-size: var(--text-body); }
 .question-group[data-kind="yesno"] .form-fieldset .form-helper { grid-column: 1; grid-row: 2; margin-top: var(--space-1); }
 .question-group[data-kind="yesno"] .form-fieldset .choice-group { grid-column: 2; grid-row: 1 / span 2; flex-wrap: nowrap; gap: var(--space-2); }
-.question-group[data-kind="yesno"] .form-fieldset .choice { flex: none; width: 6.5rem; }     /* an explicit width, not just a flex-basis: the auto grid track is sized from it */
+.question-group[data-kind="yesno"] .form-fieldset .choice { flex: none; width: 6.5rem; }
 .question-group[data-kind="yesno"] .form-fieldset .form-error { grid-column: 1 / -1; }
 .question-group[data-kind="yesno"] { padding-block: var(--space-3); gap: var(--space-1); }
 @media (max-width: 40rem) {
@@ -427,25 +391,21 @@ a.profile-row:hover > .icon { transform: translateX(3px); color: var(--indigo); 
   .step-actions .button { flex: 1; }
 }
 
-/* ---------- Lists used in side panels ---------- */
 .side-section { padding-block: var(--space-4); border-top: 1px solid var(--border); }
 .side-section:first-child { padding-top: 0; border-top: 0; }
 .side-section h2 { font-size: var(--text-subsection-heading); margin-bottom: var(--space-2); }
 
-/* Cards in the overview rows are a little more compact, as in the design */
 .dash-row > .card:not(.trend-card) { padding: 1.35rem 1.5rem; }
 .dash-main .card-title .icon-chip { width: 2.4rem; height: 2.4rem; }
 .dash-main .card-title .icon-chip .icon { width: 1.15rem; height: 1.15rem; }
 .dash-row .card-header { margin-bottom: var(--space-3); }
 
-/* ---------- The real screening form ---------- */
 .choice-hint { display: block; margin-top: 0.1rem; font-size: 0.8125rem; font-weight: 500; color: var(--body); }
 .bmi-fields { display: grid; grid-template-columns: repeat(2, minmax(0, 1fr)); gap: var(--space-4); }
 .form-label-light { font-weight: 500; color: var(--body); }
 .bmi-readout { min-height: 1.5rem; margin: var(--space-2) 0 0; font-size: var(--text-small); font-weight: 600; color: var(--indigo); }
 @media (max-width: 30rem) { .bmi-fields { grid-template-columns: minmax(0, 1fr); } }
 
-/* Timeline and activity entries that open a saved result */
 .timeline-link, .activity-link { color: inherit; text-decoration: none; border-radius: var(--radius-sm); }
 .timeline-link { display: block; }
 .timeline-link:hover .timeline-level, .activity-link:hover { text-decoration: underline; text-underline-offset: 3px; }
@@ -455,15 +415,12 @@ a.profile-row:hover > .icon { transform: translateX(3px); color: var(--indigo); 
 .answers[open] > summary::after { content: "Hide"; }
 .answers-step { margin: var(--space-4) 0 var(--space-2); }
 
-/* ================= ENHANCED SCREENING: lab value upload and confirmation (Phase 6) ================= */
 .upload-form { display: flex; flex-wrap: wrap; align-items: end; gap: var(--space-4); margin-top: var(--space-4); }
 .upload-form .form-label { display: block; margin-bottom: var(--space-2); }
 .lab-field-grid { display: grid; grid-template-columns: repeat(auto-fill, minmax(14rem, 1fr)); gap: var(--gap); }
-.required-mark { color: var(--red-text); }
 .form-control.is-suggested { border-color: var(--indigo); background: var(--lavender-wash); }
 .form-helper-suggested { display: flex; align-items: center; gap: 0.3rem; color: var(--indigo); font-weight: 600; }
 .form-helper-suggested .icon { width: 0.9rem; height: 0.9rem; }
-/* A lab value far outside the usual range: accepted, but marked so it is checked once (templates/lab/confirm.html). */
 .form-control.is-unusual { border-color: var(--amber); background: var(--amber-soft); }
 .form-helper-unusual { display: flex; align-items: flex-start; gap: 0.3rem; color: var(--amber-text); font-weight: 600; }
 .form-helper-unusual .icon { flex: none; width: 0.9rem; height: 0.9rem; margin-top: 0.15rem; }
@@ -476,9 +433,8 @@ a.profile-row:hover > .icon { transform: translateX(3px); color: var(--indigo); 
 .unusual-list li { margin-bottom: 0.2rem; }
 .unusual-list a { color: var(--navy); }
 
-/* ================= PROFESSIONAL SHARING: search results, request/authorization rows (Phase 7) ================= */
 .empty-inline { display: flex; align-items: center; gap: var(--space-2); color: var(--muted-color); margin-top: var(--space-4); }
-.card-hero .empty-inline { color: #464F82; }          /* --muted-color is 4.8:1 on plain lavender, but this sits on the hero gradient's darker stop */
+.card-hero .empty-inline { color: #464F82; }
 .search-results, .authorization-list { list-style: none; margin: var(--space-4) 0 0; padding: 0; display: flex; flex-direction: column; gap: var(--space-3); }
 .search-result, .authorization-row {
   display: flex; align-items: center; justify-content: space-between; gap: var(--space-4);
@@ -487,16 +443,13 @@ a.profile-row:hover > .icon { transform: translateX(3px); color: var(--indigo); 
 .authorization-row { flex-wrap: wrap; }
 .search-result p, .authorization-row p { margin: 0; }
 
-/* ================= CLINICAL REVIEWS: notes attached to one assessment (Phase 7) ================= */
 .review-list { list-style: none; margin: var(--space-4) 0; padding: 0; display: flex; flex-direction: column; gap: var(--space-3); }
 .review-item { padding: var(--space-3) var(--space-4); background: var(--surface-soft); border-radius: var(--radius-md); }
 .review-item p { margin: var(--space-1) 0 0; }
 .review-meta { font-size: var(--text-small); color: var(--muted-color); }
 
-/* ================= PDF REPORTS: plain checkbox row (Phase 8) ================= */
 .form-check { display: flex; align-items: center; gap: var(--space-2); margin: var(--space-3) 0; cursor: pointer; font-weight: 500; }
 
-/* ================= FIELD HELP: (?) tooltip for a lab value, click to toggle (Phase 9 refinement) ================= */
 .field-help-button {
   display: inline-grid; place-items: center; width: 1.15rem; height: 1.15rem; margin-left: var(--space-1);
   border-radius: 50%; border: 1px solid var(--border-strong); background: var(--surface-soft); color: var(--muted-color);
@@ -512,7 +465,6 @@ a.profile-row:hover > .icon { transform: translateX(3px); color: var(--indigo); 
 }
 .field-help-popover.is-visible { opacity: 1; transform: translateY(0); pointer-events: auto; }
 
-/* ================= REGISTRATION: two-up field rows and the avatar picker (Phase 9 refinement) ================= */
 .form-row { display: grid; grid-template-columns: repeat(2, minmax(0, 1fr)); gap: 0 var(--space-4); }
 @media (max-width: 34rem) { .form-row { grid-template-columns: minmax(0, 1fr); } }
 .avatar-fieldset legend { margin-bottom: var(--space-2); }
@@ -529,16 +481,13 @@ a.profile-row:hover > .icon { transform: translateX(3px); color: var(--indigo); 
 .avatar-choice input:checked + .avatar-tile { border-color: var(--indigo); box-shadow: 0 0 0 3px var(--lavender); }
 .avatar-choice input:focus-visible + .avatar-tile { outline: 2px solid var(--indigo); outline-offset: 2px; }
 
-/* ================= SCREENING DRAFT: autosave status text (Phase 9 refinement) ================= */
 .draft-save-status { font-size: var(--text-small); color: var(--muted-color); min-width: 3.5rem; text-align: right; }
 
-/* ================= DASHBOARD: Continue your screening draft card (Phase 9 refinement) ================= */
 .card-draft { border-color: var(--primary-line); background: var(--lavender); }
 .card-draft .progress-bar { margin-top: var(--space-2); }
 .draft-updated { margin-top: var(--space-2); }
 .draft-actions { display: flex; gap: var(--space-3); margin-top: var(--space-3); }
 
-/* ================= PHILHEALTH CENTERS: search form and result list (Phase 9 refinement) ================= */
 .facility-search-form { display: flex; flex-wrap: wrap; gap: var(--space-4); align-items: flex-end; }
 .facility-search-field { flex: 2 1 16rem; }
 .facility-list { list-style: none; margin: var(--space-4) 0 0; padding: 0; display: flex; flex-direction: column; gap: var(--space-3); }
@@ -550,7 +499,6 @@ a.profile-row:hover > .icon { transform: translateX(3px); color: var(--indigo); 
 .facility-contact a, .facility-tel { display: inline-flex; align-items: center; gap: var(--space-1); color: var(--muted-color); overflow-wrap: anywhere; min-width: 0; }
 [data-facility-results][aria-busy="true"], [data-practitioner-results][aria-busy="true"] { opacity: 0.5; }
 
-/* ================= DASHBOARD: "Kidney health, by the numbers" - its own column (Phase 9 refinement) ================= */
 .dash-ckd {
   display: flex; flex-direction: column; gap: var(--space-4);
   padding: 1.5rem 1.25rem; background: var(--surface-glass-strong); border: 1px solid var(--border);
@@ -563,20 +511,17 @@ a.profile-row:hover > .icon { transform: translateX(3px); color: var(--indigo); 
 .ckd-fact-card { display: flex; flex-direction: column; align-items: center; gap: var(--space-2); padding: var(--space-4) var(--space-3); border: 1px solid var(--border); border-radius: var(--radius-lg); background: var(--surface); text-align: center; }
 .ckd-fact-eyebrow { margin: 0; font-size: 0.72rem; font-weight: 700; letter-spacing: 0.02em; text-transform: uppercase; color: var(--indigo); }
 
-/* One big ring, one number at its centre - the whole point is legible from a glance, not a paragraph. */
 .ckd-ring { width: 7.75rem; margin: 0 auto; }
 .ckd-ring .ring-centre { display: grid; place-items: center; }
 .ckd-ring-value { font-size: 1.3rem; font-weight: 800; color: var(--navy); line-height: 1; }
 .ckd-ring-caption { margin: 0; font-size: 0.85rem; font-weight: 600; color: var(--navy); line-height: 1.3; }
 
-/* A row of small rings for a side-by-side comparison (risk groups, age groups) - no bars, no sentences. */
 .ckd-mini-rings-row { display: flex; justify-content: space-between; gap: var(--space-2); width: 100%; }
 .ckd-mini-ring-item { display: flex; flex-direction: column; align-items: center; gap: 0.35rem; flex: 1; min-width: 0; }
 .ckd-ring-sm { width: 4.25rem; }
 .ckd-mini-ring-value { font-size: 0.8rem; font-weight: 800; color: var(--navy); }
 .ckd-mini-ring-label { margin: 0; font-size: 0.68rem; font-weight: 600; color: var(--muted-color); line-height: 1.2; }
 
-/* Sex differences: an icon and one short label per side - the caveat lives behind "i", not on the card. */
 .ckd-sex-grid { display: flex; justify-content: space-around; gap: var(--space-3); width: 100%; }
 .ckd-sex-stat { display: flex; flex-direction: column; align-items: center; gap: 0.3rem; flex: 1; }
 .ckd-sex-icon { display: inline-grid; place-items: center; width: 2.25rem; height: 2.25rem; border-radius: 50%; background: var(--lavender); color: var(--indigo); }
@@ -587,7 +532,6 @@ a.profile-row:hover > .icon { transform: translateX(3px); color: var(--indigo); 
 .source-note-button.field-help-button { width: 1.05rem; height: 1.05rem; margin-left: 0; font-size: 0.62rem; }
 .source-note-inline { display: inline-grid; place-items: center; width: 1.05rem; height: 1.05rem; border-radius: 50%; border: 1px solid var(--border-strong); font-size: 0.62rem; font-weight: 700; color: var(--muted-color); vertical-align: middle; }
 
-/* ================= NOTIFICATIONS: header bell dropdown (Phase 9 refinement) ================= */
 .notif-menu { position: relative; }
 .notif-badge {
   position: absolute; top: -0.15rem; right: -0.15rem; min-width: 1.1rem; height: 1.1rem; padding: 0 0.25rem;
@@ -614,7 +558,6 @@ a.profile-row:hover > .icon { transform: translateX(3px); color: var(--indigo); 
 .notif-panel-time { font-size: 0.72rem; color: var(--muted-color); }
 .notif-panel-empty { display: flex; align-items: center; gap: var(--space-2); padding: var(--space-4); margin: 0; color: var(--muted-color); font-size: var(--text-small); }
 
-/* ================= NOTIFICATIONS: the dedicated /notifications list (Phase 9 refinement) ================= */
 .notification-list { list-style: none; margin: var(--space-3) 0 0; padding: 0; display: flex; flex-direction: column; gap: var(--space-2); }
 .notification-row { display: flex; align-items: flex-start; gap: var(--space-3); padding: var(--space-3) var(--space-4); border: 1px solid var(--border); border-radius: var(--radius-md); background: var(--surface); }
 .notification-row.is-unread { background: var(--surface-soft); border-color: var(--primary-line); }
@@ -625,7 +568,6 @@ a.profile-row:hover > .icon { transform: translateX(3px); color: var(--indigo); 
 .notification-time { margin: 0.3rem 0 0; font-size: 0.78rem; color: var(--muted-color); }
 .notification-actions { display: flex; gap: var(--space-1); flex: none; }
 
-/* ================= RESULT PAGE: personalized tips panel, right side (Phase 9 refinement) ================= */
 .result-layout { display: grid; grid-template-columns: minmax(0, 1fr) 22rem; gap: var(--gap); align-items: start; }
 @media (max-width: 68rem) { .result-layout { grid-template-columns: minmax(0, 1fr); } }
 .result-tips {
@@ -644,7 +586,6 @@ a.profile-row:hover > .icon { transform: translateX(3px); color: var(--indigo); 
 .result-tips-list li { font-size: var(--text-small); line-height: 1.5; color: var(--navy); }
 .result-tips-list .source-note-button { vertical-align: middle; margin-left: 0.2rem; }
 
-/* ================= FOLLOW-UP APPOINTMENTS: scheduling form and list (Phase 9 refinement) ================= */
 .appointment-form { display: flex; flex-direction: column; gap: var(--space-3); margin-bottom: var(--space-4); }
 .appointment-list { list-style: none; margin: 0; padding: 0; display: flex; flex-direction: column; gap: var(--space-3); }
 .appointment-row { padding: var(--space-3) var(--space-4); border: 1px solid var(--border); border-radius: var(--radius-md); background: var(--surface); }
@@ -657,18 +598,15 @@ a.profile-row:hover > .icon { transform: translateX(3px); color: var(--indigo); 
 .appointment-edit summary { cursor: pointer; color: var(--indigo); font-weight: 600; font-size: var(--text-small); }
 .appointment-edit .appointment-form { margin-top: var(--space-3); margin-bottom: 0; }
 
-/* ================= FOLLOW-UP SCREEN: month calendar, agenda, checklist (Phase 9 refinement) ================= */
 .calendar-header { display: flex; align-items: center; justify-content: space-between; flex-wrap: wrap; gap: var(--space-3); margin-bottom: var(--space-4); }
 .calendar-nav { display: flex; align-items: center; gap: var(--space-2); }
 .calendar-grid { display: flex; flex-direction: column; gap: 2px; }
 .calendar-weekday-row, .calendar-week { display: grid; grid-template-columns: repeat(7, minmax(0, 1fr)); gap: 2px; }
 .calendar-weekday { text-align: center; font-size: 0.72rem; font-weight: 700; color: var(--muted-color); padding-bottom: var(--space-2); text-transform: uppercase; letter-spacing: 0.02em; }
-.card-hero .calendar-weekday { color: #464F82; }          /* --muted is 4.8:1 on plain lavender, but this sits on the hero gradient's darker stop */
+.card-hero .calendar-weekday { color: #464F82; }
 .calendar-day { min-height: 5.5rem; padding: var(--space-2); border-radius: var(--radius-sm); background: var(--surface-soft); display: flex; flex-direction: column; gap: 0.2rem; overflow: hidden; }
 .calendar-day-blank { background: transparent; }
 .calendar-day-number { font-size: 0.8rem; font-weight: 600; color: var(--muted-color); }
-/* Today: it used to be a lavender fill on a lavender card - effectively invisible. Now an indigo frame, a filled
-   number and a "Today" label, so it reads at a glance (and aria-current="date" says it to a screen reader). */
 .calendar-day-head { display: flex; align-items: center; justify-content: space-between; gap: 0.25rem; }
 .calendar-day.is-today { background: #fff; box-shadow: inset 0 0 0 2px var(--indigo), 0 6px 16px rgba(48, 43, 145, 0.18); }
 .calendar-day.is-today .calendar-day-number { display: inline-grid; place-items: center; min-width: 1.6rem; height: 1.6rem; border-radius: 999px; background: var(--indigo); color: #fff; font-weight: 800; }
@@ -689,8 +627,6 @@ a.profile-row:hover > .icon { transform: translateX(3px); color: var(--indigo); 
 .agenda-body { flex: 1; min-width: 0; }
 .agenda-notes { margin: 0.2rem 0 0; font-size: var(--text-small); color: var(--muted-color); }
 
-/* ---- The daily kidney-health checklist (templates/partials/_checklist.html) ----
-   A progress ring, then one card per category in its own colour; each task is one big tappable row. */
 .checklist-card { padding: 1.5rem; }
 .checklist-hero {
   display: flex; align-items: center; gap: var(--space-5); margin-bottom: var(--space-5); padding: var(--space-4) var(--space-5);
@@ -715,7 +651,6 @@ a.profile-row:hover > .icon { transform: translateX(3px); color: var(--indigo); 
 .checklist-count { margin: 0.2rem 0 0; font-size: var(--text-small); color: var(--muted-color); }
 .checklist-count strong { color: var(--navy); }
 
-/* Cards of different lengths flow into balanced columns (no ragged gaps), as many columns as fit. */
 .checklist-groups { column-width: 19rem; column-gap: var(--space-4); margin-bottom: calc(-1 * var(--space-4)); }
 .checklist-group {
   --tone: var(--violet); --tone-soft: var(--lavender-wash); --tone-text: var(--violet-text);
@@ -771,9 +706,6 @@ a.profile-row:hover > .icon { transform: translateX(3px); color: var(--indigo); 
   .checklist-ring, .checklist-group-bar > span, .checklist-check, .checklist-check .icon, .checklist-item { transition: none; }
 }
 
-/* ================= FEEDBACK: toasts and the confirmation dialog (Phase 9 refinement) =================
-   Good news is a toast (slides in, leaves by itself, holds still under the pointer). Anything that must be read
-   and acted on stays a banner. Anything consequential asks first, in one consistent dialog. */
 .toast-region { top: 7rem; bottom: auto; right: var(--space-5); width: min(26rem, calc(100vw - 2rem)); }
 body:not(.app-body) .toast-region { top: var(--space-4); }
 @media (max-width: 40rem) { .toast-region { top: 5.5rem; right: 1rem; left: 1rem; width: auto; } }
@@ -801,7 +733,6 @@ body:not(.app-body) .toast-region { top: var(--space-4); }
 .toast-info::after { background: var(--indigo); }
 .toast-warning::after { background: var(--amber); }
 .toast:hover::after, .toast:focus-within::after { animation-play-state: paused; }
-/* Until main.js takes over, CSS alone fades a server-rendered toast out, so it can never get stuck on screen. */
 .toast-static { animation: toast-slide-in 0.5s cubic-bezier(0.2, 0.9, 0.3, 1.15), toast-fade-out 0.4s ease 5s forwards; }
 .toast-static::after { animation-duration: 5s; }
 .flash-toasts { pointer-events: none; }
@@ -857,7 +788,6 @@ body:not(.app-body) .toast-region { top: var(--space-4); }
 .consent-inline { display: flex; gap: var(--space-2); font-size: var(--text-small); }
 @media (prefers-reduced-motion: reduce) { .toast, .toast::after, .confirm-dialog[open], .confirm-badge { animation: none !important; } .toast-static { animation: toast-fade-out 0.01s 6s forwards !important; } }
 
-/* ================= PATIENT RECORDS: patient list, profile, and the professional's own screening flow (Phase 9 refinement) ================= */
 .table-scroll { width: 100%; overflow-x: auto; }
 .patients-table, .data-table { min-width: 40rem; }
 .chip-mono { font-family: var(--font-mono, ui-monospace, "SFMono-Regular", Menlo, Consolas, monospace); letter-spacing: 0.02em; }
@@ -868,7 +798,7 @@ body:not(.app-body) .toast-region { top: var(--space-4); }
 .assessment-choice { text-decoration: none; color: inherit; }
 .assessment-choice.is-disabled { cursor: not-allowed; }
 .assessment-choice.is-disabled h3 { color: var(--muted-color); }
-.assessment-choice.is-disabled p { color: #565F8A; }          /* --muted at full opacity: still reads as "disabled" without failing contrast */
+.assessment-choice.is-disabled p { color: #565F8A; }
 .assessment-choice.is-disabled .output-visual { opacity: 0.55; }
 .assessment-choice .output-visual { color: var(--indigo); }
 .assessment-choice .output-visual .icon { width: 2.25rem; height: 2.25rem; }
@@ -881,38 +811,27 @@ body:not(.app-body) .toast-region { top: var(--space-4); }
 .answers-group-title { margin: var(--space-4) 0 var(--space-2); font-size: var(--text-small); font-weight: 700; text-transform: uppercase; letter-spacing: 0.02em; color: var(--indigo); }
 .answers-group-title:first-child { margin-top: 0; }
 
-/* A shared result's answers, shown in full for the professional (authorizations/shared_result.html): one small card
-   per group of questions, side by side where there is room. */
 .answers-grid { display: grid; grid-template-columns: repeat(auto-fit, minmax(min(100%, 19rem), 1fr)); gap: var(--space-4); align-items: start; }
 .answers-group { padding: var(--space-4); background: var(--surface-soft); border: 1px solid var(--border); border-radius: var(--radius-lg); min-width: 0; }
 .answers-group .term-list { margin: 0; }
 .answers-group dd { overflow-wrap: anywhere; }
 .shared-answers .card-header { flex-wrap: wrap; }
-/* A shared result's "Add a clinical note" / "Add note + follow-up" buttons (top of the page and after the answers). */
 .respond-actions { display: flex; flex-wrap: wrap; gap: var(--space-2); }
 .respond-card { display: flex; flex-wrap: wrap; align-items: center; justify-content: space-between; gap: var(--space-3) var(--space-5); }
 .respond-card .card-title { margin: 0 0 var(--space-1); }
 .respond-card p { margin: 0; }
 .history-card-actions { display: flex; flex-wrap: wrap; align-items: center; gap: var(--space-2) var(--space-5); margin-top: var(--space-3); }
 
-/* ================= PROFESSIONAL DASHBOARD: six stat cards instead of three (Phase 9 refinement) =================
-   .stat-row.stat-row-six (not just .stat-row-six) on purpose: pages.css's own unconditional .stat-row rule loads
-   AFTER this file, so an equal-specificity .stat-row-six selector would lose to it regardless of which media
-   query is true - the extra .stat-row here raises specificity just enough to always win. */
-/* The professional dashboard's hero "at a glance" card - same visual weight as .path-steps, without the
-   sequential done/current semantics (a professional's week is not a checklist to complete in order). */
 .glance-list { display: grid; gap: 1.05rem; margin: 0; padding: 0; list-style: none; }
 .glance-list li { display: flex; align-items: center; gap: 0.75rem; min-height: 1.375rem; font-size: 0.9375rem; color: var(--navy); }
 .glance-icon { display: grid; place-items: center; flex: none; width: 1.375rem; height: 1.375rem; color: var(--indigo); background: rgba(255, 255, 255, 0.7); border: 2px solid var(--lavender-strong); border-radius: 50%; }
 .glance-icon .icon { width: 0.8rem; height: 0.8rem; stroke-width: 3; }
 .glance-icon-warn { color: var(--red-text); border-color: var(--red); }
 
-/* ================= PROFESSIONAL SEARCH: patients and assessments together (Phase 9 refinement) ================= */
 .search-result-list { list-style: none; margin: 0; padding: 0; display: flex; flex-direction: column; gap: var(--space-3); }
 .search-result-row { display: flex; align-items: center; justify-content: space-between; gap: var(--space-3); padding: var(--space-3) var(--space-4); border: 1px solid var(--border); border-radius: var(--radius-md); background: var(--surface); flex-wrap: wrap; }
 .search-result-row strong { margin-right: var(--space-2); }
 
-/* ================= PATIENT MANAGEMENT: category tabs and the filter form (Phase 9 refinement) ================= */
 .tab-row { display: flex; flex-wrap: wrap; gap: var(--space-2); margin-bottom: var(--space-4); border-bottom: 1px solid var(--border); padding-bottom: var(--space-3); }
 .tab-link {
   display: inline-flex; align-items: center; gap: 0.4rem; padding: 0.5rem 0.95rem; border-radius: var(--radius-pill);
@@ -930,16 +849,11 @@ body:not(.app-body) .toast-region { top: var(--space-4); }
 .filter-form-actions { display: flex; gap: var(--space-2); }
 @media (max-width: 40rem) { .filter-form { flex-direction: column; align-items: stretch; } .filter-form .form-group { min-width: 0; } .filter-form-actions { flex-direction: column; } }
 
-/* ================= ASSESS AN EXISTING PATIENT: search-and-select row (Phase 9 refinement) ================= */
 .existing-patient-row { flex-wrap: wrap; gap: var(--space-3); }
 .existing-patient-info { display: flex; flex-wrap: wrap; align-items: center; gap: var(--space-2); }
 
-/* ================= REPORTS SECTION: inline download form inside a table cell (Phase 9 refinement) ================= */
 .inline-form { display: inline-block; margin: 0; }
 
-/* ================= SCREENING REVIEW: answers grouped by step, each with its own Edit button (Phase 9 refinement) =================
-   Replaces one long label ... value list (a wide empty gap between every label and its answer) with compact
-   label-over-answer cells, two per row, grouped under the step they came from. */
 .summary-list .review-group + .review-group { margin-top: var(--space-4); padding-top: var(--space-4); border-top: 1px solid var(--border); }
 .review-group-head { display: flex; align-items: center; justify-content: space-between; gap: var(--space-3); margin-bottom: var(--space-3); }
 .review-group-head h4 { margin: 0; font-size: var(--text-small); font-weight: 700; text-transform: uppercase; letter-spacing: 0.03em; color: var(--indigo); }
@@ -950,10 +864,6 @@ body:not(.app-body) .toast-region { top: var(--space-4); }
 .review-grid .summary-row dd.is-missing { color: var(--red-text); }
 @media (max-width: 40rem) { .review-grid { grid-template-columns: minmax(0, 1fr); } }
 
-/* ================= LAB CONFIRM: breathing room between groups, and every box on the same line (Phase 9 refinement) =================
-   The group cards were stacked with no gap at all, and a long label ("Urine albumin-to-creatinine ratio") wrapped
-   onto two lines and pushed only its own box lower than its neighbours. Each field is now a three-row grid
-   (label, box, help) whose label row is always two lines tall and bottom-aligned, so every box in a row lines up. */
 .lab-confirm-form { display: flex; flex-direction: column; gap: var(--gap); }
 .lab-confirm-form > .section-tight-inline { margin-top: 0; }
 .lab-field-grid { grid-template-columns: repeat(auto-fill, minmax(15rem, 1fr)); gap: var(--space-5) var(--space-5); }
@@ -964,7 +874,6 @@ body:not(.app-body) .toast-region { top: var(--space-4); }
 }
 .lab-field-grid > .form-group > .form-helper { margin: var(--space-2) 0 0; }
 
-/* ================= PROFESSIONAL REVIEW pages (Phase 9 refinement) ================= */
 .page-stack { display: flex; flex-direction: column; gap: var(--gap); }
 .page-stack > .text-muted { margin: 0; }
 .review-note-list { list-style: none; margin: 0 0 var(--space-4); padding: 0; display: flex; flex-direction: column; gap: var(--space-3); }
@@ -976,29 +885,19 @@ body:not(.app-body) .toast-region { top: var(--space-4); }
 .review-waiting-list li { display: flex; align-items: center; justify-content: space-between; gap: var(--space-3); padding: var(--space-3) 0; border-top: 1px solid var(--border); font-size: var(--text-small); }
 .review-waiting-list li:first-child { border-top: 0; }
 
-/* ================= ONE VERTICAL RHYTHM BETWEEN PAGE SECTIONS (Phase 9 refinement) =================
-   Pages built at different times stacked their cards with different (or no) spacing - two cards touching on
-   Shared assessments, a stat row pressed against the card under it on Reports. Every top-level block on a page
-   now gets the same gap from the block above it. :where() keeps this at the lowest specificity, so any page that
-   sets its own larger spacing still wins. */
 .app-main > :where(.card, section, .stat-row, .dash-row, .section-tight-inline, .page-stack, .page-actions, form, .notice, .alert)
   + :where(.card, section, .stat-row, .dash-row, .section-tight-inline, .page-stack, form, .notice, .alert) { margin-top: var(--gap); }
 .app-main > .stat-row + .stat-row { margin-top: var(--gap); }
 
-/* A list row with a name and its own buttons: the name takes the free space, every button sits together on the
-   right (with three children, space-between left the middle button floating alone in the centre). */
 .authorization-row > :first-child { flex: 1 1 14rem; min-width: 0; }
 .authorization-row > :not(:first-child) { flex: none; }
 .authorization-row > form { margin: 0; }
 
-/* Data tables inside a narrow dashboard column must fit it, not force a 40rem scroll width that clips the last column. */
 .dash .data-table, .dash-row .data-table { min-width: 0; }
 .dash .data-table td, .dash .data-table th { padding-inline: var(--space-3); }
 .dash-row.dash-row-natural { align-items: start; }
 .live-results[aria-busy="true"] { opacity: 0.6; transition: opacity 0.15s ease; }
 
-/* A term list INSIDE a card: the About page's own top/bottom rules (meant for a list on the open page) left an
-   empty bordered band at the top of a card and a doubled line at its bottom edge. */
 .card .term-list { margin-top: 0; }
 .card .term-list > .term-row:first-child { border-top: 0; padding-top: var(--space-1); }
 .card .term-list > .term-row:last-child { border-bottom: 0; padding-bottom: var(--space-1); }
@@ -1008,30 +907,21 @@ body:not(.app-body) .toast-region { top: var(--space-4); }
 .outside-training ul { margin: var(--space-2) 0 0; padding-left: 1.1rem; }
 .outside-training li { margin-top: var(--space-1); }
 
-/* A fixed screening answer (from the date of birth, the account, or the first screening): shown, never editable. */
 .question-fixed .fixed-answer { display: flex; align-items: center; gap: var(--space-2); padding: 0.7rem 0.9rem; border-radius: var(--radius-md); background: var(--surface-soft); border: 1px dashed var(--border); color: var(--muted-color); }
 .question-fixed .fixed-answer .icon { width: 1rem; height: 1rem; color: var(--indigo); flex: none; }
 .question-fixed .fixed-answer-value { border: 0; background: transparent; font: inherit; font-weight: 600; color: var(--navy); width: 100%; padding: 0; outline: none; }
 .lab-upload-inline { margin-bottom: var(--gap); }
 .lab-upload-inline .upload-form { flex-wrap: wrap; align-items: flex-end; }
 
-/* ================= EVEN DASHBOARD COLUMNS (Phase 9 refinement) =================
-   The side panel (profile, quick actions, recent activity) was stretched to the full height of the main column,
-   so every extra card on the left - most visibly the "Continue your screening" card - left a tall empty white
-   block under Recent Activity. It now keeps its own height. */
 
-/* A risk pill in a narrow panel wraps instead of running past its edge ("Low Enhanced Screening"). */
 .risk-pill { max-width: 100%; white-space: normal; }
 
-/* Two cards side by side in a dashboard row share one height; a short one centres its content instead of
-   leaving all of its spare room at the bottom. */
 .dash-row > .card { display: flex; flex-direction: column; }
 .dash-row > .card > .summary-body, .dash-row > .card > .empty-state-centered { flex: 1; align-content: center; align-items: center; }
 .risk-overview-foot { display: flex; flex-direction: column; gap: var(--space-2); margin-top: var(--space-4); padding-top: var(--space-4); border-top: 1px solid var(--border); }
 .risk-overview-foot .summary-note { margin: 0; font-size: var(--text-small); color: var(--muted-color); }
 .write-review { margin-bottom: var(--gap); }
 .write-review-form textarea { resize: vertical; }
-/* "Clinical note only" / "Clinical note + follow-up": two equal tiles, and the follow-up fields in their own panel. */
 .review-mode-choices { display: grid; grid-template-columns: repeat(2, minmax(0, 1fr)); }
 .review-mode-choices .choice { min-width: 0; }
 .review-mode-choices .choice-tile { width: 100%; height: 100%; align-items: center; text-align: left; }
@@ -1050,10 +940,8 @@ body:not(.app-body) .toast-region { top: var(--space-4); }
 .continue-card .card-header { flex-wrap: wrap; }
 .continue-card .button { align-self: flex-start; }
 a.badge { text-decoration: none; }
-/* The avatar chosen at registration, in place of the initials (falls back to initials when none was chosen). */
 .avatar.has-image, .profile-avatar.has-image { padding: 0; overflow: hidden; background: var(--lavender); }
 .avatar-img { display: block; width: 100%; height: 100%; object-fit: cover; border-radius: 50%; }
-/* Daily kidney-health checklist summary on the dashboard (the checklist itself resets every day). */
 .checklist-days-grid { display: grid; grid-template-columns: repeat(2, minmax(0, 1fr)); gap: var(--space-3); }
 .checklist-day { display: flex; flex-direction: column; gap: var(--space-1); padding: var(--space-3) var(--space-4); border-radius: var(--radius-md); background: var(--surface-soft); }
 .checklist-day.is-today { background: var(--lavender); }
@@ -1063,7 +951,6 @@ a.badge { text-decoration: none; }
 .checklist-days .card-header { flex-wrap: wrap; }
 @media (max-width: 40rem) { .checklist-days-grid { grid-template-columns: minmax(0, 1fr); } }
 
-/* ================= LAB REPORT CHECKS + ATTESTATION (Phase 9 refinement, services/lab_verification.py) ================= */
 .report-checks { margin-bottom: var(--gap); }
 .report-checks-note { margin: 0 0 var(--space-3); font-size: var(--text-small); }
 .report-check-list { list-style: none; margin: 0; padding: 0; display: grid; grid-template-columns: repeat(auto-fill, minmax(16rem, 1fr)); gap: var(--space-3); }
@@ -1079,7 +966,6 @@ a.badge { text-decoration: none; }
 .attest-label { display: flex; gap: var(--space-3); align-items: flex-start; font-weight: 600; color: var(--navy); cursor: pointer; }
 .attest-label input { width: 1.15rem; height: 1.15rem; margin-top: 0.15rem; flex: none; }
 
-/* ================= ADMINISTRATOR SIDE ================= */
 .admin-row { margin-top: var(--gap); }
 .admin-model-list { list-style: none; margin: 0; padding: 0; display: flex; flex-direction: column; gap: var(--space-3); }
 .admin-model-list li { display: flex; gap: var(--space-3); align-items: flex-start; }
@@ -1093,8 +979,6 @@ a.badge { text-decoration: none; }
 .admin-model-details { margin-top: var(--space-1); font-size: 0.78rem; }
 .admin-model-details summary { cursor: pointer; color: var(--indigo); font-weight: 600; }
 .admin-model-details p { margin: var(--space-1) 0 0; color: var(--muted-color); overflow-wrap: anywhere; }
-/* The admin overview's two cards are not inside a dashboard's .dash-main (whose container query makes a .dash-row one
-   column on a narrow screen), so it needs its own narrow-screen rule. */
 @media (max-width: 56rem) { .dash-row.admin-row { grid-template-columns: minmax(0, 1fr); } }
 .kpi-row { margin-bottom: var(--gap); }
 .admin-age { margin-bottom: var(--gap); }
@@ -1105,14 +989,12 @@ a.badge { text-decoration: none; }
 .temp-password { display: flex; flex-wrap: wrap; align-items: center; gap: var(--space-3); margin: var(--space-4) 0; padding: var(--space-4); border-radius: var(--radius-md); background: var(--surface-soft); }
 .temp-password code { font-size: 1.35rem; font-weight: 700; letter-spacing: 0.04em; color: var(--navy); overflow-wrap: anywhere; }
 .table-actions .inline-form + .inline-form { margin-left: var(--space-2); }
-/* A row heading inside a data table's BODY looks like the row's other cells, just bold - not like the column headings. */
 .data-table tbody th[scope="row"] { background: transparent; text-transform: none; letter-spacing: normal; font-size: inherit;
   font-weight: 700; color: var(--navy); text-align: left; border-bottom: 1px solid var(--border); }
-.admin-age-table { min-width: 0; }      /* four short columns: it fits a phone without scrolling */
+.admin-age-table { min-width: 0; }
 .data-table tbody tr:last-child th[scope="row"] { border-bottom: 0; }
 .admin-code { margin: var(--space-3) 0 0; padding: var(--space-4); border-radius: var(--radius-md); background: var(--surface-soft); overflow-x: auto; font-size: var(--text-small); }
 
-/* ================= ADMIN: MODEL PERFORMANCE ================= */
 .model-jump { margin-bottom: var(--gap); }
 .model-section { display: flex; flex-direction: column; gap: var(--gap); scroll-margin-top: 7.5rem; }
 .model-section + .model-section { margin-top: calc(var(--gap) * 2); padding-top: var(--gap); border-top: 1px dashed var(--border); }
@@ -1159,10 +1041,8 @@ a.badge { text-decoration: none; }
 .model-checks .is-ok .icon { color: var(--green-text); } .model-checks .is-bad .icon { color: var(--red-text); }
 .model-reason { overflow-wrap: anywhere; }
 @media (max-width: 56rem) { .dash-row.model-row { grid-template-columns: minmax(0, 1fr); } }
-.admin-code { max-width: 100%; white-space: pre-wrap; overflow-wrap: anywhere; }   /* a long command wraps on a phone */
+.admin-code { max-width: 100%; white-space: pre-wrap; overflow-wrap: anywhere; }
 
-/* ---- Gender (Sex is asked through it) - eleven answers as an even grid of tiles, not one long ragged row; the
-   "Sex assigned at birth" follow-up slides in under it only when the gender answer does not already tell. ---- */
 .question-group .choice-group-gender { display: grid; grid-template-columns: repeat(auto-fill, minmax(min(100%, 11rem), 1fr)); }
 .question-group .choice-group-gender .choice { flex: none; min-width: 0; }
 .question-group .choice-group-gender .choice-tile { height: 100%; }
@@ -1170,7 +1050,6 @@ a.badge { text-decoration: none; }
 @keyframes follow-up-in { from { opacity: 0; transform: translateY(-4px); } to { opacity: 1; transform: none; } }
 @media (prefers-reduced-motion: reduce) { .question-follow-up { animation: none; } }
 
-/* ---- Kidney health in the Philippines: sourced big-number cards, and Nephron's own community counts ---- */
 .ckd-subhead { margin: var(--space-2) 0 0; font-size: 0.8rem; font-weight: 800; letter-spacing: 0.02em; color: var(--navy); display: flex; align-items: center; gap: var(--space-2); }
 .ckd-subhead small { font-weight: 500; color: var(--muted-color); letter-spacing: 0; }
 .ckd-stat-icon { display: inline-grid; place-items: center; width: 2.5rem; height: 2.5rem; border-radius: 50%; background: var(--lavender); color: var(--indigo); }
@@ -1210,9 +1089,6 @@ a.badge { text-decoration: none; }
 .ckd-ring-sm { width: 4.75rem; }
 .ckd-mini-ring-value { font-size: 0.72rem; letter-spacing: -0.02em; }
 
-/* ---- How the models work & Model comparison ----
-   Two model identities, validated as a colourblind-safe pair (dataviz validator, light surface): Preliminary =
-   violet, Enhanced = green. With/without CKD reuse the app's risk red against the violet. */
 :root { --model-preliminary: #6C63E6; --model-enhanced: #0FA287; --dist-negative: #6C63E6; }
 .model-key-dot { display: inline-block; width: 0.7rem; height: 0.7rem; border-radius: 50%; margin-right: 0.45rem; vertical-align: 0.05em; background: var(--model-preliminary); }
 .model-tone-enhanced .model-section-head .model-key-dot, .model-dot-enhanced { background: var(--model-enhanced); }
@@ -1248,7 +1124,7 @@ a.badge { text-decoration: none; }
 .legend-line.model-line-preliminary { border-color: var(--model-preliminary); }
 .legend-line.model-line-enhanced { border-color: var(--model-enhanced); }
 .dist-svg, .trade-svg { width: 100%; display: block; overflow: visible; }
-.trade-svg { max-width: 34rem; }          /* the text inside scales with the chart: keep it near body size on wide screens */
+.trade-svg { max-width: 34rem; }
 .chart-grid { stroke: var(--border); stroke-width: 0.8; }
 .chart-baseline { stroke: var(--border-strong); stroke-width: 1; }
 .chart-tick { font-size: 9px; fill: var(--muted); }
@@ -1288,7 +1164,7 @@ a.badge { text-decoration: none; }
 .threshold-marker.model-marker-preliminary { background: var(--model-preliminary); }
 .threshold-marker.model-marker-enhanced { background: var(--model-enhanced); }
 .threshold-marker-label { position: absolute; bottom: 1.45rem; left: 50%; transform: translateX(-50%); white-space: nowrap; font-size: 0.75rem; font-weight: 700; color: var(--navy); }
-.model-marker-enhanced .threshold-marker-label { left: auto; right: -0.4rem; transform: none; bottom: 2.75rem; }   /* staggered: never on top of the other label */
+.model-marker-enhanced .threshold-marker-label { left: auto; right: -0.4rem; transform: none; bottom: 2.75rem; }
 .threshold-marker-label::after { content: ""; position: absolute; top: 100%; width: 1px; background: var(--border-strong); left: 50%; height: 0.3rem; }
 .model-marker-enhanced .threshold-marker-label::after { left: auto; right: 0.95rem; height: 1.6rem; }
 @media (max-width: 40rem) {
@@ -1322,7 +1198,6 @@ a.badge { text-decoration: none; }
 .drivers-preliminary .importance-bar > span { background: var(--model-preliminary); }
 
 
-/* ---- Baseline vs tuned candidates: Random Forest amber, XGBoost violet (validated pair); baseline = dashed / lighter ---- */
 :root { --cand-rf: #C97C00; --cand-xgb: #6C63E6; }
 .candidates-card { margin-bottom: var(--space-4); }
 .cand-key { display: inline-block; width: 1.1rem; height: 0; border-top: 3px solid var(--cand-xgb); margin-right: 0.4rem; vertical-align: middle; }
@@ -1359,7 +1234,6 @@ a.badge { text-decoration: none; }
 .candidates-card .model-row { align-items: start; }
 .question-derived .derived-bands { display: block; margin-top: 0.15rem; font-size: 0.74rem; color: var(--muted); }
 
-/* ---- Where in the Philippines (province; town and barangay for Pangasinan) ---- */
 .location-fields { border: 1px solid var(--border); border-radius: var(--radius-lg); padding: var(--space-4); margin: 0 0 var(--space-4); background: var(--surface-soft); min-inline-size: 0; }
 .location-fields legend { padding: 0 var(--space-2); font-weight: 700; }
 .location-fields > .form-helper { margin: 0 0 var(--space-3); }
@@ -1368,7 +1242,6 @@ a.badge { text-decoration: none; }
 .location-card { margin-top: var(--gap, var(--space-5)); }
 .location-nudge { margin-bottom: var(--space-4); }
 
-/* ---- Pangasinan map (the LGU heatmap) ---- */
 .map-card { margin-bottom: var(--space-4); }
 .map-controls { display: flex; flex-wrap: wrap; gap: var(--space-3); align-items: center; margin-bottom: var(--space-4); }
 .segmented { display: inline-flex; flex-wrap: wrap; gap: 2px; padding: 3px; border-radius: 999px; background: var(--lavender-wash); border: 1px solid var(--border); }
@@ -1397,7 +1270,6 @@ a.badge { text-decoration: none; }
 .map-table th[scope="row"] { font-weight: 600; }
 .map-source { margin-top: var(--space-3); }
 
-/* ---- Research data (de-identified export) ---- */
 .research-notice { margin-bottom: var(--space-4); }
 .research-notice ul { margin: var(--space-2) 0; padding-left: 1.1rem; display: grid; gap: 0.25rem; }
 .research-counts { display: flex; flex-wrap: wrap; gap: var(--space-5); margin: 0 0 var(--space-4); }
@@ -1413,7 +1285,6 @@ a.badge { text-decoration: none; }
 .research-row > .card { min-width: 0; }
 .data-use-note { display: flex; gap: var(--space-2); align-items: flex-start; margin: var(--space-3) 0; } .data-use-note .icon { flex: none; margin-top: 0.15rem; }
 
-/* ---- Re-assessment rule (admin) and asking for an early screening (General User) ---- */
 .dash-row.reassess-row { display: grid; grid-template-columns: repeat(auto-fit, minmax(min(100%, 20rem), 1fr)); gap: var(--space-4); }
 .dash-row.reassess-row > * { min-width: 0; }
 .reassess-form { display: flex; flex-wrap: wrap; align-items: flex-end; gap: var(--space-3); margin-top: var(--space-3); }
