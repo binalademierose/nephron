@@ -791,5 +791,5 @@
       "valid_max": 24
     }
   ],
-  "range_policy": "min/max are the ranges the model was TRAINED on; valid_min/valid_max are the realistic limits an answer is accepted within. An answer outside the training range is accepted and flagged on the result. An option's model_value (e.g. Philippines -> Other) is what the model receives; the person's own answer is what is saved."
+  "range_policy": "min/max are the ranges the model was TRAINED on; valid_min/valid_max are the realistic limits an answer is accepted within. An answer outside the training range is accepted. An option's model_value (e.g. Philippines -> Other) is what the model receives; the person's own answer is what is saved."
 }
